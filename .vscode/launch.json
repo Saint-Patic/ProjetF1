@@ -1,0 +1,24 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "cppdbg",
+      "request": "launch",
+      "args": [],
+      "stopAtEntry": false,
+      "externalConsole": true,
+      "cwd": "c:/Users/lemai/OneDrive/Documents/Cours/Cours Ephec/2024 - 2025/Q1/OS 2/ProjetF1/ProjetF1",
+      "program": "c:/Users/lemai/OneDrive/Documents/Cours/Cours Ephec/2024 - 2025/Q1/OS 2/ProjetF1/ProjetF1/build/Debug/outDebug",
+      "MIMode": "gdb",
+      "miDebuggerPath": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    }
+  ]
+}
