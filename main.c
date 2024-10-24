@@ -68,8 +68,8 @@ int main() {
         exit(1);
     }
 
-    int min_time = 5;  // Temps minimum en secondes
-    int max_time = 10; // Temps maximum en secondes
+    int min_time = 25;  // Temps minimum en secondes
+    int max_time = 45; // Temps maximum en secondes
 
     for (int i = 0; i < NUM_CARS; i++) {
         cars[i].car_number = i + 1;
