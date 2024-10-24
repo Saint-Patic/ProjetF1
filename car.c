@@ -7,7 +7,6 @@
 
 void generate_sector_times(struct CarTime *car, int min_time, int max_time) {
     car->best_lap_time = 0;
-    // static int counter = 0;
     for (int i = 0; i < NUM_SECTORS; i++) {
         car->sector_times[i] = random_float(min_time, max_time);
         car->best_lap_time += car->sector_times[i];
@@ -16,7 +15,6 @@ void generate_sector_times(struct CarTime *car, int min_time, int max_time) {
         if (car->best_sector_times[i] == 0 || car->sector_times[i] < car->best_sector_times[i]) {
             car->best_sector_times[i] = car->sector_times[i];
         }
-        // printf("Génération des temps de secteur: %d\n", counter++);
     }
 
     // Mettre à jour le meilleur temps de tour
@@ -67,7 +65,6 @@ void simulate_practice_session(struct CarTime cars[], int num_cars, int min_time
                 cars[i].out = 1; // 5% de chance de sortir de la course
             }
         }
-    
 
         // Rafraîchir l'affichage à chaque tour
         system("clear"); // Efface l'écran
@@ -107,7 +104,6 @@ void display_practice_results(struct CarTime cars[], int num_cars) {
     printf("=================================================================\n");
 }
 
-// Comparer les voitures par meilleur temps de tour
 int compare_cars(const void *a, const void *b) {
     struct CarTime *carA = (struct CarTime *)a;
     struct CarTime *carB = (struct CarTime *)b;
@@ -138,7 +134,7 @@ void display_overall_best_times(struct CarTime cars[], int num_cars) {
     }
 
     // Affichage des meilleurs temps
-    printf("\nMeilleurs temps de la période d'essai :\n");
+    printf("\n=== Meilleurs temps par section et général de la période d'essai ===\n");
     printf("=======================================================\n");
     for (int i = 0; i < NUM_SECTORS; i++) {
         printf("Meilleur temps secteur %d : %.2f secondes\n", i + 1, overall_best_sector_times[i]);

@@ -6,5 +6,6 @@ void initialize_random() {
 }
 
 float random_float(int min, int max) {
-    return (rand() % (max - min + 1)) + min + (float)rand() / RAND_MAX;
+    return min + (float)rand() / RAND_MAX * (max - min); 
 }
+

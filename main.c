@@ -49,6 +49,7 @@ int main() {
     simulate_practice_session(cars, NUM_CARS, MIN_TIME, MAX_TIME);
 
     // Affichage des résultats
+    printf("\n=== Meilleurs temps de la période d'essai ===\n");
     display_practice_results(cars, NUM_CARS);
 
     // Afficher les meilleurs temps globaux
