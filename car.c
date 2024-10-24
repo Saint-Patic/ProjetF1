@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h> // Pour sleep()
+#include <string.h> // Pour system()
 #include "car.h"
-#include "utils.h"
+#include "utils.h" 
 
 void generate_sector_times(struct CarTime *car, int min_time, int max_time) {
     car->best_lap_time = 0;
@@ -24,7 +26,8 @@ void generate_sector_times(struct CarTime *car, int min_time, int max_time) {
 }
 
 void simulate_practice_session(struct CarTime cars[], int num_cars, int min_time, int max_time) {
-    for (int lap = 0; lap < MAX_LAPS; lap++) {
+    int total_laps = MAX_LAPS; // Nombre total de tours
+    for (int lap = 0; lap < total_laps; lap++) {
         for (int i = 0; i < num_cars; i++) {
             if (cars[i].out) {
                 continue; // Ignore les voitures hors course
@@ -48,7 +51,7 @@ void simulate_practice_session(struct CarTime cars[], int num_cars, int min_time
             cars[i].temps_rouler += (float)max_time; // Ajouter le temps de ce tour
 
             // Vérifiez si la voiture a dépassé 1 heure (3600 secondes)
-            if (cars[i].temps_rouler >= DUREE_ESSAI) {
+            if (cars[i].temps_rouler >= 3600) {
                 // Marquer toutes les voitures comme hors course
                 for (int j = 0; j < num_cars; j++) {
                     cars[j].out = 1; // Toutes les voitures s'arrêtent
@@ -65,12 +68,18 @@ void simulate_practice_session(struct CarTime cars[], int num_cars, int min_time
                 cars[i].out = 1; // 5% de chance de sortir de la course
             }
         }
+
+        // Rafraîchir l'affichage à chaque tour
+        system("clear"); // Efface l'écran
+        printf("Tour %d:\n", lap + 1);
+        display_practice_results(cars, num_cars);
+        sleep(1); // Attendre 1 seconde avant de rafraîchir l'affichage
     }
-}
+}   
 
 void display_practice_results(struct CarTime cars[], int num_cars) {
     qsort(cars, num_cars, sizeof(struct CarTime), compare_cars);
-
+    
     printf("=================================================================\n");
     printf("|  #   |  Secteur 1  |  Secteur 2  |  Secteur 3  |   Tour   | Diff |\n");
     printf("=================================================================\n");
@@ -82,9 +91,9 @@ void display_practice_results(struct CarTime cars[], int num_cars) {
         float diff = cars[i].best_lap_time - prev_time;
         printf("| %3d  |   %7.2f   |   %7.2f   |   %7.2f   |  %7.2f  |  %+5.2f |\n",
                cars[i].car_number,
-               cars[i].best_sector_times[0],
-               cars[i].best_sector_times[1],
-               cars[i].best_sector_times[2],
+               cars[i].sector_times[0],
+               cars[i].sector_times[1],
+               cars[i].sector_times[2],
                cars[i].best_lap_time,
                i == 0 ? 0.00 : diff);
 
