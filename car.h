@@ -5,10 +5,11 @@
 
 struct CarTime {
     int car_number;
+    int pit_stop; // 1 si en pit stop, 0 sinon
+    int out; // 1 si hors course, 0 sinon
     float sector_times[NUM_SECTORS];
     float best_lap_time;
-    int pit_stop;
-    int out;
+    int pit_stop_duration; // Durée du pit stop en tours
 };
 
 // Déclarations des fonctions

@@ -23,20 +23,36 @@ void generate_sector_times(struct CarTime *car, int min_time, int max_time) {
 void simulate_practice_session(struct CarTime cars[], int num_cars, int min_time, int max_time) {
     for (int lap = 0; lap < MAX_LAPS; lap++) {
         for (int i = 0; i < num_cars; i++) {
-            if (cars[i].out || cars[i].pit_stop) {
-                continue;
+            if (cars[i].out) {
+                continue; // Ignore les voitures hors course
             }
+
+            // Gestion des pit stops
+            if (cars[i].pit_stop) {
+                // Décrémenter la durée du pit stop
+                if (cars[i].pit_stop_duration > 0) {
+                    cars[i].pit_stop_duration--;
+                    continue; // Ignorez la voiture pendant le pit stop
+                } else {
+                    cars[i].pit_stop = 0; // La voiture sort du pit stop
+                }
+            }
+
+            // Génération des temps de secteur pour les voitures en course
             generate_sector_times(&cars[i], min_time, max_time);
 
-            // Random pit or out event
+            // Événements aléatoires pour pit ou out
             if (rand() % 100 < 10) {
-                cars[i].pit_stop = 1;
+                // Attribuez une durée aléatoire de pit stop 
+                cars[i].pit_stop_duration = random_float(min_time, max_time);
+                cars[i].pit_stop = 1; // 10% de chance d'entrer en pit stop
             } else if (rand() % 100 < 5) {
-                cars[i].out = 1;
+                cars[i].out = 1; // 5% de chance de sortir de la course
             }
         }
     }
 }
+
 
 void display_practice_results(struct CarTime cars[], int num_cars) {
     qsort(cars, num_cars, sizeof(struct CarTime), compare_cars);
