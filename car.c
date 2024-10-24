@@ -26,18 +26,19 @@ void generate_sector_times(struct CarTime *car, int min_time, int max_time) {
 }
 
 void simulate_practice_session(struct CarTime cars[], int num_cars, int min_time, int max_time) {
-    int total_laps = MAX_LAPS; // Nombre total de tours
+    int total_laps = MAX_LAPS; // Total number of laps
     for (int lap = 0; lap < total_laps; lap++) {
         for (int i = 0; i < num_cars; i++) {
             if (cars[i].out) {
-                continue; // Ignore les voitures hors course
+                continue; // Ignore out of race cars
             }
 
             // Gestion des pit stops
             if (cars[i].pit_stop) {
-                // Décrémenter la durée du pit stop
-                if (cars[i].pit_stop_duration > 0) {
-                    cars[i].pit_stop_duration--;
+                // Décrémenter la durée du pit stop d'un temps aléatoire
+                int pit_stop_time = random_float(min_time, max_time); // Temps de pit stop aléatoire
+                if (cars[i].pit_stop_duration > pit_stop_time) {
+                    cars[i].pit_stop_duration -= pit_stop_time; // Décrémenter le temps de pit stop
                     continue; // Ignorez la voiture pendant le pit stop
                 } else {
                     cars[i].pit_stop = 0; // La voiture sort du pit stop
@@ -52,7 +53,6 @@ void simulate_practice_session(struct CarTime cars[], int num_cars, int min_time
 
             // Vérifiez si la voiture a dépassé 1 heure (3600 secondes)
             if (cars[i].temps_rouler >= 3600) {
-                // Marquer toutes les voitures comme hors course
                 for (int j = 0; j < num_cars; j++) {
                     cars[j].out = 1; // Toutes les voitures s'arrêtent
                 }
@@ -61,13 +61,13 @@ void simulate_practice_session(struct CarTime cars[], int num_cars, int min_time
 
             // Événements aléatoires pour pit ou out
             if (rand() % 100 < 10) {
-                // Attribuez une durée aléatoire de pit stop 
                 cars[i].pit_stop_duration = random_float(MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION);
                 cars[i].pit_stop = 1; // 10% de chance d'entrer en pit stop
             } else if (rand() % 100 < 5) {
                 cars[i].out = 1; // 5% de chance de sortir de la course
             }
         }
+    
 
         // Rafraîchir l'affichage à chaque tour
         system("clear"); // Efface l'écran
