@@ -8,6 +8,19 @@
 #define MIN_TIME 25
 #define MAX_TIME 45
 
+void initialize_cars(struct CarTime cars[], int car_numbers[], int num_cars, int max_time) {
+    for (int i = 0; i < num_cars; i++) {
+        cars[i].car_number = car_numbers[i];
+        cars[i].pit_stop = 0;
+        cars[i].out = 0;
+        cars[i].best_lap_time = max_time * 3; // Initialiser à une valeur élevée
+        cars[i].temps_rouler = 0; // Initialiser le temps de roulage
+        for (int j = 0; j < NUM_SECTORS; j++) {
+            cars[i].best_sector_times[j] = 0; // Initialiser les meilleurs temps de secteur
+        }
+    }
+}
+
 int main() {
     struct CarTime *cars;
     int car_numbers[NUM_CARS] = {1, 11, 44, 63, 16, 55, 4, 81, 14, 18, 10, 31, 23, 2, 22, 3, 77, 24, 20, 27};
@@ -37,6 +50,9 @@ int main() {
 
     // Affichage des résultats
     display_practice_results(cars, NUM_CARS);
+
+    // Afficher les meilleurs temps globaux
+    display_overall_best_times(cars, NUM_CARS);
 
     // Nettoyage
     shmdt(cars);
