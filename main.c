@@ -1,63 +1,60 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/shm.h>
+#include <time.h>
 #include "car.h"
-#include "utils.h"
+#include "display.h"
+#include "file_manager.h"
 
 #define NUM_CARS 20
-#define MIN_TIME 25
-#define MAX_TIME 45
-
-void initialize_cars(struct CarTime cars[], int car_numbers[], int num_cars, int max_time) {
-    for (int i = 0; i < num_cars; i++) {
-        cars[i].car_number = car_numbers[i];
-        cars[i].pit_stop = 0;
-        cars[i].out = 0;
-        cars[i].best_lap_time = max_time * 3; // Initialiser à une valeur élevée
-        cars[i].temps_rouler = 0; // Initialiser le temps de roulage
-        for (int j = 0; j < NUM_SECTORS; j++) {
-            cars[i].best_sector_times[j] = 0; // Initialiser les meilleurs temps de secteur
-        }
-    }
-}
+#define MIN_TIME 25    // Temps minimal pour un secteur
+#define MAX_TIME 45    // Temps maximal pour un secteur
 
 int main() {
-    struct CarTime *cars;
+    srand(time(NULL));
+
+    const char *output_file = "fichier_enregistree/meilleurs_temps.csv";
+    struct CarTime cars[NUM_CARS];
     int car_numbers[NUM_CARS] = {1, 11, 44, 63, 16, 55, 4, 81, 14, 18, 10, 31, 23, 2, 22, 3, 77, 24, 20, 27};
-    
-    // Initialisation aléatoire
-    initialize_random();
+    char *session_files[] = {
+        "fichier_enregistree/session_P1.csv",
+        "fichier_enregistree/session_P2.csv",
+        "fichier_enregistree/session_P3.csv"
+    };
+    int session_count = sizeof(session_files) / sizeof(session_files[0]);
 
-    // Allocation mémoire partagée
-    int shmid = shmget(IPC_PRIVATE, NUM_CARS * sizeof(struct CarTime), IPC_CREAT | 0666);
-    if (shmid == -1) {
-        perror("Erreur mémoire partagée");
-        exit(1);
+    for (int i = 0; i < NUM_CARS; i++) {
+        cars[i].car_number = car_numbers[i];
+        cars[i].best_lap_time = 0;
+        cars[i].temps_rouler = 0;
+        cars[i].pit_stop = 0;
+        cars[i].out = 0;
+        for (int j = 0; j < NUM_SECTORS; j++) {
+            cars[i].sector_times[j] = 0;
+            cars[i].best_sector_times[j] = 0;
+        }
     }
-    
-    // Attachement de la mémoire partagée
-    cars = (struct CarTime *)shmat(shmid, NULL, 0);
-    if (cars == (void *)-1) {
-        perror("Erreur attachement mémoire partagée");
-        exit(1);
+
+    printf("===== Début du week-end de Grand Prix =====\n\n");
+
+    for (int session = 0; session < session_count; session++) {
+        printf("\n=== Début de la session %d ===\n", session + 1);
+
+        simulate_practice_session(cars, NUM_CARS, MIN_TIME, MAX_TIME);
+        save_session_results(cars, NUM_CARS, session_files[session]);
+        printf("Les résultats de la session %d ont été enregistrés dans %s\n", session + 1, session_files[session]);
+
+        if (session < session_count - 1) {
+            printf("Appuyez sur Entrée pour passer à la session suivante...");
+            getchar();
+        }
     }
 
-    // Initialisation des voitures
-    initialize_cars(cars, car_numbers, NUM_CARS, MAX_TIME);
-
-    // Simulation de la séance d'essai
-    simulate_practice_session(cars, NUM_CARS, MIN_TIME, MAX_TIME);
-
-    // Affichage des résultats
-    printf("\n=== Meilleurs temps de la période d'essai ===\n");
-    display_practice_results(cars, NUM_CARS);
-
-    // Afficher les meilleurs temps globaux
+    printf("\n===== Résultats finaux du week-end =====\n");
     display_overall_best_times(cars, NUM_CARS);
 
-    // Nettoyage
-    shmdt(cars);
-    shmctl(shmid, IPC_RMID, NULL);
+    combine_session_results(session_files, session_count, output_file);
+
+    printf("\nFin du week-end de Grand Prix avec les meilleurs temps enregistrés.\n");
 
     return 0;
 }
