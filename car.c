@@ -29,8 +29,18 @@ int compare_cars(const void *a, const void *b) {
     return (carA->best_lap_time > carB->best_lap_time) ? 1 : -1;
 }
 
-void simulate_practice_session(struct CarTime cars[], int num_cars, int min_time, int max_time) {
-    int total_laps = MAX_LAPS; 
+void reset_out_status_and_temps_rouler(struct CarTime cars[], int num_cars) { // Réinitialise le statut "Out" et le temps de roulage des voitures après chaque séance
+    for(int i = 0; i < num_cars; i++){
+        printf("Voiture %d - Temps roulé : %.2f secondes\n", cars[i].car_number, cars[i].temps_rouler);
+    }
+    for (int i = 0; i < num_cars; i++) {
+        cars[i].out = 0;
+        cars[i].temps_rouler = 0;
+    }
+}
+
+void simulate_practice(struct CarTime cars[], int num_cars, int min_time, int max_time, int session_duration) {
+    int total_laps = MAX_LAPS;
     for (int lap = 0; lap < total_laps; lap++) {
         for (int i = 0; i < num_cars; i++) {
             if (cars[i].out) continue;
@@ -46,9 +56,9 @@ void simulate_practice_session(struct CarTime cars[], int num_cars, int min_time
             }
 
             generate_sector_times(&cars[i], min_time, max_time);
-            cars[i].temps_rouler += (float)max_time;
+            cars[i].temps_rouler += max_time;
 
-            if (cars[i].temps_rouler >= 3600) {
+            if (cars[i].temps_rouler >= session_duration) {
                 for (int j = 0; j < num_cars; j++) {
                     cars[j].out = 1;
                 }
@@ -59,7 +69,7 @@ void simulate_practice_session(struct CarTime cars[], int num_cars, int min_time
             if (rand() % 100 < 35) {
                 cars[i].pit_stop_duration = random_float(MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION);
                 cars[i].pit_stop = 1;
-            } else if (rand() % 100 < 1) { // Probabilité plus faible d'être "Out"
+            } else if (rand() % 100 < 1) {
                 cars[i].out = 1;
             }
         }
@@ -69,17 +79,6 @@ void simulate_practice_session(struct CarTime cars[], int num_cars, int min_time
         display_practice_results(cars, num_cars);
         sleep(1);
     }
-    save_session_results(cars, num_cars, "session_results.csv");
-
     reset_out_status_and_temps_rouler(cars, num_cars);
 }
 
-void reset_out_status_and_temps_rouler(struct CarTime cars[], int num_cars) { // Réinitialise le statut "Out" et le temps de roulage des voitures après chaque séance
-    for(int i = 0; i < num_cars; i++){
-        printf("Voiture %d - Temps roulé : %.2f secondes\n", cars[i].car_number, cars[i].temps_rouler);
-    }
-    for (int i = 0; i < num_cars; i++) {
-        cars[i].out = 0;
-        cars[i].temps_rouler = 0;
-    }
-}

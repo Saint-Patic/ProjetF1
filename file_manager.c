@@ -40,7 +40,6 @@ void save_session_results(struct CarTime cars[], int num_cars, const char *filen
     fprintf(file, "Best Overall Lap,%.2f\n", best_overall_lap_time);
 
     fclose(file);
-    printf("Les résultats de la session ont été enregistrés dans %s\n", filename);
 }
 
 void load_session_results(struct CarTime cars[], int *num_cars, const char *filename) {

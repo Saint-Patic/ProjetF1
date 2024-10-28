@@ -1,26 +1,54 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <string.h>
 #include "car.h"
 #include "display.h"
 #include "file_manager.h"
 
 #define NUM_CARS 20
-#define MIN_TIME 25    // Temps minimal pour un secteur
-#define MAX_TIME 45    // Temps maximal pour un secteur
+#define MIN_TIME 25
+#define MAX_TIME 45
 
-int main() {
+int file_exists(const char *filename) {
+    struct stat buffer;
+    return (stat(filename, &buffer) == 0);
+}
+
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        printf("Usage: %s <session_filename>\n", argv[0]);
+        return 1;
+    }
+
+    char *session_file = argv[1];
+    int session_num;
+
+    // Extract the session number from the filename
+    if (sscanf(session_file, "fichier_enregistree/session_%d.csv", &session_num) != 1) {
+        printf("Nom de fichier invalide. Utilisez le format fichier_enregistree/session_<numéro>.csv\n");
+        return 1;
+    }
+
+    char prev_session_file[50];
+    sprintf(prev_session_file, "fichier_enregistree/session_%d.csv", session_num - 1);
+
+    if (file_exists(session_file)) {
+        printf("Le fichier %s existe déjà. La session a déjà été exécutée.\n", session_file);
+        return 0;
+    }
+
+    if (session_num > 1 && !file_exists(prev_session_file)) {
+        printf("La session précédente %s n'existe pas. Exécution annulée.\n", prev_session_file);
+        return 0;
+    }
+
     srand(time(NULL));
-
-    const char *output_file = "fichier_enregistree/meilleurs_temps.csv";
+    int session_duration = 3600;
     struct CarTime cars[NUM_CARS];
     int car_numbers[NUM_CARS] = {1, 11, 44, 63, 16, 55, 4, 81, 14, 18, 10, 31, 23, 2, 22, 3, 77, 24, 20, 27};
-    char *session_files[] = {
-        "fichier_enregistree/session_P1.csv",
-        "fichier_enregistree/session_P2.csv",
-        "fichier_enregistree/session_P3.csv"
-    };
-    int session_count = sizeof(session_files) / sizeof(session_files[0]);
 
     for (int i = 0; i < NUM_CARS; i++) {
         cars[i].car_number = car_numbers[i];
@@ -34,27 +62,11 @@ int main() {
         }
     }
 
-    printf("===== Début du week-end de Grand Prix =====\n\n");
+    printf("===== Début de la session de pratique : %s =====\n\n", session_file);
 
-    for (int session = 0; session < session_count; session++) {
-        printf("\n=== Début de la session %d ===\n", session + 1);
-
-        simulate_practice_session(cars, NUM_CARS, MIN_TIME, MAX_TIME);
-        save_session_results(cars, NUM_CARS, session_files[session]);
-        printf("Les résultats de la session %d ont été enregistrés dans %s\n", session + 1, session_files[session]);
-
-        if (session < session_count - 1) {
-            printf("Appuyez sur Entrée pour passer à la session suivante...");
-            getchar();
-        }
-    }
-
-    printf("\n===== Résultats finaux du week-end =====\n");
-    display_overall_best_times(cars, NUM_CARS);
-
-    combine_session_results(session_files, session_count, output_file);
-
-    printf("\nFin du week-end de Grand Prix avec les meilleurs temps enregistrés.\n");
+    simulate_practice(cars, NUM_CARS, MIN_TIME, MAX_TIME, session_duration);
+    save_session_results(cars, NUM_CARS, session_file);
+    printf("Les résultats de la session ont été enregistrés dans %s\n", session_file);
 
     return 0;
 }
