@@ -52,13 +52,14 @@ void simulate_practice_session(struct CarTime cars[], int num_cars, int min_time
                 for (int j = 0; j < num_cars; j++) {
                     cars[j].out = 1;
                 }
+                reset_out_status_and_temps_rouler(cars, num_cars);
                 return;
             }
 
-            if (rand() % 100 < 10) {
+            if (rand() % 100 < 35) {
                 cars[i].pit_stop_duration = random_float(MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION);
                 cars[i].pit_stop = 1;
-            } else if (rand() % 100 < 5) {
+            } else if (rand() % 100 < 1) { // Probabilité plus faible d'être "Out"
                 cars[i].out = 1;
             }
         }
@@ -69,4 +70,16 @@ void simulate_practice_session(struct CarTime cars[], int num_cars, int min_time
         sleep(1);
     }
     save_session_results(cars, num_cars, "session_results.csv");
+
+    reset_out_status_and_temps_rouler(cars, num_cars);
+}
+
+void reset_out_status_and_temps_rouler(struct CarTime cars[], int num_cars) { // Réinitialise le statut "Out" et le temps de roulage des voitures après chaque séance
+    for(int i = 0; i < num_cars; i++){
+        printf("Voiture %d - Temps roulé : %.2f secondes\n", cars[i].car_number, cars[i].temps_rouler);
+    }
+    for (int i = 0; i < num_cars; i++) {
+        cars[i].out = 0;
+        cars[i].temps_rouler = 0;
+    }
 }
