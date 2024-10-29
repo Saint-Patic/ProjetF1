@@ -57,7 +57,6 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < NUM_CARS; i++) {
         cars[i].car_number = car_numbers[i];
         cars[i].best_lap_time = 0;
-        cars[i].current_lap = 0;
         cars[i].temps_rouler = 0;
         cars[i].pit_stop = 0;
         cars[i].out = 0;

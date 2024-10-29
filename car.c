@@ -14,21 +14,21 @@ int estimate_max_laps(int session_duration, int max_time) {
 
 
 void generate_sector_times(struct CarTime *car, int min_time, int max_time) {
-    car->current_lap = 0.0;
+    float lap_time = 0;
     for (int i = 0; i < NUM_SECTORS; i++) {
         car->sector_times[i] = random_float(min_time, max_time);
-        car->current_lap += car->sector_times[i];
+        lap_time += car->sector_times[i];
 
-        // Mise à jour du meilleur temps par secteur
         if (car->best_sector_times[i] == 0 || car->sector_times[i] < car->best_sector_times[i]) {
             car->best_sector_times[i] = car->sector_times[i];
         }
     }
 
-    // Mise à jour du meilleur temps au tour
-    if (car->best_lap_time == 0 || car->current_lap < car->best_lap_time) {
-        car->best_lap_time = car->current_lap;
+    if (car->best_lap_time == 0 || lap_time < car->best_lap_time) {
+        car->best_lap_time = lap_time;
     }
+    car->temps_rouler += lap_time;
+}
 
 void simulate_pit_stop(struct CarTime *car, int min_time, int max_time) {
     if (car->pit_stop) {
@@ -39,18 +39,18 @@ void simulate_pit_stop(struct CarTime *car, int min_time, int max_time) {
         } else {
             car->pit_stop = 0;
         }
-    
+    }
 }
 
 int compare_cars(const void *a, const void *b) {
     struct CarTime *carA = (struct CarTime *)a;
     struct CarTime *carB = (struct CarTime *)b;
-    
-    return (carA->current_lap > carB->current_lap) - (carA->current_lap < carB->current_lap);
+    return (carA->best_lap_time > carB->best_lap_time) ? 1 : -1;
 }
 
-void reset_out_status_and_temps_rouler(struct CarTime cars[], int num_cars) { // Réinitialise le statut "Out" et le temps de roulage des voitures après chaque séance
+void reset_out_status_and_temps_rouler(struct CarTime cars[], int num_cars) {
     for (int i = 0; i < num_cars; i++) {
+        printf("Voiture %d - Temps roulé : %.2f secondes\n", cars[i].car_number, cars[i].temps_rouler);
         cars[i].out = 0;
         cars[i].temps_rouler = 0;
     }
