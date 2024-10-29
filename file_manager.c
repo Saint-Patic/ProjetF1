@@ -1,6 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <string.h>
+#include "car.h"
+#include "display.h"
 #include "file_manager.h"
+
+
+int file_exists(const char *filename) {
+    struct stat buffer;
+    return (stat(filename, &buffer) == 0);
+}
+
 
 void save_session_results(struct CarTime cars[], int num_cars, const char *filename) {
     FILE *file = fopen(filename, "w");
