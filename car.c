@@ -1,11 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h> 
-#include <string.h> 
+#include <unistd.h>
+#include <string.h>
 #include "car.h"
-#include "utils.h" 
+#include "utils.h"
 #include "display.h"
 #include "file_manager.h"
+
+
+int estimate_max_laps(int session_duration, int max_time) {
+    return session_duration / max_time;
+}
+
 
 void generate_sector_times(struct CarTime *car, int min_time, int max_time) {
     car->current_lap = 0.0;
@@ -23,6 +29,17 @@ void generate_sector_times(struct CarTime *car, int min_time, int max_time) {
     if (car->best_lap_time == 0 || car->current_lap < car->best_lap_time) {
         car->best_lap_time = car->current_lap;
     }
+
+void simulate_pit_stop(struct CarTime *car, int min_time, int max_time) {
+    if (car->pit_stop) {
+        float pit_stop_time = random_float(min_time, max_time);
+        if (car->pit_stop_duration > pit_stop_time) {
+            car->pit_stop_duration -= pit_stop_time;
+            car->temps_rouler += pit_stop_time;
+        } else {
+            car->pit_stop = 0;
+        }
+    
 }
 
 int compare_cars(const void *a, const void *b) {
@@ -40,23 +57,17 @@ void reset_out_status_and_temps_rouler(struct CarTime cars[], int num_cars) { //
 }
 
 void simulate_practice(struct CarTime cars[], int num_cars, int min_time, int max_time, int session_duration) {
-    int total_laps = MAX_LAPS;
+    int total_laps = estimate_max_laps(session_duration, 3*min_time) + 1;
     for (int lap = 0; lap < total_laps; lap++) {
         for (int i = 0; i < num_cars; i++) {
             if (cars[i].out) continue;
 
             if (cars[i].pit_stop) {
-                int pit_stop_time = random_float(min_time, max_time);
-                if (cars[i].pit_stop_duration > pit_stop_time) {
-                    cars[i].pit_stop_duration -= pit_stop_time;
-                    continue;
-                } else {
-                    cars[i].pit_stop = 0;
-                }
+                simulate_pit_stop(&cars[i], min_time, max_time);
+                if (cars[i].pit_stop) continue;
             }
 
             generate_sector_times(&cars[i], min_time, max_time);
-            cars[i].temps_rouler += max_time;
 
             if (cars[i].temps_rouler >= session_duration) {
                 for (int j = 0; j < num_cars; j++) {
@@ -66,10 +77,10 @@ void simulate_practice(struct CarTime cars[], int num_cars, int min_time, int ma
                 return;
             }
 
-            if (rand() % 100 < 35) {
+            if (rand() % 100 < 20) { // 20% d'être en pit stop
                 cars[i].pit_stop_duration = random_float(MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION);
                 cars[i].pit_stop = 1;
-            } else if (rand() % 100 < 1) {
+            } else if (rand() % 100 < 1) { // 1% d'être en arrêt
                 cars[i].out = 1;
             }
         }
@@ -77,8 +88,7 @@ void simulate_practice(struct CarTime cars[], int num_cars, int min_time, int ma
         system("clear");
         printf("Tour %d:\n", lap + 1);
         display_practice_results(cars, num_cars);
-        sleep(1);
+        sleep(0.2);
     }
     reset_out_status_and_temps_rouler(cars, num_cars);
 }
-
