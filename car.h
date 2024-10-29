@@ -13,6 +13,7 @@ struct CarTime {
     int out; // 1 si hors course, 0 sinon
     float sector_times[NUM_SECTORS];
     float best_lap_time;
+    float current_lap;
     float best_sector_times[NUM_SECTORS]; // Meilleur temps pour chaque secteur
     int pit_stop_duration; // Durée du pit stop en tours
     float temps_rouler; // Temps de roulage total en secondes
