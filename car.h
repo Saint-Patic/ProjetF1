@@ -19,7 +19,7 @@ struct CarTime {
 };
 
 void generate_sector_times(struct CarTime *car, int min_time, int max_time);
-void simulate_practice(struct CarTime cars[], int num_cars, int min_time, int max_time, int session_duration);
+void simulate_sess(struct CarTime cars[], int num_cars, int min_time, int max_time, int session_duration);
 void display_practice_results(struct CarTime cars[], int num_cars);
 void display_overall_best_times(struct CarTime cars[], int num_cars);
 int compare_cars(const void *a, const void *b);

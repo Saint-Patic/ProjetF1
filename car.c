@@ -56,7 +56,7 @@ void reset_out_status_and_temps_rouler(struct CarTime cars[], int num_cars) {
     }
 }
 
-void simulate_practice(struct CarTime cars[], int num_cars, int min_time, int max_time, int session_duration) {
+void simulate_sess(struct CarTime cars[], int num_cars, int min_time, int max_time, int session_duration) {
     int total_laps = estimate_max_laps(session_duration, 3*min_time) + 1;
     for (int lap = 0; lap < total_laps; lap++) {
         for (int i = 0; i < num_cars; i++) {

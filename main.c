@@ -16,25 +16,46 @@
 
 
 int main(int argc, char *argv[]) {
+
+    // ######################## Phase de check ########################
+
+
     // check s'il y a des paramètres 
     if (argc != 2) {
         printf("Usage: %s <session_filename>\n", argv[0]);
-        printf("Format paramètre attendu:  fichier_enregistree/session_<numéro>.csv\n");
+        printf("Format paramètre attendu:  fichier_enregistree/<session_><numéro>.csv\n");
         return 1;
     }
 
     char *session_file = argv[1];
     int session_num;
 
-    // check si le format de fichier est correct
-    if (sscanf(session_file, "fichier_enregistree/session_%d.csv", &session_num) != 1) {
-        printf("Nom de fichier invalide. Utilisez le format fichier_enregistree/session_<numéro>.csv\n");
+
+    char *session_type = extract_type_session(session_file);
+    if (session_type == NULL) {
+        printf("Erreur: Impossible de déterminer le type de session.\n");
         return 1;
+    }
+    printf("Type de session : %s\n", session_type); 
+
+    // check si le chemin du fichier est correct
+    if (sscanf(session_file, "fichier_enregistree/%[a-zA-Z]_%d.csv", session_type, &session_num) != 2) {
+        printf("Nom de fichier invalide. Utilisez le format fichier_enregistree/<type>_<numéro>.csv\n");
+        return 1;
+    }
+
+
+    // Si le type est "qualif", on vérifie que les essais ont déjà un résumé
+    if (strcmp(session_type, "qualif") == 0 && session_num == 1) {
+        if (!file_exists("fichier_enregistree/resume_essai.csv")) {
+            printf("Erreur: La simulation de qualification requiert un résumé des essais (resume_essai.csv).\n");
+            return 0;
+        }
     }
 
     // crée la chaine prev_session_file avec le numéro précédent de celui mis en paramètre
     char prev_session_file[50];
-    sprintf(prev_session_file, "fichier_enregistree/session_%d.csv", session_num - 1);
+    sprintf(prev_session_file, "fichier_enregistree/%s_%d.csv", session_type, session_num - 1);
 
     // fichier exite ? ne simule rien : simule la session
     if (file_exists(session_file)) {
@@ -56,12 +77,14 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
+
+    // ######################## initialision des voitures ########################
+
     srand(time(NULL));
     int session_duration = 3600;
     struct CarTime cars[NUM_CARS];
     int car_numbers[NUM_CARS] = {1, 11, 44, 63, 16, 55, 4, 81, 14, 18, 10, 31, 23, 2, 22, 3, 77, 24, 20, 27};
 
-    // initialision des voitures
     for (int i = 0; i < NUM_CARS; i++) {
         cars[i].car_number = car_numbers[i];
         cars[i].best_lap_time = 0;
@@ -75,16 +98,17 @@ int main(int argc, char *argv[]) {
     }
 
 
-    // simulation 
-    printf("===== Début de la session de pratique : %s =====\n\n", session_file);
+    // ######################## simulation ########################
 
-    simulate_practice(cars, NUM_CARS, MIN_TIME, MAX_TIME, session_duration);
+    printf("===== Début de la session: %s =====\n\n", session_file);
+
+    simulate_sess(cars, NUM_CARS, MIN_TIME, MAX_TIME, session_duration);
     save_session_results(cars, NUM_CARS, session_file);
     printf("Les résultats de la session ont été enregistrés dans %s\n", session_file);
 
 
     // int_session == MAX_SESSION ? trouver meilleurs temps et secteurs des MAX_SESSION sessions
-    process_session_files(session_num);
+    process_session_files(session_num, session_type);
 
     return 0;
 }
