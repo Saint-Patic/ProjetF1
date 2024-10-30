@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
     // check s'il y a des paramètres 
     if (argc != 2) {
         printf("Usage: %s <session_filename>\n", argv[0]);
-        printf("Format paramètre attendu:  fichier_enregistree/<session_><numéro>.csv\n");
+        printf("Format paramètre attendu:  fichier_enregistree/<type>_<numéro>.csv\n");
         return 1;
     }
 
@@ -102,10 +102,14 @@ int main(int argc, char *argv[]) {
 
     printf("===== Début de la session: %s =====\n\n", session_file);
 
-    simulate_sess(cars, NUM_CARS, MIN_TIME, MAX_TIME, session_duration);
-    save_session_results(cars, NUM_CARS, session_file);
-    printf("Les résultats de la session ont été enregistrés dans %s\n", session_file);
 
+    if (strcmp(session_type, "qualif") == 0) {
+        simulate_qualification(cars, session_num, session_file, MIN_TIME, MAX_TIME, NUM_CARS);
+    } else if (strcmp(session_type, "essai") == 0) {
+        simulate_sess(cars, NUM_CARS, MIN_TIME, MAX_TIME, session_duration);
+        save_session_results(cars, NUM_CARS, session_file, "w");
+        printf("Les résultats de la session ont été enregistrés dans %s\n", session_file);
+    }
 
     // int_session == MAX_SESSION ? trouver meilleurs temps et secteurs des MAX_SESSION sessions
     process_session_files(session_num, session_type);

@@ -8,9 +8,6 @@
 #include "file_manager.h"
 
 
-int estimate_max_laps(int session_duration, int max_time) {
-    return session_duration / max_time;
-}
 
 
 void generate_sector_times(struct CarTime *car, int min_time, int max_time) {
@@ -50,7 +47,7 @@ int compare_cars(const void *a, const void *b) {
 
 void reset_out_status_and_temps_rouler(struct CarTime cars[], int num_cars) {
     for (int i = 0; i < num_cars; i++) {
-        printf("Voiture %d - Temps roulé : %.2f secondes\n", cars[i].car_number, cars[i].temps_rouler);
+        // printf("Voiture %d - Temps roulé : %.2f secondes\n", cars[i].car_number, cars[i].temps_rouler);
         cars[i].out = 0;
         cars[i].temps_rouler = 0;
     }
@@ -91,4 +88,38 @@ void simulate_sess(struct CarTime cars[], int num_cars, int min_time, int max_ti
         sleep(0.2);
     }
     reset_out_status_and_temps_rouler(cars, num_cars);
+}
+
+
+
+void simulate_qualification(struct CarTime cars[], int session_num, char *session_file, int min_time, int max_time, int total_cars) {
+    int num_cars_in_stage = (session_num == 1) ? 20 : (session_num == 2) ? 15 : 10;
+    int eliminated_cars_count = (session_num == 1) ? 5 : (session_num == 2) ? 5 : 0;
+    int session_duration = (session_num == 1) ? 720 : (session_num == 2) ? 600 : 480;
+
+    // Load eliminated cars from classement.csv
+    load_eliminated_cars("fichier_enregistree/classement.csv", cars, total_cars);
+    
+    struct CarTime eligible_cars[num_cars_in_stage];
+    int eligible_index = 0;
+
+    // Collect eligible (non-eliminated) cars for this qualification round
+    for (int i = 0; i < total_cars; i++) {
+        if (!cars[i].out && eligible_index < num_cars_in_stage) {
+            eligible_cars[eligible_index++] = cars[i];
+        }
+    }
+
+    // Simulate the session
+    simulate_sess(eligible_cars, num_cars_in_stage, min_time, max_time, session_duration);
+
+    // Sort the cars in this session based on best lap time
+    qsort(eligible_cars, num_cars_in_stage, sizeof(struct CarTime), compare_cars);
+
+    // Save results for this session in CSV format
+    save_session_results(eligible_cars, num_cars_in_stage, session_file, "a");
+
+    // Save eliminated cars and update their status in the main car array
+
+    save_eliminated_cars(eligible_cars, num_cars_in_stage, eliminated_cars_count, session_num, cars, total_cars);
 }

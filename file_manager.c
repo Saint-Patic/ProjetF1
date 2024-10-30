@@ -34,8 +34,8 @@ int file_exists(const char *filename) {
 }
 
 
-void save_session_results(struct CarTime cars[], int num_cars, const char *filename) {
-    FILE *file = fopen(filename, "w");
+void save_session_results(struct CarTime cars[], int num_cars, const char *filename, const char *mode) {
+    FILE *file = fopen(filename, mode);
     if (!file) {
         perror("Erreur d'ouverture du fichier");
         return;
@@ -152,14 +152,53 @@ void process_session_files(int session_num, char *type_session) {
         
         for (int i = 0; i < session_num; i++) {
             session_files[i] = malloc(50 * sizeof(char));  // Allocation mémoire pour chaque nom de fichier
-            snprintf(session_files[i], 50, "fichier_enregistree/session_%d.csv", i + 1);
+            snprintf(session_files[i], 50, "fichier_enregistree/%s_%d.csv", type_session, i + 1);
+            printf("%s\n", session_files[i]);
         }
 
-        const char *output_file = "fichier_enregistree/resume_%s.csv", type_session;
+        char output_file[50];
+        sprintf(output_file, "fichier_enregistree/resume_%s.csv", type_session);
+
         combine_session_results(session_files, session_num, output_file);
 
         for (int i = 0; i < session_num; i++) {
             free(session_files[i]);  // Libérer la mémoire après utilisation
         }
     }
+}
+
+
+void save_eliminated_cars(struct CarTime eligible_cars[], int num_cars_in_stage, int eliminated_cars_count, int session_num, struct CarTime cars[], int total_cars) {
+    FILE *ranking_file = fopen("fichier_enregistree/classement.csv", "a");
+    if (ranking_file == NULL) {
+        printf("Erreur lors de l'ouverture de classement.csv\n");
+        return;
+    }
+
+    // If the file is empty, write the header
+    if (ftell(ranking_file) == 0) {
+        fprintf(ranking_file, "Car Number,Session Number,Position,Best Lap Time\n");
+    }
+
+    // If it's the third qualifying session, we do not eliminate cars but record their positions
+    if (session_num == 3) {
+        for (int i = 0; i < num_cars_in_stage; i++) {
+            fprintf(ranking_file, "%d,%d,%d,%.2f\n", eligible_cars[i].car_number, session_num, i + 1, eligible_cars[i].best_lap_time);
+        }
+    } else {
+        // For Q1 and Q2, save eliminated cars
+        for (int i = num_cars_in_stage - eliminated_cars_count; i < num_cars_in_stage; i++) {
+            fprintf(ranking_file, "%d,%d,%d,%.2f\n", eligible_cars[i].car_number, session_num, num_cars_in_stage - eliminated_cars_count + (i - (num_cars_in_stage - eliminated_cars_count) + 1), eligible_cars[i].best_lap_time);
+            
+            // Mark these cars as eliminated in the original cars array
+            for (int j = 0; j < total_cars; j++) {
+                if (cars[j].car_number == eligible_cars[i].car_number) {
+                    cars[j].out = 1; // Mark car as eliminated
+                    break;
+                }
+            }
+        }
+    }
+
+    fclose(ranking_file);
 }
