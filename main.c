@@ -14,6 +14,7 @@
 
 
 
+
 int main(int argc, char *argv[]) {
     // check s'il y a des paramètres 
     if (argc != 2) {
@@ -48,6 +49,13 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
+
+    // nombre de session autorisée est atteinte ? simule rien : simule
+    if (session_num > MAX_SESSION) {
+        printf("Il ne peut y avoir plus de %d sessions. Exécution annulée.\n", MAX_SESSION);
+        return 0;
+    }
+
     srand(time(NULL));
     int session_duration = 3600;
     struct CarTime cars[NUM_CARS];
@@ -73,6 +81,10 @@ int main(int argc, char *argv[]) {
     simulate_practice(cars, NUM_CARS, MIN_TIME, MAX_TIME, session_duration);
     save_session_results(cars, NUM_CARS, session_file);
     printf("Les résultats de la session ont été enregistrés dans %s\n", session_file);
+
+
+    // int_session == MAX_SESSION ? trouver meilleurs temps et secteurs des MAX_SESSION sessions
+    process_session_files(session_num);
 
     return 0;
 }

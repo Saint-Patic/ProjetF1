@@ -9,6 +9,7 @@
 #include "file_manager.h"
 
 
+
 int file_exists(const char *filename) {
     struct stat buffer;
     return (stat(filename, &buffer) == 0);
@@ -124,4 +125,23 @@ void combine_session_results(char *session_files[], int num_sessions, const char
 
     fclose(output);
     printf("Les meilleurs temps ont été enregistrés dans %s\n", output_file);
+}
+
+
+void process_session_files(int session_num) {
+    if (session_num == MAX_SESSION) {
+        char *session_files[session_num];
+        
+        for (int i = 0; i < session_num; i++) {
+            session_files[i] = malloc(50 * sizeof(char));  // Allocation mémoire pour chaque nom de fichier
+            snprintf(session_files[i], 50, "fichier_enregistree/session_%d.csv", i + 1);
+        }
+
+        const char *output_file = "fichier_enregistree/resume_session.csv";
+        combine_session_results(session_files, session_num, output_file);
+
+        for (int i = 0; i < session_num; i++) {
+            free(session_files[i]);  // Libérer la mémoire après utilisation
+        }
+    }
 }
