@@ -15,7 +15,9 @@ char *extract_type_session(char *filename) {
     else type_start++;                          // Avancer d'un caractère pour passer le '/'
 
     char *underscore_pos = strchr(type_start, '_'); // Trouver le premier '_'
-    if (!underscore_pos) return NULL;           // Retourner NULL si le format est incorrect
+    if (!underscore_pos) {
+        return NULL; 
+    }          // Retourner NULL si le format est incorrect
 
     size_t type_length = underscore_pos - type_start;
     char *session_type = malloc(type_length + 1);
@@ -152,12 +154,12 @@ void process_session_files(int session_num, char *type_session) {
         
         for (int i = 0; i < session_num; i++) {
             session_files[i] = malloc(50 * sizeof(char));  // Allocation mémoire pour chaque nom de fichier
-            snprintf(session_files[i], 50, "fichier_enregistree/%s_%d.csv", type_session, i + 1);
+            snprintf(session_files[i], 50, "fichiers/%s_%d.csv", type_session, i + 1);
             printf("%s\n", session_files[i]);
         }
 
         char output_file[50];
-        sprintf(output_file, "fichier_enregistree/resume_%s.csv", type_session);
+        sprintf(output_file, "fichiers/resume_%s.csv", type_session);
 
         combine_session_results(session_files, session_num, output_file);
 
@@ -169,7 +171,7 @@ void process_session_files(int session_num, char *type_session) {
 
 
 void save_eliminated_cars(struct CarTime eligible_cars[], int num_cars_in_stage, int eliminated_cars_count, int session_num, struct CarTime cars[], int total_cars) {
-    FILE *ranking_file = fopen("fichier_enregistree/classement.csv", "a");
+    FILE *ranking_file = fopen("fichiers/classement.csv", "a");
     if (ranking_file == NULL) {
         printf("Erreur lors de l'ouverture de classement.csv\n");
         return;

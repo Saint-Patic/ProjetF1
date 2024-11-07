@@ -98,7 +98,7 @@ void simulate_qualification(struct CarTime cars[], int session_num, char *sessio
     int session_duration = (session_num == 1) ? 720 : (session_num == 2) ? 600 : 480;
 
     // Load eliminated cars from classement.csv
-    load_eliminated_cars("fichier_enregistree/classement.csv", cars, total_cars);
+    load_eliminated_cars("fichiers/classement.csv", cars, total_cars);
     
     struct CarTime eligible_cars[num_cars_in_stage];
     int eligible_index = 0;

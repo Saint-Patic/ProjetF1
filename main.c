@@ -34,9 +34,9 @@ int main(int argc, char *argv[]) {
     char *session_type = extract_type_session(session_file);
     if (session_type == NULL) {
         printf("Erreur: Impossible de déterminer le type de session.\n");
+        printf("type attendu: essai - qualif - course \n");
         return 1;
     }
-    printf("Type de session : %s\n", session_type); 
 
     // check si le chemin du fichier est correct
     if (sscanf(session_file, "fichier_enregistree/%[a-zA-Z]_%d.csv", session_type, &session_num) != 2) {
@@ -45,6 +45,7 @@ int main(int argc, char *argv[]) {
     }
 
 
+    session_num = strcmp(session_type, "course") == 0 ? -1 : session_num;
     // Si le type est "qualif", on vérifie que les essais ont déjà un résumé
     if (strcmp(session_type, "qualif") == 0 && session_num == 1) {
         if (!file_exists("fichier_enregistree/resume_essai.csv")) {
@@ -78,6 +79,15 @@ int main(int argc, char *argv[]) {
     }
 
 
+    // qualif terminée ? simule Course : rien
+        if (strcmp(session_type, "course") == 0 && session_num == 1) {
+            if (!file_exists("fichier_enregistree/resume_qualif.csv")) {
+                printf("Erreur: La simulation de course requiert un résumé des qualif (resume_qualif.csv).\n");
+                return 0;
+            }
+    }
+
+
     // ######################## initialision des voitures ########################
 
     srand(time(NULL));
@@ -103,12 +113,14 @@ int main(int argc, char *argv[]) {
     printf("===== Début de la session: %s =====\n\n", session_file);
 
 
-    if (strcmp(session_type, "qualif") == 0) {
+    if (strcmp(session_type,"qualif") == 0) {
         simulate_qualification(cars, session_num, session_file, MIN_TIME, MAX_TIME, NUM_CARS);
-    } else if (strcmp(session_type, "essai") == 0) {
+    } else if (strcmp(session_type,"essai") == 0) {
         simulate_sess(cars, NUM_CARS, MIN_TIME, MAX_TIME, session_duration);
         save_session_results(cars, NUM_CARS, session_file, "w");
         printf("Les résultats de la session ont été enregistrés dans %s\n", session_file);
+    } else if (strcmp(session_type,"course") == 0) {
+        printf("simulation de la course");
     }
 
     // int_session == MAX_SESSION ? trouver meilleurs temps et secteurs des MAX_SESSION sessions
