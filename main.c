@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
     // check s'il y a des paramètres 
     if (argc != 2) {
         printf("Usage: %s <session_filename>\n", argv[0]);
-        printf("Format paramètre attendu:  fichier_enregistree/<type>_<numéro>.csv\n");
+        printf("Format paramètre attendu:  fichiers/<type>_<numéro>.csv\n");
         return 1;
     }
 
@@ -39,8 +39,8 @@ int main(int argc, char *argv[]) {
     }
 
     // check si le chemin du fichier est correct
-    if (sscanf(session_file, "fichier_enregistree/%[a-zA-Z]_%d.csv", session_type, &session_num) != 2) {
-        printf("Nom de fichier invalide. Utilisez le format fichier_enregistree/<type>_<numéro>.csv\n");
+    if (sscanf(session_file, "fichiers/%[a-zA-Z]_%d.csv", session_type, &session_num) != 2) {
+        printf("Nom de fichier invalide. Utilisez le format fichiers/<type>_<numéro>.csv\n");
         return 1;
     }
 
@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
     session_num = strcmp(session_type, "course") == 0 ? -1 : session_num;
     // Si le type est "qualif", on vérifie que les essais ont déjà un résumé
     if (strcmp(session_type, "qualif") == 0 && session_num == 1) {
-        if (!file_exists("fichier_enregistree/resume_essai.csv")) {
+        if (!file_exists("fichiers/resume_essai.csv")) {
             printf("Erreur: La simulation de qualification requiert un résumé des essais (resume_essai.csv).\n");
             return 0;
         }
@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
 
     // crée la chaine prev_session_file avec le numéro précédent de celui mis en paramètre
     char prev_session_file[50];
-    sprintf(prev_session_file, "fichier_enregistree/%s_%d.csv", session_type, session_num - 1);
+    sprintf(prev_session_file, "fichiers/%s_%d.csv", session_type, session_num - 1);
 
     // fichier exite ? ne simule rien : simule la session
     if (file_exists(session_file)) {
@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
 
     // qualif terminée ? simule Course : rien
         if (strcmp(session_type, "course") == 0 && session_num == 1) {
-            if (!file_exists("fichier_enregistree/resume_qualif.csv")) {
+            if (!file_exists("fichiers/resume_qualif.csv")) {
                 printf("Erreur: La simulation de course requiert un résumé des qualif (resume_qualif.csv).\n");
                 return 0;
             }
