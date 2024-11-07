@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
     }
 
 
-    session_num = strcmp(session_type, "course") == 0 ? -1 : session_num;
+    //session_num = strcmp(session_type, "course") == 0 ? -1 : session_num;
     // Si le type est "qualif", on vérifie que les essais ont déjà un résumé
     if (strcmp(session_type, "qualif") == 0 && session_num == 1) {
         if (!file_exists("fichiers/resume_essai.csv")) {
@@ -61,6 +61,11 @@ int main(int argc, char *argv[]) {
     // fichier exite ? ne simule rien : simule la session
     if (file_exists(session_file)) {
         printf("Le fichier %s existe déjà. La session a déjà été exécutée.\n", session_file);
+        return 0;
+    }
+
+    if (session_num < 1) {
+        printf("Veuillez indiquer un numéro de session positif.\n");
         return 0;
     }
 
