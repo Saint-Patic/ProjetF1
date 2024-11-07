@@ -1,0 +1,8 @@
+1) fonction qui créer les dossiers x_nomVille
+1.1) lire fichier csv
+
+2) verif si wk n-1 est fini si essai_1.csv est exécuté
+
+3) simuler course
+
+4) gérer wk de sprint
