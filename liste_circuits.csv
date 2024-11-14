@@ -1,4 +1,4 @@
-COURSE,Ville,DATE,Pays,Nom du circuit,taille (km),Race,Circuit,Date,Sprint
+Course,Ville,DATE,Pays,Nom du circuit,taille (km),Race,Circuit,Date,Sprint
 1,Sakhir,5-mars,Bahrain,Bahrain International Circuit,5.412,Bahrain Grand Prix,Bahrain International Circuit,Mar 3-5,false
 2,Djeddah,19-mars,Arabie Saoudite,Jeddah Corniche Circuit,6.174,Saudi Arabian Grand Prix,Jeddah Corniche Circuit,Mar 17-19,false
 3,Melbourne,2-avr.,Australie,Albert Park Circuit,5.278,Australian Grand Prix,Albert Park,Mar 31-Apr 2,false
