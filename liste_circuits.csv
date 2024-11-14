@@ -1,23 +1,23 @@
-COURSE,Ville,DATE,Pays,Nom du circuit,taille (km),Race,Circuit,Date
-1,Sakhir,5-mars,Bahrain,Bahrain International Circuit,5.412,Bahrain Grand Prix,Bahrain International Circuit,Mar 3-5
-2,Djeddah,19-mars,Arabie Saoudite,Jeddah Corniche Circuit,6.174,Saudi Arabian Grand Prix,Jeddah Corniche Circuit,Mar 17-19
-3,Melbourne,2-avr.,Australie,Albert Park Circuit,5.278,Australian Grand Prix,Albert Park,Mar 31-Apr 2
-4,Bakou,30-avr.,Azerbaijan,Baku City Circuit,6.003,Azerbaijan Grand Prix,Baku City Circuit,Apr 28-30
-5,Miami,7-mai,Etats-Unis,Miami International Autodrome,5.41,Miami Grand Prix,Miami International Autodrome,May 5-7
-6,Monte-Carlo,28-mai,Monaco,Circuit de Monaco,3.337,Monaco Grand Prix,Monaco,May 26-28
-7,Barcelone,4-juin,Espagne,Circuit de Barcelona-Catalunya ,4.675,Spanish Grand Prix,Circuit de Catalunya,Jun 2-4
-8,Montréal,18-juin,Canada,Circuit Gilles-Villeneuve,4.361,Canadian Grand Prix,Circuit Gilles Villeneuve,Jun 16-18
-9,Spielberg,2-juil.,Autriche,Red Bull Ring,4.318,Austrian Grand Prix,Red Bull Ring,Jun 30-Jul 2
-10,Silverstone,9-juil.,Royaume Uni,Silverstone Circuit,5.891,British Grand Prix,Silverstone,Jul 7-9
-11,Budapest,23-juil.,Hongrie,Hungaroring,4.381,Hungarian Grand Prix,Hungaroring,Jul 21-23
-12,Spa-Francorchamps,30-juil.,Belgique,Circuit de Spa-Francorchamps,7.004,Belgian Grand Prix,Spa-Francorchamps,Jul 28-30
-13,Zandvoort,27-août,Pays-Bas,Circuit Zandvoort,4.259,Dutch Grand Prix,Zandvoort,Aug 25-27
-14,Monza,3-sept.,Italie,Autodromo Nazionale di Monza,5.793,Italian Grand Prix,Monza,Sep 1-3
-15,Marina Bay,17-sept.,Singapour,Marina Bay Street Circuit,5.063,Singapore Grand Prix,Singapore,Sep 15-17
-16,Suzuka,24-sept.,Japon,Suzuka International Racing Course,5.807,Japanese Grand Prix,Suzuka,Sep 22-24
-17,Losail,8-oct.,Qatar,circuit international de Losail ,5.418,Qatar Grand Prix,Losail International Circuit,Oct 6-8
-18,Austin,22-oct.,Etats-Unis,Circuit of the Americas,5.513,United States Grand Prix,Circuit of the Americas,Oct 20-22
-19,Mexico,29-oct.,Mexique,Autódromo Hermanos Rodríguez,4.304,Mexican Grand Prix,Autodromo Hermanos Rodriguez,Oct 27-29
-20,Sao Paulo,5-nov.,Brésil,Autódromo José Carlos Pace,4.309,Brazilian Grand Prix,Interlagos,Nov 3-5
-21,Las Vegas,18-nov.,Etats-Unis,Circuit Silver Las Vegas,6.12,Las Vegas Grand Prix,Las Vegas Street Circuit,Nov 16-18
-22,Yas Marina,26-nov.,Emirats Arabes Unis,Yas Marina Circuit,5.281,Abu Dhabi Grand Prix,Yas Marina,Nov 24-26
+COURSE,Ville,DATE,Pays,Nom du circuit,taille (km),Race,Circuit,Date,Sprint
+1,Sakhir,5-mars,Bahrain,Bahrain International Circuit,5.412,Bahrain Grand Prix,Bahrain International Circuit,Mar 3-5,false
+2,Djeddah,19-mars,Arabie Saoudite,Jeddah Corniche Circuit,6.174,Saudi Arabian Grand Prix,Jeddah Corniche Circuit,Mar 17-19,false
+3,Melbourne,2-avr.,Australie,Albert Park Circuit,5.278,Australian Grand Prix,Albert Park,Mar 31-Apr 2,false
+4,Bakou,30-avr.,Azerbaijan,Baku City Circuit,6.003,Azerbaijan Grand Prix,Baku City Circuit,Apr 28-30,true
+5,Miami,7-mai,Etats-Unis,Miami International Autodrome,5.41,Miami Grand Prix,Miami International Autodrome,May 5-7,false
+6,Monte-Carlo,28-mai,Monaco,Circuit de Monaco,3.337,Monaco Grand Prix,Monaco,May 26-28,false
+7,Barcelone,4-juin,Espagne,Circuit de Barcelona-Catalunya,4.675,Spanish Grand Prix,Circuit de Catalunya,Jun 2-4,false
+8,Montréal,18-juin,Canada,Circuit Gilles-Villeneuve,4.361,Canadian Grand Prix,Circuit Gilles Villeneuve,Jun 16-18,false
+9,Spielberg,2-juil.,Autriche,Red Bull Ring,4.318,Austrian Grand Prix,Red Bull Ring,Jun 30-Jul 2,true
+10,Silverstone,9-juil.,Royaume Uni,Silverstone Circuit,5.891,British Grand Prix,Silverstone,Jul 7-9,false
+11,Budapest,23-juil.,Hongrie,Hungaroring,4.381,Hungarian Grand Prix,Hungaroring,Jul 21-23,false
+12,Spa-Francorchamps,30-juil.,Belgique,Circuit de Spa-Francorchamps,7.004,Belgian Grand Prix,Spa-Francorchamps,Jul 28-30,true
+13,Zandvoort,27-août,Pays-Bas,Circuit Zandvoort,4.259,Dutch Grand Prix,Zandvoort,Aug 25-27,false
+14,Monza,3-sept.,Italie,Autodromo Nazionale di Monza,5.793,Italian Grand Prix,Monza,Sep 1-3,false
+15,Marina Bay,17-sept.,Singapour,Marina Bay Street Circuit,5.063,Singapore Grand Prix,Singapore,Sep 15-17,false
+16,Suzuka,24-sept.,Japon,Suzuka International Racing Course,5.807,Japanese Grand Prix,Suzuka,Sep 22-24,false
+17,Losail,8-oct.,Qatar,circuit international de Losail ,5.418,Qatar Grand Prix,Losail International Circuit,Oct 6-8,true
+18,Austin,22-oct.,Etats-Unis,Circuit of the Americas,5.513,United States Grand Prix,Circuit of the Americas,Oct 20-22,true
+19,Mexico,29-oct.,Mexique,Autódromo Hermanos Rodríguez,4.304,Mexican Grand Prix,Autodromo Hermanos Rodriguez,Oct 27-29,false
+20,Sao Paulo,5-nov.,Brésil,Autódromo José Carlos Pace,4.309,Brazilian Grand Prix,Interlagos,Nov 3-5,true
+21,Las Vegas,18-nov.,Etats-Unis,Circuit Silver Las Vegas,6.12,Las Vegas Grand Prix,Las Vegas Street Circuit,Nov 16-18,false
+22,Yas Marina,26-nov.,Emirats Arabes Unis,Yas Marina Circuit,5.281,Abu Dhabi Grand Prix,Yas Marina,Nov 24-26,false

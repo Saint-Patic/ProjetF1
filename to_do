@@ -1,5 +1,5 @@
 1) fonction qui créer les dossiers x_nomVille
-1.1) mettre à jour liste_circuits pour les wk de sprint 
+1.1) mettre à jour liste_circuits pour les wk de sprint (fait)
 1.2) lire fichier csv
 
 2) wk n-1 fini à l'excé d'essai_1.csv ? simuler nouveau wk : erreur

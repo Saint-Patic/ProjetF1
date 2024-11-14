@@ -125,7 +125,8 @@ int main(int argc, char *argv[]) {
         save_session_results(cars, NUM_CARS, session_file, "w");
         printf("Les résultats de la session ont été enregistrés dans %s\n", session_file);
     } else if (strcmp(session_type,"course") == 0) {
-        printf("simulation de la course");
+        printf("simulation de la course\n");
+        test_recuperer_colonne_csv();
     }
 
     // int_session == MAX_SESSION ? trouver meilleurs temps et secteurs des MAX_SESSION sessions

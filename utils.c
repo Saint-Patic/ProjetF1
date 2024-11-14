@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <ctype.h>
 #include "car.h"
 #include "utils.h"
 #include "display.h"
@@ -48,4 +49,23 @@ void load_eliminated_cars(char *filename, struct CarTime cars[], int total_cars)
         }
     }
     fclose(file);
+}
+
+char *trim(char *str) {
+    char *end;
+
+    // Supprimer les espaces en début
+    while (isspace((unsigned char)*str)) str++;
+
+    // Si la chaîne est vide
+    if (*str == 0) return str;
+
+    // Supprimer les espaces en fin
+    end = str + strlen(str) - 1;
+    while (end > str && isspace((unsigned char)*end)) end--;
+
+    // Ajouter le terminateur de chaîne
+    *(end + 1) = '\0';
+
+    return str;
 }

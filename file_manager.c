@@ -7,6 +7,7 @@
 #include "car.h"
 #include "display.h"
 #include "file_manager.h"
+#include "utils.h"
 
 
 char *extract_type_session(char *filename) {
@@ -203,4 +204,100 @@ void save_eliminated_cars(struct CarTime eligible_cars[], int num_cars_in_stage,
     }
 
     fclose(ranking_file);
+}
+
+
+
+char **recuperer_colonne_csv(const char *nom_fichier, const char *nom_colonne, int numero_course, int *nb_resultats) {
+    FILE *fichier = fopen(nom_fichier, "r");
+    if (fichier == NULL) {
+        printf("Erreur lors de l'ouverture du fichier %s.\n", nom_fichier);
+        return NULL;
+    }
+
+    char ligne[1024];
+    char *colonnes[50];
+    int indice_colonne = -1;
+    *nb_resultats = 0; // Initialiser le compteur de résultats
+
+    // Lecture de la première ligne pour trouver l'index de la colonne
+    if (fgets(ligne, sizeof(ligne), fichier) != NULL) {
+        int i = 0;
+        colonnes[i] = strtok(ligne, ",");
+        while (colonnes[i] != NULL) {
+            if (strcmp(trim(colonnes[i]), nom_colonne) == 0) {
+                indice_colonne = i;
+            }
+            colonnes[++i] = strtok(NULL, ",");
+        }
+    }
+
+    if (indice_colonne == -1) {
+        printf("Colonne \"%s\" introuvable dans le fichier.\n", nom_colonne);
+        fclose(fichier);
+        return NULL;
+    }
+
+    // Allocation initiale pour le tableau de résultats
+    char **resultats = malloc(100 * sizeof(char *));
+    if (resultats == NULL) {
+        printf("Erreur d'allocation mémoire.\n");
+        fclose(fichier);
+        return NULL;
+    }
+
+    // Lecture des lignes suivantes pour récupérer les valeurs de la colonne
+    while (fgets(ligne, sizeof(ligne), fichier) != NULL) {
+        int i = 0;
+        char *valeur = NULL;
+        colonnes[i] = strtok(ligne, ",");
+
+        int numero_courant = atoi(colonnes[0]); // Premier champ est le numéro de course
+        if (numero_course != -1 && numero_courant != numero_course) {
+            continue;
+        }
+
+        while (colonnes[i] != NULL) {
+            if (i == indice_colonne) {
+                valeur = trim(colonnes[i]);
+            }
+            colonnes[++i] = strtok(NULL, ",");
+        }
+
+        if (valeur != NULL) {
+            resultats[*nb_resultats] = strdup(valeur); // Copier la valeur trouvée
+            if (resultats[*nb_resultats] == NULL) {
+                printf("Erreur d'allocation mémoire pour le résultat.\n");
+                break;
+            }
+            (*nb_resultats)++;
+
+            // Agrandir le tableau si nécessaire
+            if (*nb_resultats % 100 == 0) {
+                resultats = realloc(resultats, (*nb_resultats + 100) * sizeof(char *));
+                if (resultats == NULL) {
+                    printf("Erreur de réallocation mémoire.\n");
+                    break;
+                }
+            }
+        }
+    }
+
+    fclose(fichier);
+    return resultats;
+}
+
+// exemple d'utilisation de recuperer_colonne_csv
+int test_recuperer_colonne_csv() {
+    int nb_resultats;
+    char **resultats = recuperer_colonne_csv("liste_circuits.csv", "Sprint", -1, &nb_resultats);
+
+    if (resultats != NULL) {
+        for (int i = 0; resultats[i] != NULL; i++) {
+            printf("Résultat %d: %s\n", i + 1, resultats[i]);
+            free(resultats[i]);
+        }
+        free(resultats);
+    }
+    return 0;
 }

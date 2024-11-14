@@ -11,5 +11,7 @@ int file_exists(const char *filename);
 void process_session_files(int session_num, char *type_session);
 char *extract_type_session(char *filename);
 void save_eliminated_cars(struct CarTime eligible_cars[], int num_cars_in_stage, int eliminated_cars_count, int session_num, struct CarTime cars[], int total_cars);
+char **recuperer_colonne_csv(const char *nom_fichier, const char *nom_colonne, int numero_course, int *nb_resultats);
+int test_recuperer_colonne_csv();
 
 #endif // FILE_MANAGER_H
