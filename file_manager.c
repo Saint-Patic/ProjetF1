@@ -226,17 +226,15 @@ char **recuperer_colonne_csv(const char *nom_fichier, const char *nom_colonne, i
         int i = 0;
         colonnes[i] = strtok(ligne, ",");
         while (colonnes[i] != NULL) {
-            // Afficher les colonnes lues avec des délimiteurs pour voir s'il y a des espaces
-            printf("Colonne lue: \"%s\" (Index: %d)\n", colonnes[i], i);
-
             // Comparer en supprimant les espaces de début et de fin
             if (strcmp(trim(colonnes[i]), nom_colonne) == 0) {
                 indice_colonne = i;
-                printf("Colonne \"%s\" trouvée à l'index %d\n", nom_colonne, indice_colonne);
+                // Supprimé: printf("Colonne \"%s\" trouvée à l'index %d\n", nom_colonne, indice_colonne);
             }
             colonnes[++i] = strtok(NULL, ",");
         }
     }
+
 
     // Si la colonne n'est toujours pas trouvée, afficher un message d'erreur détaillé
     if (indice_colonne == -1) {
@@ -261,11 +259,8 @@ char **recuperer_colonne_csv(const char *nom_fichier, const char *nom_colonne, i
         colonnes[i] = strtok(ligne, ",");
 
         while (colonnes[i] != NULL) {
-            // Afficher la valeur de chaque champ avec des délimiteurs pour détecter les problèmes d'espacement
-            printf("Champ lu: \"%s\" (Index: %d)\n", colonnes[i], i);
             if (i == indice_colonne) {
                 valeur = trim(colonnes[i]);
-                printf("Valeur dans la colonne \"%s\": \n", nom_colonne);
             }
             colonnes[++i] = strtok(NULL, ",");
         }
@@ -275,6 +270,7 @@ char **recuperer_colonne_csv(const char *nom_fichier, const char *nom_colonne, i
             (*nb_resultats)++;
         }
     }
+
 
 
     fclose(fichier);
@@ -308,7 +304,8 @@ void create_directory_if_not_exists(const char *path) {
 }
 
 // Fonction pour créer un dossier basé sur la première valeur récupérée d'une colonne CSV
-void create_directory_from_csv_value(const char *csv_file, const char *course_column, const char *city_column) {
+// Fonction pour créer un dossier pour chaque valeur de la colonne "Ville"
+void create_directories_from_csv_values(const char *csv_file, const char *course_column, const char *city_column) {
     int nb_resultats_course, nb_resultats_city;
     
     // Récupérer les valeurs de la colonne "Course"
@@ -317,12 +314,15 @@ void create_directory_from_csv_value(const char *csv_file, const char *course_co
     char **city_values = recuperer_colonne_csv(csv_file, city_column, -1, &nb_resultats_city);
 
     if (course_values != NULL && city_values != NULL && nb_resultats_course > 0 && nb_resultats_city > 0) {
-        // Construire le chemin complet du dossier avec "fichiers/NuméroCourse_Ville"
-        char full_path[256]; // Taille ajustable selon le besoin
-        snprintf(full_path, sizeof(full_path), "fichiers/%s_%s", course_values[0], city_values[0]);
+        // Créer un dossier pour chaque ville en utilisant la course correspondante
+        for (int i = 0; i < nb_resultats_course && i < nb_resultats_city; i++) {
+            // Construire le chemin complet du dossier avec "fichiers/NuméroCourse_Ville"
+            char full_path[256]; // Taille ajustable selon le besoin
+            snprintf(full_path, sizeof(full_path), "fichiers/%s_%s", course_values[i], city_values[i]);
 
-        // Créer le dossier avec le chemin complet
-        create_directory_if_not_exists(full_path);
+            // Créer le dossier avec le chemin complet
+            create_directory_if_not_exists(full_path);
+        }
 
         // Libérer la mémoire
         for (int i = 0; i < nb_resultats_course; i++) {
@@ -337,3 +337,4 @@ void create_directory_from_csv_value(const char *csv_file, const char *course_co
         printf("Aucune valeur trouvée dans les colonnes %s et %s.\n", course_column, city_column);
     }
 }
+
