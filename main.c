@@ -127,7 +127,8 @@ int main(int argc, char *argv[]) {
     } else if (strcmp(session_type,"course") == 0) {
         printf("simulation de la course\n");
         //test_recuperer_colonne_csv();
-        create_directories_from_csv_values("liste_circuits.csv", "Course", "Ville");
+        //create_directories_from_csv_values("liste_circuits.csv", "Course", "Ville");
+        supprimer_dossiers_dans_repertoire("fichiers");
     }
 
     // int_session == MAX_SESSION ? trouver meilleurs temps et secteurs des MAX_SESSION sessions

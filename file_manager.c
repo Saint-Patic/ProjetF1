@@ -9,6 +9,7 @@
 #include "file_manager.h"
 #include "utils.h"
 #include <sys/types.h>
+#include <dirent.h>
 
 
 char *extract_type_session(char *filename) {
@@ -303,7 +304,6 @@ void create_directory_if_not_exists(const char *path) {
     }
 }
 
-// Fonction pour créer un dossier basé sur la première valeur récupérée d'une colonne CSV
 // Fonction pour créer un dossier pour chaque valeur de la colonne "Ville"
 void create_directories_from_csv_values(const char *csv_file, const char *course_column, const char *city_column) {
     int nb_resultats_course, nb_resultats_city;
@@ -338,3 +338,36 @@ void create_directories_from_csv_values(const char *csv_file, const char *course
     }
 }
 
+// Fonction pour supprimer un dossier et tout son contenu
+void supprimer_dossiers_dans_repertoire(const char *path) {
+    struct dirent *entry;
+    struct stat statbuf;
+    char full_path[512]; // Taille ajustable selon le besoin
+
+    DIR *dir = opendir(path);
+    if (dir == NULL) {
+        perror("Erreur lors de l'ouverture du répertoire");
+        return;
+    }
+
+    while ((entry = readdir(dir)) != NULL) {
+        // Ignorer les entrées spéciales "." et ".."
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+
+        snprintf(full_path, sizeof(full_path), "%s/%s", path, entry->d_name);
+        if (stat(full_path, &statbuf) == 0 && S_ISDIR(statbuf.st_mode)) {
+            // Supprimer le contenu du dossier récursivement
+            supprimer_dossiers_dans_repertoire(full_path);
+            // Supprimer le dossier vide après suppression du contenu
+            if (rmdir(full_path) == 0) {
+                printf("Dossier %s supprimé avec succès.\n", full_path);
+            } else {
+                perror("Erreur lors de la suppression du dossier");
+            }
+        }
+    }
+
+    closedir(dir);
+}
