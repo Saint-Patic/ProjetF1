@@ -4,12 +4,12 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <string.h>
+#include <sys/types.h>
+#include <dirent.h>
 #include "car.h"
 #include "display.h"
 #include "file_manager.h"
 #include "utils.h"
-#include <sys/types.h>
-#include <dirent.h>
 
 
 char *extract_type_session(char *filename) {
@@ -23,13 +23,13 @@ char *extract_type_session(char *filename) {
     }          // Retourner NULL si le format est incorrect
 
     size_t type_length = underscore_pos - type_start;
-    char *session_type = malloc(type_length + 1);
-    if (!session_type) return NULL;
+    char *type_session = malloc(type_length + 1);
+    if (!type_session) return NULL;
 
-    strncpy(session_type, type_start, type_length);
-    session_type[type_length] = '\0';           // Terminer la chaîne
+    strncpy(type_session, type_start, type_length);
+    type_session[type_length] = '\0';           // Terminer la chaîne
 
-    return session_type;
+    return type_session;
 }
 
 
@@ -77,28 +77,6 @@ void save_session_results(struct CarTime cars[], int num_cars, const char *filen
     fprintf(file, "Best Overall Lap,%.2f\n", best_overall_lap_time);
 
     fclose(file);
-}
-
-void load_session_results(struct CarTime cars[], int *num_cars, const char *filename) {
-    FILE *file = fopen(filename, "r");
-    if (!file) {
-        perror("Erreur d'ouverture du fichier");
-        return;
-    }
-
-    int i = 0;
-    while (fscanf(file, "Car #%d: Best Lap: %f s, S1: %f s, S2: %f s, S3: %f s\n",
-                  &cars[i].car_number,
-                  &cars[i].best_lap_time,
-                  &cars[i].best_sector_times[0],
-                  &cars[i].best_sector_times[1],
-                  &cars[i].best_sector_times[2]) == 5) {
-        i++;
-    }
-    *num_cars = i;
-
-    fclose(file);
-    printf("Les résultats de la session ont été chargés depuis %s\n", filename);
 }
 
 void combine_session_results(char *session_files[], int num_sessions, const char *output_file) {
@@ -150,55 +128,67 @@ void combine_session_results(char *session_files[], int num_sessions, const char
     printf("Les meilleurs temps ont été enregistrés dans %s\n", output_file);
 }
 
-
-void process_session_files(int session_num, char *type_session) {
-    if (session_num == MAX_SESSION) {
+void process_session_files(int session_num, char *ville, char *type_session) {
+    if ((strcmp(type_session, "essai") == 0 && session_num > MAX_SESSION_ESSAI) ||
+        (strcmp(type_session, "qualif") == 0 && session_num > MAX_SESSION_QUALIF) ||
+        (strcmp(type_session, "course") == 0 && session_num > MAX_SESSION_COURSE)) {
         char *session_files[session_num];
-        
+
+        // Allocation et création des chemins pour chaque fichier de session
         for (int i = 0; i < session_num; i++) {
-            session_files[i] = malloc(50 * sizeof(char));  // Allocation mémoire pour chaque nom de fichier
-            snprintf(session_files[i], 50, "fichiers/%s_%d.csv", type_session, i + 1);
+            session_files[i] = malloc(100 * sizeof(char));  // Allocation mémoire pour chaque nom de fichier
+            snprintf(session_files[i], 100, "fichiers/%s/%s_%d.csv", ville, type_session, i + 1);
             printf("%s\n", session_files[i]);
         }
 
-        char output_file[50];
-        sprintf(output_file, "fichiers/resume_%s.csv", type_session);
+        char output_file[100];
+        snprintf(output_file, 100, "fichiers/%s/resume_%s.csv", ville, type_session);
 
+        // Appel à la fonction pour combiner les résultats des sessions
         combine_session_results(session_files, session_num, output_file);
 
+        // Libération de la mémoire allouée
         for (int i = 0; i < session_num; i++) {
-            free(session_files[i]);  // Libérer la mémoire après utilisation
+            free(session_files[i]);
         }
     }
 }
 
 
-void save_eliminated_cars(struct CarTime eligible_cars[], int num_cars_in_stage, int eliminated_cars_count, int session_num, struct CarTime cars[], int total_cars) {
-    FILE *ranking_file = fopen("fichiers/classement.csv", "a");
+
+void save_eliminated_cars(struct CarTime eligible_cars[], int num_cars_in_stage, int eliminated_cars_count, int session_num, struct CarTime cars[], int total_cars, const char *ville) {
+    char ranking_file_path[100];
+    snprintf(ranking_file_path, 100, "fichiers/%s/classement.csv", ville);
+
+    FILE *ranking_file = fopen(ranking_file_path, "a");
     if (ranking_file == NULL) {
-        printf("Erreur lors de l'ouverture de classement.csv\n");
+        printf("Erreur lors de l'ouverture de %s\n", ranking_file_path);
         return;
     }
 
-    // If the file is empty, write the header
+    // Si le fichier est vide, écrire l'en-tête
     if (ftell(ranking_file) == 0) {
         fprintf(ranking_file, "Car Number,Session Number,Position,Best Lap Time\n");
     }
 
-    // If it's the third qualifying session, we do not eliminate cars but record their positions
+    // Si c'est la troisième session de qualifications (Q3), enregistrer les positions finales
     if (session_num == 3) {
         for (int i = 0; i < num_cars_in_stage; i++) {
-            fprintf(ranking_file, "%d,%d,%d,%.2f\n", eligible_cars[i].car_number, session_num, i + 1, eligible_cars[i].best_lap_time);
+            fprintf(ranking_file, "%d,%d,%d,%.2f\n", 
+                    eligible_cars[i].car_number, session_num, i + 1, eligible_cars[i].best_lap_time);
         }
     } else {
-        // For Q1 and Q2, save eliminated cars
+        // Pour Q1 et Q2, enregistrer les voitures éliminées
         for (int i = num_cars_in_stage - eliminated_cars_count; i < num_cars_in_stage; i++) {
-            fprintf(ranking_file, "%d,%d,%d,%.2f\n", eligible_cars[i].car_number, session_num, num_cars_in_stage - eliminated_cars_count + (i - (num_cars_in_stage - eliminated_cars_count) + 1), eligible_cars[i].best_lap_time);
-            
-            // Mark these cars as eliminated in the original cars array
+            fprintf(ranking_file, "%d,%d,%d,%.2f\n", 
+                    eligible_cars[i].car_number, session_num, 
+                    num_cars_in_stage - eliminated_cars_count + (i - (num_cars_in_stage - eliminated_cars_count) + 1), 
+                    eligible_cars[i].best_lap_time);
+
+            // Marquer les voitures comme éliminées dans le tableau original
             for (int j = 0; j < total_cars; j++) {
                 if (cars[j].car_number == eligible_cars[i].car_number) {
-                    cars[j].out = 1; // Mark car as eliminated
+                    cars[j].out = 1; // Marquer la voiture comme éliminée
                     break;
                 }
             }
@@ -209,6 +199,34 @@ void save_eliminated_cars(struct CarTime eligible_cars[], int num_cars_in_stage,
 }
 
 
+void load_eliminated_cars(char *filename, struct CarTime cars[], int total_cars) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        printf("Erreur lors de l'ouverture de %s\n", filename);
+        return;
+    }
+    
+    int car_number, session_num, place;
+    float lap_time;
+    char line[100];
+    
+    // Mark all cars as eligible initially
+    for (int i = 0; i < total_cars; i++) {
+        cars[i].out = 0;
+    }
+    
+    // Read each line to mark cars that are already eliminated
+    while (fgets(line, sizeof(line), file)) {
+        sscanf(line, "%d,%d,%d,%f", &car_number, &session_num, &place, &lap_time);
+        for (int i = 0; i < total_cars; i++) {
+            if (cars[i].car_number == car_number && place > 15) { // Cars with place > 15 are eliminated
+                cars[i].out = 1;
+                break;
+            }
+        }
+    }
+    fclose(file);
+}
 
 char **recuperer_colonne_csv(const char *nom_fichier, const char *nom_colonne, int numero_course, int *nb_resultats) {
     FILE *fichier = fopen(nom_fichier, "r");

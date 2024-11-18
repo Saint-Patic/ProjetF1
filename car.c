@@ -92,34 +92,42 @@ void simulate_sess(struct CarTime cars[], int num_cars, int min_time, int max_ti
 
 
 
-void simulate_qualification(struct CarTime cars[], int session_num, char *session_file, int min_time, int max_time, int total_cars) {
+void simulate_qualification(struct CarTime cars[], int session_num, const char *ville, int min_time, int max_time, int total_cars) {
     int num_cars_in_stage = (session_num == 1) ? 20 : (session_num == 2) ? 15 : 10;
     int eliminated_cars_count = (session_num == 1) ? 5 : (session_num == 2) ? 5 : 0;
     int session_duration = (session_num == 1) ? 720 : (session_num == 2) ? 600 : 480;
 
-    // Load eliminated cars from classement.csv
-    load_eliminated_cars("fichiers/classement.csv", cars, total_cars);
-    
+    // Chemin du fichier de classement
+    char classement_file[100];
+    snprintf(classement_file, 100, "fichiers/%s/classement.csv", ville);
+
+    // Charger les voitures éliminées à partir du fichier classement.csv
+    load_eliminated_cars(classement_file, cars, total_cars);
+
     struct CarTime eligible_cars[num_cars_in_stage];
     int eligible_index = 0;
 
-    // Collect eligible (non-eliminated) cars for this qualification round
+    // Rassembler les voitures éligibles pour cette manche
     for (int i = 0; i < total_cars; i++) {
         if (!cars[i].out && eligible_index < num_cars_in_stage) {
             eligible_cars[eligible_index++] = cars[i];
         }
     }
 
-    // Simulate the session
+    // Simuler la session
     simulate_sess(eligible_cars, num_cars_in_stage, min_time, max_time, session_duration);
 
-    // Sort the cars in this session based on best lap time
+    // Trier les voitures en fonction de leur meilleur temps
     qsort(eligible_cars, num_cars_in_stage, sizeof(struct CarTime), compare_cars);
 
-    // Save results for this session in CSV format
+    // Chemin pour enregistrer les résultats de la session
+    char session_file[100];
+    snprintf(session_file, 100, "fichiers/%s/qualif_%d.csv", ville, session_num);
+
+    // Enregistrer les résultats de la session dans un fichier CSV
     save_session_results(eligible_cars, num_cars_in_stage, session_file, "a");
 
-    // Save eliminated cars and update their status in the main car array
-
-    save_eliminated_cars(eligible_cars, num_cars_in_stage, eliminated_cars_count, session_num, cars, total_cars);
+    // Enregistrer les voitures éliminées et mettre à jour leur statut dans le tableau principal
+    save_eliminated_cars(eligible_cars, num_cars_in_stage, eliminated_cars_count, session_num, cars, total_cars, ville);
 }
+

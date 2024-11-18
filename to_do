@@ -1,9 +1,10 @@
 1) fonction qui créer les dossiers x_nomVille (fait)
 1.1) mettre à jour liste_circuits pour les wk de sprint (fait)
 1.2) lire fichier csv (fait)
-1.3) fonction qui supprime les dossiers à la fin du championnat (semi fait)
+1.3) fonction qui supprime les dossiers à la fin du championnat (fait)
 
-2) wk n-1 fini à l'excé d'essai_1.csv ? simuler nouveau wk : erreur
+2) adaptation du code au nouveau chemin (fait)
+2.1) wk n-1 fini à l'excé d'essai_1.csv ? simuler nouveau wk : erreur
 
 3) simuler course
 

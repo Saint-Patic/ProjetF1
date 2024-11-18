@@ -25,7 +25,7 @@ void display_overall_best_times(struct CarTime cars[], int num_cars);
 int compare_cars(const void *a, const void *b);
 void reset_out_status_and_temps_rouler(struct CarTime cars[], int num_cars);
 void simulate_pit_stop(struct CarTime *car, int min_time, int max_time);
-void simulate_qualification(struct CarTime cars[], int session_num, char *session_file, int min_time, int max_time, int total_cars);
+void simulate_qualification(struct CarTime cars[], int session_num, const char *ville, int min_time, int max_time, int total_cars);
 
 
 #endif // CAR_H

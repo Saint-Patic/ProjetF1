@@ -19,46 +19,70 @@ int main(int argc, char *argv[]) {
 
     // ######################## Phase de check ########################
 
-
-    // check s'il y a des paramètres 
+    // Vérifie s'il y a des paramètres
     if (argc != 2) {
         printf("Usage: %s <session_filename>\n", argv[0]);
-        printf("Format paramètre attendu:  fichiers/<type>_<numéro>.csv\n");
+        printf("Format paramètre attendu: fichiers/<x_ville>/<type>_<numéro>.csv\n");
         return 1;
     }
 
     char *session_file = argv[1];
     int session_num;
+    char session_type[20];
+    char ville[50];
 
-
-    char *session_type = extract_type_session(session_file);
-    if (session_type == NULL) {
-        printf("Erreur: Impossible de déterminer le type de session.\n");
-        printf("type attendu: essai - qualif - course \n");
+    // Vérifie si le chemin du fichier est correct
+    if (sscanf(session_file, "fichiers/%[^/]/%[a-zA-Z]_%d.csv", ville, session_type, &session_num) != 3) {
+        printf("Nom de fichier invalide. Utilisez le format fichiers/<x_ville>/<type>_<numéro>.csv\n");
         return 1;
     }
 
-    // check si le chemin du fichier est correct
-    if (sscanf(session_file, "fichiers/%[a-zA-Z]_%d.csv", session_type, &session_num) != 2) {
-        printf("Nom de fichier invalide. Utilisez le format fichiers/<type>_<numéro>.csv\n");
+    // Vérifie si le type de session est valide
+    if (strcmp(session_type, "essai") != 0 && strcmp(session_type, "qualif") != 0 && strcmp(session_type, "course") != 0) {
+        printf("Erreur: Type de session invalide.\n");
+        printf("Types attendus: essai - qualif - course\n");
         return 1;
     }
 
+    // Vérifie si le nombre de sessions autorisées est atteint
+    if ((strcmp(session_type, "essai") == 0 && session_num > MAX_SESSION_ESSAI) ||
+        (strcmp(session_type, "qualif") == 0 && session_num > MAX_SESSION_QUALIF) ||
+        (strcmp(session_type, "course") == 0 && session_num > MAX_SESSION_COURSE)) {
+        printf("Il ne peut y avoir plus de %d sessions pour le type %s. Exécution annulée.\n", 
+            (strcmp(session_type, "essai") == 0) ? MAX_SESSION_ESSAI : 
+            (strcmp(session_type, "qualif") == 0) ? MAX_SESSION_QUALIF : 
+            MAX_SESSION_COURSE, 
+            session_type);
+        return 0;
+    }
 
-    //session_num = strcmp(session_type, "course") == 0 ? -1 : session_num;
-    // Si le type est "qualif", on vérifie que les essais ont déjà un résumé
-    if (strcmp(session_type, "qualif") == 0 && session_num == 1) {
-        if (!file_exists("fichiers/resume_essai.csv")) {
-            printf("Erreur: La simulation de qualification requiert un résumé des essais (resume_essai.csv).\n");
+    // ######################## Vérifications spécifiques aux sessions ########################
+
+    // Si le type est "course", vérifie que les qualifications sont terminées
+    if (strcmp(session_type, "course") == 0 && session_num == 1) {
+        char qualif_resume_file[100];
+        snprintf(qualif_resume_file, 100, "fichiers/%s/resume_qualif.csv", ville);
+        if (!file_exists(qualif_resume_file)) {
+            printf("Erreur: La simulation de course requiert un résumé des qualifications (%s).\n", qualif_resume_file);
             return 0;
         }
     }
 
-    // crée la chaine prev_session_file avec le numéro précédent de celui mis en paramètre
-    char prev_session_file[50];
-    sprintf(prev_session_file, "fichiers/%s_%d.csv", session_type, session_num - 1);
+    // Si le type est "qualif", vérifie que les essais ont déjà un résumé
+    if (strcmp(session_type, "qualif") == 0 && session_num == 1) {
+        char essai_resume_file[100];
+        snprintf(essai_resume_file, 100, "fichiers/%s/resume_essai.csv", ville);
+        if (!file_exists(essai_resume_file)) {
+            printf("Erreur: La simulation de qualification requiert un résumé des essais (%s).\n", essai_resume_file);
+            return 0;
+        }
+    }
 
-    // fichier exite ? ne simule rien : simule la session
+    // Crée la chaîne pour la session précédente
+    char prev_session_file[100];
+    sprintf(prev_session_file, "fichiers/%s/%s_%d.csv", ville, session_type, session_num - 1);
+
+    // Vérifie si le fichier existe
     if (file_exists(session_file)) {
         printf("Le fichier %s existe déjà. La session a déjà été exécutée.\n", session_file);
         return 0;
@@ -69,31 +93,13 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-
-    // course précédente existe ? simule ? simule rien
+    // Vérifie si la session précédente existe
     if (session_num > 1 && !file_exists(prev_session_file)) {
         printf("La session précédente %s n'existe pas. Exécution annulée.\n", prev_session_file);
         return 0;
     }
 
-
-    // nombre de session autorisée est atteinte ? simule rien : simule
-    if (session_num > MAX_SESSION) {
-        printf("Il ne peut y avoir plus de %d sessions. Exécution annulée.\n", MAX_SESSION);
-        return 0;
-    }
-
-
-    // qualif terminée ? simule Course : rien
-        if (strcmp(session_type, "course") == 0 && session_num == 1) {
-            if (!file_exists("fichiers/resume_qualif.csv")) {
-                printf("Erreur: La simulation de course requiert un résumé des qualif (resume_qualif.csv).\n");
-                return 0;
-            }
-    }
-
-
-    // ######################## initialision des voitures ########################
+    // ######################## Initialisation des voitures ########################
 
     srand(time(NULL));
     int session_duration = 3600;
@@ -112,27 +118,24 @@ int main(int argc, char *argv[]) {
         }
     }
 
-
-    // ######################## simulation ########################
+    // ######################## Simulation ########################
 
     printf("===== Début de la session: %s =====\n\n", session_file);
+    create_directories_from_csv_values("liste_circuits.csv", "Course", "Ville");
 
-
-    if (strcmp(session_type,"qualif") == 0) {
-        simulate_qualification(cars, session_num, session_file, MIN_TIME, MAX_TIME, NUM_CARS);
-    } else if (strcmp(session_type,"essai") == 0) {
+    if (strcmp(session_type, "qualif") == 0) {
+        simulate_qualification(cars, session_num, ville, MIN_TIME, MAX_TIME, NUM_CARS);
+    } else if (strcmp(session_type, "essai") == 0) {
         simulate_sess(cars, NUM_CARS, MIN_TIME, MAX_TIME, session_duration);
         save_session_results(cars, NUM_CARS, session_file, "w");
         printf("Les résultats de la session ont été enregistrés dans %s\n", session_file);
-    } else if (strcmp(session_type,"course") == 0) {
+    } else if (strcmp(session_type, "course") == 0) {
         printf("simulation de la course\n");
-        //test_recuperer_colonne_csv();
-        //create_directories_from_csv_values("liste_circuits.csv", "Course", "Ville");
-        supprimer_dossiers_dans_repertoire("fichiers");
+        test_recuperer_colonne_csv();
     }
 
-    // int_session == MAX_SESSION ? trouver meilleurs temps et secteurs des MAX_SESSION sessions
-    process_session_files(session_num, session_type);
+    // Processus des fichiers de session
+    process_session_files(session_num, ville, session_type);
 
     return 0;
 }
