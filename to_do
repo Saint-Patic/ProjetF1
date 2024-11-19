@@ -4,10 +4,18 @@
 1.3) fonction qui supprime les dossiers à la fin du championnat (fait)
 
 2) adaptation du code au nouveau chemin (fait)
-2.1) wk n-1 fini à l'excé d'essai_1.csv ? simuler nouveau wk : erreur
+2.1) wk n-1 fini à l'excé d'essai_1.csv ? simuler nouveau wk : erreur (Coco)
 
 3) simuler course
+3.1) gérer estimation des courses
+3.2) gérer les dépassement
+3.3) gérer les départs
+3.4) affichage tout les x tours
+3.5) passage au stand au moins une fois
+3.5.1) si aucun pitstop à 75% de la course, forcer le pitstop
 
 4) gérer wk de sprint
-4.1) modifier MAX_SESSION en plusieurs petites variables
-tout doux
+4.1) modifier MAX_SESSION en plusieurs petites variables (fait)
+
+Poser questions: 
+-Comment on gère le classement pendant la course ? Plusieurs fichiers ou un fichier écrasé ?
