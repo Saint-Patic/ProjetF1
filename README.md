@@ -30,12 +30,13 @@ Pour compiler le projet et générer l'exécutable :
 make
 ```
 
-pour nettoyer les fichiers.o, dossiers ou fichiers.csv, il existe respectivement:
+pour nettoyer les fichiers.o, dossiers, fichiers.csv ou tout d'un coup, il existe respectivement:
 
 ```bash
 make clean
 make clean_dirs
 make clean_files
+make clean_all
 ```
 
 Après avoir exécuté le `Makefile`, exécuté la commande `./main fichiers/$ville/$nom_fichier.csv`
