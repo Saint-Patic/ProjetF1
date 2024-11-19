@@ -17,7 +17,7 @@ float random_float(int min, int max) {
 }
 
 
-int estimate_max_laps(int session_duration, int max_time) {
+int estimate_max_laps(int session_duration, float max_time) {
     return session_duration / max_time;
 }
 

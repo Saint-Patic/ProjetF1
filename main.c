@@ -7,10 +7,12 @@
 #include "car.h"
 #include "display.h"
 #include "file_manager.h"
+#include "utils.h"
 
 #define NUM_CARS 20
 #define MIN_TIME 25
 #define MAX_TIME 45
+#define SESSION_DISTANCE 300
 
 
 
@@ -37,6 +39,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+
     // Vérifie si le type de session est valide
     if (strcmp(session_type, "essai") != 0 && strcmp(session_type, "qualif") != 0 && strcmp(session_type, "course") != 0) {
         printf("Erreur: Type de session invalide.\n");
@@ -53,6 +56,12 @@ int main(int argc, char *argv[]) {
             (strcmp(session_type, "qualif") == 0) ? MAX_SESSION_QUALIF : 
             MAX_SESSION_COURSE, 
             session_type);
+        return 0;
+    }
+
+    int num_ville;
+    if (sscanf(ville, "%d", &num_ville) != 1) {
+        printf("Erreur : Impossible d'extraire le numéro de ville.\n");
         return 0;
     }
 
@@ -126,12 +135,14 @@ int main(int argc, char *argv[]) {
     if (strcmp(session_type, "qualif") == 0) {
         simulate_qualification(cars, session_num, ville, MIN_TIME, MAX_TIME, NUM_CARS);
     } else if (strcmp(session_type, "essai") == 0) {
-        simulate_sess(cars, NUM_CARS, MIN_TIME, MAX_TIME, session_duration);
+        int total_laps = estimate_max_laps(session_duration, (float)3*MIN_TIME) + 1;
+        simulate_sess(cars, NUM_CARS, MIN_TIME, MAX_TIME, session_duration, total_laps);
         save_session_results(cars, NUM_CARS, session_file, "w");
-        printf("Les résultats de la session ont été enregistrés dans %s\n", session_file);
     } else if (strcmp(session_type, "course") == 0) {
-        printf("simulation de la course\n");
-        test_recuperer_colonne_csv();
+        int nb_resultats;
+        char **circuit_distance = recuperer_colonne_csv("liste_circuits.csv", "taille (km)", &nb_resultats);
+        int total_laps = estimate_max_laps(SESSION_DISTANCE,atof(circuit_distance[num_ville - 1])) + 1;
+        simulate_course(SESSION_DISTANCE, MIN_TIME, MAX_TIME, total_laps);
     }
 
     // Processus des fichiers de session

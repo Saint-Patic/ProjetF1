@@ -129,16 +129,15 @@ void combine_session_results(char *session_files[], int num_sessions, const char
 }
 
 void process_session_files(int session_num, char *ville, char *type_session) {
-    if ((strcmp(type_session, "essai") == 0 && session_num > MAX_SESSION_ESSAI) ||
-        (strcmp(type_session, "qualif") == 0 && session_num > MAX_SESSION_QUALIF) ||
-        (strcmp(type_session, "course") == 0 && session_num > MAX_SESSION_COURSE)) {
+    if ((strcmp(type_session, "essai") == 0 && session_num == MAX_SESSION_ESSAI) ||
+        (strcmp(type_session, "qualif") == 0 && session_num == MAX_SESSION_QUALIF) ||
+        (strcmp(type_session, "course") == 0 && session_num == MAX_SESSION_COURSE)) {
         char *session_files[session_num];
 
         // Allocation et création des chemins pour chaque fichier de session
         for (int i = 0; i < session_num; i++) {
             session_files[i] = malloc(100 * sizeof(char));  // Allocation mémoire pour chaque nom de fichier
             snprintf(session_files[i], 100, "fichiers/%s/%s_%d.csv", ville, type_session, i + 1);
-            printf("%s\n", session_files[i]);
         }
 
         char output_file[100];
@@ -228,7 +227,7 @@ void load_eliminated_cars(char *filename, struct CarTime cars[], int total_cars)
     fclose(file);
 }
 
-char **recuperer_colonne_csv(const char *nom_fichier, const char *nom_colonne, int numero_course, int *nb_resultats) {
+char **recuperer_colonne_csv(const char *nom_fichier, const char *nom_colonne, int *nb_resultats) {
     FILE *fichier = fopen(nom_fichier, "r");
     if (fichier == NULL) {
         printf("Erreur lors de l'ouverture du fichier %s.\n", nom_fichier);
@@ -299,7 +298,7 @@ char **recuperer_colonne_csv(const char *nom_fichier, const char *nom_colonne, i
 // exemple d'utilisation de recuperer_colonne_csv
 int test_recuperer_colonne_csv() {
     int nb_resultats;
-    char **resultats = recuperer_colonne_csv("liste_circuits.csv", "Course", -1, &nb_resultats);
+    char **resultats = recuperer_colonne_csv("liste_circuits.csv", "Ville", &nb_resultats);
 
     if (resultats != NULL) {
         for (int i = 0; resultats[i] != NULL; i++) {
@@ -327,9 +326,9 @@ void create_directories_from_csv_values(const char *csv_file, const char *course
     int nb_resultats_course, nb_resultats_city;
     
     // Récupérer les valeurs de la colonne "Course"
-    char **course_values = recuperer_colonne_csv(csv_file, course_column, -1, &nb_resultats_course);
+    char **course_values = recuperer_colonne_csv(csv_file, course_column, &nb_resultats_course);
     // Récupérer les valeurs de la colonne "Ville"
-    char **city_values = recuperer_colonne_csv(csv_file, city_column, -1, &nb_resultats_city);
+    char **city_values = recuperer_colonne_csv(csv_file, city_column, &nb_resultats_city);
 
     if (course_values != NULL && city_values != NULL && nb_resultats_course > 0 && nb_resultats_city > 0) {
         // Créer un dossier pour chaque ville en utilisant la course correspondante
@@ -356,36 +355,4 @@ void create_directories_from_csv_values(const char *csv_file, const char *course
     }
 }
 
-// Fonction pour supprimer un dossier et tout son contenu
-void supprimer_dossiers_dans_repertoire(const char *path) {
-    struct dirent *entry;
-    struct stat statbuf;
-    char full_path[512]; // Taille ajustable selon le besoin
 
-    DIR *dir = opendir(path);
-    if (dir == NULL) {
-        perror("Erreur lors de l'ouverture du répertoire");
-        return;
-    }
-
-    while ((entry = readdir(dir)) != NULL) {
-        // Ignorer les entrées spéciales "." et ".."
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-            continue;
-        }
-
-        snprintf(full_path, sizeof(full_path), "%s/%s", path, entry->d_name);
-        if (stat(full_path, &statbuf) == 0 && S_ISDIR(statbuf.st_mode)) {
-            // Supprimer le contenu du dossier récursivement
-            supprimer_dossiers_dans_repertoire(full_path);
-            // Supprimer le dossier vide après suppression du contenu
-            if (rmdir(full_path) == 0) {
-                printf("Dossier %s supprimé avec succès.\n", full_path);
-            } else {
-                perror("Erreur lors de la suppression du dossier");
-            }
-        }
-    }
-
-    closedir(dir);
-}
