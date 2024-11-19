@@ -23,3 +23,13 @@ file_manager.o: file_manager.c file_manager.h
 
 clean:
 	rm -f *.o main
+
+clean_dirs:
+	rm -rf fichiers/*/
+
+clean_files:
+	rm -f fichiers/*
+
+clean_all:
+	rm -f *.o main
+	rm -rf fichiers/*/
