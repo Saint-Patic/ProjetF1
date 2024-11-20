@@ -14,14 +14,7 @@
 #define MAX_TIME 45
 #define SESSION_DISTANCE 300
 
-
-
-
 int main(int argc, char *argv[]) {
-
-    // ######################## Phase de check ########################
-
-    // Vérifie s'il y a des paramètres
     if (argc != 2) {
         printf("Usage: %s <session_filename>\n", argv[0]);
         printf("Format paramètre attendu: fichiers/<x_ville>/<type>_<numéro>.csv\n");
@@ -29,15 +22,13 @@ int main(int argc, char *argv[]) {
     }
 
     char *session_file = argv[1];
-    char *ville = malloc(50*sizeof(char));
-    char *session_type = malloc(20*sizeof(char));
+    char *ville = malloc(50 * sizeof(char));
+    char *session_type = malloc(20 * sizeof(char));
     int session_num;
 
     if (!verifier_parametres(session_file, ville, session_type, &session_num)) {
         return 1;
     }
-
-    // ######################## Initialisation des voitures ########################
 
     srand(time(NULL));
     int session_duration = 3600;
@@ -57,25 +48,21 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // ######################## Simulation ########################
-
     printf("===== Début de la session: %s =====\n\n", session_file);
     create_directories_from_csv_values("liste_circuits.csv", "Course", "Ville");
     if (strcmp(session_type, "qualif") == 0) {
         simulate_qualification(cars, session_num, ville, MIN_TIME, MAX_TIME, NUM_CARS);
     } else if (strcmp(session_type, "essai") == 0) {
-        int total_laps = estimate_max_laps(session_duration, (float)3*MIN_TIME) + 1;
+        int total_laps = estimate_max_laps(session_duration, (float)3 * MIN_TIME) + 1;
         simulate_sess(cars, NUM_CARS, MIN_TIME, MAX_TIME, session_duration, total_laps);
         save_session_results(cars, NUM_CARS, session_file, "w");
     } else if (strcmp(session_type, "course") == 0) {
         int nb_resultats;
         char **circuit_distance = recuperer_colonne_csv("liste_circuits.csv", "taille (km)", &nb_resultats);
-        int total_laps = estimate_max_laps(SESSION_DISTANCE,atof(circuit_distance[atoi(ville) - 1])) + 1;
+        int total_laps = estimate_max_laps(SESSION_DISTANCE, atof(circuit_distance[atoi(ville) - 1])) + 1;
         simulate_course(SESSION_DISTANCE, MIN_TIME, MAX_TIME, total_laps);
     }
 
-
-    // Processus des fichiers de session
     process_session_files(session_num, ville, session_type);
     free(ville);
     free(session_type);

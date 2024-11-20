@@ -1,6 +1,8 @@
 #ifndef CAR_H
 #define CAR_H
 
+#include <semaphore.h>
+
 #define NUM_SECTORS 3
 #define MIN_PIT_STOP_DURATION 24 // Durée minimale du pit stop en secondes
 #define MAX_PIT_STOP_DURATION 26 // Durée maximale du pit stop en secondes
@@ -17,7 +19,13 @@ typedef struct car{
     int pit_stop_duration; // Durée du pit stop en tours
     int pit_stop_nb; // nombre de pit stop effectué
     float temps_rouler; // Temps de roulage total en secondes
-}car_t;
+} car_t;
+
+typedef struct {
+    car_t *car;
+    int min_time;
+    int max_time;
+} lap_args_t;
 
 void generate_sector_times(car_t *car, int min_time, int max_time);
 void simulate_sess(car_t cars[], int num_cars, int min_time, int max_time, int session_duration, int total_laps);
@@ -30,5 +38,6 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, in
 void simulate_course(int distance, int min_time, int max_time, int total_laps);
 int ternaire_moins_criminel(int session_num, int res1, int res2, int resDefault);
 
+extern sem_t sem; // Declare the semaphore
 
 #endif // CAR_H
