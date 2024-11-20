@@ -28,12 +28,12 @@ typedef struct {
 } lap_args_t;
 
 void generate_sector_times(car_t *car, int min_time, int max_time);
-void simulate_sess(car_t cars[], int num_cars, int min_time, int max_time, int session_duration, int total_laps);
+void simulate_sess(car_t cars[], int num_cars, int min_time, int max_time, int session_duration, int total_laps, char *session_type);
 void display_practice_results(car_t cars[], int num_cars);
 void display_overall_best_times(car_t cars[], int num_cars);
 int compare_cars(const void *a, const void *b);
 void reset_out_status_and_temps_rouler(car_t cars[], int num_cars);
-void simulate_pit_stop(car_t *car, int min_time, int max_time);
+void simulate_pit_stop(car_t *car, int min_time, int max_time, char *session_type);
 void simulate_qualification(car_t cars[], int session_num, const char *ville, int min_time, int max_time, int total_cars);
 void simulate_course(int distance, int min_time, int max_time, int total_laps);
 int ternaire_moins_criminel(int session_num, int res1, int res2, int resDefault);

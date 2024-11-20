@@ -17,8 +17,6 @@
 
 sem_t sem; // Define the semaphore
 
-
-
 void generate_sector_times(car_t *car, int min_time, int max_time) {
     float lap_time = 0;
     for (int i = 0; i < NUM_SECTORS; i++) {
@@ -40,17 +38,12 @@ void generate_sector_times(car_t *car, int min_time, int max_time) {
     car->temps_rouler += lap_time;
 }
 
-void simulate_pit_stop(car_t *car, int min_time, int max_time) {
-    if (car->pit_stop) {
-        float pit_stop_time = random_float(min_time, max_time);
-        car->pit_stop_nb += 1;
-        if (car->pit_stop_duration > pit_stop_time) {
-            car->pit_stop_duration -= pit_stop_time;
-            car->temps_rouler += pit_stop_time;
-        } else {
-            car->pit_stop = 0;
-        }
-    }
+void simulate_pit_stop(car_t *car, int min_time, int max_time, char *session_type) {
+    // Pit stop obligatoire dans le secteur 3
+    float pit_stop_time = random_float(min_time, max_time);
+    car->temps_rouler += pit_stop_time;
+    car->pit_stop_nb++;
+    car->pit_stop = 0; // Une fois effectué, désactive l'indicateur
 }
 
 int compare_cars(const void *a, const void *b) {
@@ -74,37 +67,58 @@ void *simulate_lap(void *arg) {
 
     sem_wait(&sem);
     generate_sector_times(car, min_time, max_time);
-    simulate_pit_stop(car, min_time, max_time);
+    simulate_pit_stop(car, min_time, max_time, "qualif");
     sem_post(&sem);
 
     return NULL;
 }
 
-void simulate_sess(car_t cars[], int num_cars, int min_time, int max_time, int session_duration, int total_laps) {
-    pthread_t threads[num_cars];
-    lap_args_t args[num_cars];
-    sem_init(&sem, 0, 1); // Initialize the semaphore
-
+void simulate_sess(car_t cars[], int num_cars, int min_time, int max_time, int session_duration, int total_laps, char *session_type) {
     for (int lap = 0; lap < total_laps; lap++) {
+        int active_cars = num_cars;
+
         for (int i = 0; i < num_cars; i++) {
-            if (cars[i].out) continue;
-            args[i].car = &cars[i];
-            args[i].min_time = min_time;
-            args[i].max_time = max_time;
-            pthread_create(&threads[i], NULL, simulate_lap, (void *)&args[i]);
+            if (cars[i].out) {
+                active_cars--;
+                continue;
+            }
+
+            if (cars[i].pit_stop) {
+                simulate_pit_stop(&cars[i], MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION, session_type);
+                continue;
+            }
+
+            generate_sector_times(&cars[i], min_time, max_time);
+
+            // Gestion des pannes
+            if (rand() % 100 < 1) { // 1% de panne
+                cars[i].out = 1;
+                cars[i].pit_stop = 0;
+                active_cars--;
+            }
+            if (cars[i].temps_rouler > session_duration) return;
         }
-        for (int i = 0; i < num_cars; i++) {
-            pthread_join(threads[i], NULL);
-        }
+
+        if (active_cars == 0) break;
 
         system("clear");
         printf("Tour %d:\n", lap + 1);
         display_practice_results(cars, num_cars);
-        sleep(0.2);
+        usleep(200000); // sleep for 0.2 seconds
     }
 
-    sem_destroy(&sem); // Destroy the semaphore
-    reset_out_status_and_temps_rouler(cars, num_cars);
+    // En course : Vérifiez que chaque voiture a effectué au moins un pit stop
+    if (strcmp(session_type, "course") == 0) {
+        for (int i = 0; i < num_cars; i++) {
+            if (!cars[i].out && cars[i].pit_stop_nb == 0) {
+                printf("La voiture %d n'a pas respecté l'arrêt obligatoire.\n", cars[i].car_number);
+                cars[i].out = 1;
+            }
+        }
+    }
+
+    printf("Session terminée (laps total = %d) !\n", total_laps);
+    display_practice_results(cars, num_cars);
 }
 
 void simulate_qualification(car_t cars[], int session_num, const char *ville, int min_time, int max_time, int total_cars) {
@@ -127,7 +141,7 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, in
     }
 
     int total_laps = estimate_max_laps(session_duration, (float)3 * min_time) + 1;
-    simulate_sess(eligible_cars, num_cars_in_stage, min_time, max_time, session_duration, total_laps);
+    simulate_sess(eligible_cars, num_cars_in_stage, min_time, max_time, session_duration, total_laps, "qualif");
 
     qsort(eligible_cars, num_cars_in_stage, sizeof(car_t), compare_cars);
 
@@ -157,7 +171,7 @@ void simulate_course(int distance, int min_time, int max_time, int total_laps) {
         }
     }
 
-    simulate_sess(cars, NUM_CARS, min_time, max_time, 999999, total_laps);
+    simulate_sess(cars, NUM_CARS, min_time, max_time, 999999, total_laps, "course");
 
     munmap(cars, sizeof(car_t) * NUM_CARS);
     shm_unlink("/cars_shm");

@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
         simulate_qualification(cars, session_num, ville, MIN_TIME, MAX_TIME, NUM_CARS);
     } else if (strcmp(session_type, "essai") == 0) {
         int total_laps = estimate_max_laps(session_duration, (float)3 * MIN_TIME) + 1;
-        simulate_sess(cars, NUM_CARS, MIN_TIME, MAX_TIME, session_duration, total_laps);
+        simulate_sess(cars, NUM_CARS, MIN_TIME, MAX_TIME, session_duration, total_laps, "essai");
         save_session_results(cars, NUM_CARS, session_file, "w");
     } else if (strcmp(session_type, "course") == 0) {
         int nb_resultats;
