@@ -10,7 +10,7 @@
 
 
 
-void generate_sector_times(struct CarTime *car, int min_time, int max_time) {
+void generate_sector_times(car_t *car, int min_time, int max_time) {
     float lap_time = 0;
     for (int i = 0; i < NUM_SECTORS; i++) {
         car->sector_times[i] = random_float(min_time, max_time);
@@ -18,6 +18,10 @@ void generate_sector_times(struct CarTime *car, int min_time, int max_time) {
 
         if (car->best_sector_times[i] == 0 || car->sector_times[i] < car->best_sector_times[i]) {
             car->best_sector_times[i] = car->sector_times[i];
+        }
+        if (rand() % 100 < 20 && i == NUM_SECTORS - 1) { // 20% d'être en pit stop
+            car->pit_stop_duration = random_float(MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION);
+            car->pit_stop = 1;
         }
     }
 
@@ -27,9 +31,10 @@ void generate_sector_times(struct CarTime *car, int min_time, int max_time) {
     car->temps_rouler += lap_time;
 }
 
-void simulate_pit_stop(struct CarTime *car, int min_time, int max_time) {
+void simulate_pit_stop(car_t *car, int min_time, int max_time) {
     if (car->pit_stop) {
         float pit_stop_time = random_float(min_time, max_time);
+        car->pit_stop_nb += 1;
         if (car->pit_stop_duration > pit_stop_time) {
             car->pit_stop_duration -= pit_stop_time;
             car->temps_rouler += pit_stop_time;
@@ -40,12 +45,12 @@ void simulate_pit_stop(struct CarTime *car, int min_time, int max_time) {
 }
 
 int compare_cars(const void *a, const void *b) {
-    struct CarTime *carA = (struct CarTime *)a;
-    struct CarTime *carB = (struct CarTime *)b;
+    car_t *carA = (car_t *)a;
+    car_t *carB = (car_t *)b;
     return (carA->best_lap_time > carB->best_lap_time) ? 1 : -1;
 }
 
-void reset_out_status_and_temps_rouler(struct CarTime cars[], int num_cars) {
+void reset_out_status_and_temps_rouler(car_t cars[], int num_cars) {
     for (int i = 0; i < num_cars; i++) {
         // printf("Voiture %d - Temps roulé : %.2f secondes\n", cars[i].car_number, cars[i].temps_rouler);
         cars[i].out = 0;
@@ -53,13 +58,13 @@ void reset_out_status_and_temps_rouler(struct CarTime cars[], int num_cars) {
     }
 }
 
-void simulate_sess(struct CarTime cars[], int num_cars, int min_time, int max_time, int session_duration, int total_laps) {
+void simulate_sess(car_t cars[], int num_cars, int min_time, int max_time, int session_duration, int total_laps) {
     for (int lap = 0; lap < total_laps; lap++) {
         for (int i = 0; i < num_cars; i++) {
             if (cars[i].out) continue;
 
             if (cars[i].pit_stop) {
-                simulate_pit_stop(&cars[i], min_time, max_time);
+                simulate_pit_stop(&cars[i], min_time, MAX_PIT_STOP_DURATION);
                 if (cars[i].pit_stop) continue;
             }
 
@@ -73,10 +78,8 @@ void simulate_sess(struct CarTime cars[], int num_cars, int min_time, int max_ti
                 return;
             }
 
-            if (rand() % 100 < 20) { // 20% d'être en pit stop
-                cars[i].pit_stop_duration = random_float(MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION);
-                cars[i].pit_stop = 1;
-            } else if (rand() % 100 < 1) { // 1% d'être en arrêt
+
+            if (rand() % 100 < 1) { // 1% d'être en arrêt
                 cars[i].out = 1;
             }
         }
@@ -84,17 +87,26 @@ void simulate_sess(struct CarTime cars[], int num_cars, int min_time, int max_ti
         system("clear");
         printf("Tour %d:\n", lap + 1);
         display_practice_results(cars, num_cars);
-        sleep(0.2);
+        sleep(2);
     }
     reset_out_status_and_temps_rouler(cars, num_cars);
 }
 
+int ternaire_moins_criminel(int session_num, int res1, int res2, int resDefault) {
+    switch (session_num) {
+        case 1:
+            return res1;
+        case 2:
+            return res2;
+        default:
+            return resDefault;
+    }
+} // cordialement, Eloy
 
-
-void simulate_qualification(struct CarTime cars[], int session_num, const char *ville, int min_time, int max_time, int total_cars) {
-    int num_cars_in_stage = (session_num == 1) ? 20 : (session_num == 2) ? 15 : 10;
-    int eliminated_cars_count = (session_num == 1) ? 5 : (session_num == 2) ? 5 : 0;
-    int session_duration = (session_num == 1) ? 720 : (session_num == 2) ? 600 : 480;
+void simulate_qualification(car_t cars[], int session_num, const char *ville, int min_time, int max_time, int total_cars) {
+    int num_cars_in_stage = ternaire_moins_criminel(session_num,20, 15, 10); // (session_num == 1) ? 20 : (session_num == 2) ? 15 : 10;
+    int eliminated_cars_count = ternaire_moins_criminel(session_num,5, 5, 0); // (session_num == 1) ? 5 : (session_num == 2) ? 5 : 0;
+    int session_duration = ternaire_moins_criminel(session_num,720, 600, 480); // (session_num == 1) ? 720 : (session_num == 2) ? 600 : 480;
 
     // Chemin du fichier de classement
     char classement_file[100];
@@ -103,7 +115,7 @@ void simulate_qualification(struct CarTime cars[], int session_num, const char *
     // Charger les voitures éliminées à partir du fichier classement.csv
     load_eliminated_cars(classement_file, cars, total_cars);
 
-    struct CarTime eligible_cars[num_cars_in_stage];
+    car_t eligible_cars[num_cars_in_stage];
     int eligible_index = 0;
 
     // Rassembler les voitures éligibles pour cette manche
@@ -118,7 +130,7 @@ void simulate_qualification(struct CarTime cars[], int session_num, const char *
     simulate_sess(eligible_cars, num_cars_in_stage, min_time, max_time, session_duration, total_laps);
 
     // Trier les voitures en fonction de leur meilleur temps
-    qsort(eligible_cars, num_cars_in_stage, sizeof(struct CarTime), compare_cars);
+    qsort(eligible_cars, num_cars_in_stage, sizeof(car_t), compare_cars);
 
     // Chemin pour enregistrer les résultats de la session
     char session_file[100];
@@ -133,5 +145,7 @@ void simulate_qualification(struct CarTime cars[], int session_num, const char *
 
 
 void simulate_course(int distance, int min_time, int max_time, int total_laps) {
-        simulate_sess(cars, NUM_CARS, min_time, max_time, total_laps);
+        // simulate_sess(cars, NUM_CARS, min_time, max_time, 999999, total_laps);
+
+        return;
 }

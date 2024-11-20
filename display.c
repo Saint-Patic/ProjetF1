@@ -6,8 +6,8 @@
 #include "utils.h" 
 #include "display.h"
 
-void display_practice_results(struct CarTime cars[], int num_cars) {
-    qsort(cars, num_cars, sizeof(struct CarTime), compare_cars);
+void display_practice_results(car_t cars[], int num_cars) {
+    qsort(cars, num_cars, sizeof(car_t), compare_cars);
 
     printf("=================================================================\n");
     printf("|  #   |  Secteur 1  |  Secteur 2  |  Secteur 3  |   Tour   | Diff |\n");
@@ -36,7 +36,7 @@ void display_practice_results(struct CarTime cars[], int num_cars) {
     printf("=================================================================\n");
 }
 
-void display_overall_best_times(struct CarTime cars[], int num_cars) {
+void display_overall_best_times(car_t cars[], int num_cars) {
     float overall_best_sector_times[NUM_SECTORS] = {9999.0, 9999.0, 9999.0};
     int overall_best_sector_car[NUM_SECTORS] = {-1, -1, -1}; // Ajout du tableau pour les numéros des voitures des meilleurs secteurs
     float overall_best_lap_time = 9999.0;

@@ -39,7 +39,7 @@ int file_exists(const char *filename) {
 }
 
 
-void save_session_results(struct CarTime cars[], int num_cars, const char *filename, const char *mode) {
+void save_session_results(car_t cars[], int num_cars, const char *filename, const char *mode) {
     FILE *file = fopen(filename, mode);
     if (!file) {
         perror("Erreur d'ouverture du fichier");
@@ -69,7 +69,6 @@ void save_session_results(struct CarTime cars[], int num_cars, const char *filen
             best_overall_lap_time = cars[i].best_lap_time;
         }
     }
-
     fprintf(file, "\nBest Sector Times\n");
     fprintf(file, "Sector 1,%.2f\n", best_overall_sector_times[0]);
     fprintf(file, "Sector 2,%.2f\n", best_overall_sector_times[1]);
@@ -139,6 +138,7 @@ void process_session_files(int session_num, char *ville, char *type_session) {
             session_files[i] = malloc(100 * sizeof(char));  // Allocation mémoire pour chaque nom de fichier
             snprintf(session_files[i], 100, "fichiers/%s/%s_%d.csv", ville, type_session, i + 1);
         }
+        
 
         char output_file[100];
         snprintf(output_file, 100, "fichiers/%s/resume_%s.csv", ville, type_session);
@@ -155,7 +155,7 @@ void process_session_files(int session_num, char *ville, char *type_session) {
 
 
 
-void save_eliminated_cars(struct CarTime eligible_cars[], int num_cars_in_stage, int eliminated_cars_count, int session_num, struct CarTime cars[], int total_cars, const char *ville) {
+void save_eliminated_cars(car_t eligible_cars[], int num_cars_in_stage, int eliminated_cars_count, int session_num, car_t cars[], int total_cars, const char *ville) {
     char ranking_file_path[100];
     snprintf(ranking_file_path, 100, "fichiers/%s/classement.csv", ville);
 
@@ -198,7 +198,7 @@ void save_eliminated_cars(struct CarTime eligible_cars[], int num_cars_in_stage,
 }
 
 
-void load_eliminated_cars(char *filename, struct CarTime cars[], int total_cars) {
+void load_eliminated_cars(char *filename, car_t cars[], int total_cars) {
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
         printf("Erreur lors de l'ouverture de %s\n", filename);
