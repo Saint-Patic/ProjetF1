@@ -1,0 +1,27 @@
+1. 1 argument passé dans le terminal
+
+2. Cherche un type de course. Le type doit être suivi d'un _x
+
+3. Vérifie si le chemin du fichier est correct
+
+4. Si essai_resume n'existe pas, pas de phase de qualif
+
+5. Si fichier existe déjà, ne peut pas re simuler cette course
+
+6. Si course précédente n'existe pas, pas de simulation
+
+7.Si nombre de simulation max atteinte, pas d'autres simulation1. 1 argument passé dans le terminal
+
+2. Cherche un type de course. Le type doit être suivi d'un _x
+
+3. Vérifie si le chemin du fichier est correct
+
+4. Si essai_resume n'existe pas, pas de phase de qualif
+
+5. Si fichier existe déjà, ne peut pas re simuler cette course
+
+6. Si course précédente n'existe pas, pas de simulation
+
+7. Si nombre de simulation max atteinte, pas d'autres simulation
+
+8. Si qualif_resume n'existe pas, pas de phase de course 
