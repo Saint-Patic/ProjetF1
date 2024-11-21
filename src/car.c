@@ -60,20 +60,6 @@ void reset_out_status_and_temps_rouler(car_t cars[], int num_cars) {
     }
 }
 
-void *simulate_lap(void *arg) {
-    lap_args_t *args = (lap_args_t *)arg;
-    car_t *car = args->car;
-    int min_time = args->min_time;
-    int max_time = args->max_time;
-
-    sem_wait(&sem);
-    generate_sector_times(car, min_time, max_time);
-    simulate_pit_stop(car, min_time, max_time, "qualif");
-    sem_post(&sem);
-
-    return NULL;
-}
-
 void simulate_sess(car_t cars[], int num_cars, int min_time, int max_time, int session_duration, int total_laps, char *session_type) {
     for (int lap = 0; lap < total_laps; lap++) {
         int active_cars = num_cars;
