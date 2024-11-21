@@ -9,6 +9,11 @@
 #include "../include/file_manager.h"
 
 // Fonction pour effectuer toutes les vérifications
+//session_file: chemin du fichier
+//ville: le nom de la ville seul
+//session_type: type de la course qualif, etc
+//seesion_num: essai 1, essai 2, etc
+//directory_num: numéro avant le nom de la ville
 int verifier_parametres(char *session_file, char *ville, char *session_type, int *session_num, int *directory_num) {
 
     if (ville == NULL) {
@@ -47,6 +52,7 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
     }
 
     // Vérifications spécifiques aux types de session
+    //vérifie si des qualif on bien eux lieux avant de faire la course
     if (strcmp(session_type, "course") == 0 && *session_num == 1) {
         char qualif_resume_file[100];
         snprintf(qualif_resume_file, 100, "data/fichiers/%s/resume_qualif.csv", ville);
@@ -55,7 +61,7 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
             return 0;
         }
     }
-
+    //vérifie si des essais on bien eux lieux avant de faire des qualif
     if (strcmp(session_type, "qualif") == 0 && *session_num == 1) {
         char essai_resume_file[100];
         snprintf(essai_resume_file, 100, "data/fichiers/%s/resume_essai.csv", ville);
