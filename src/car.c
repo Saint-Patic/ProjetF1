@@ -15,7 +15,6 @@
 #include "../include/file_manager.h"
 
 
-#define NUM_CARS 20 // Define NUM_CARS with an appropriate value
 
 sem_t sem; // Define the semaphore
 extern sem_t sem; // Declare the semaphore
@@ -62,7 +61,7 @@ void reset_out_status_and_temps_rouler(car_t cars[], int num_cars) {
     }
 }
 
-void simulate_sess(car_t cars[], int num_cars, int min_time, int max_time, int session_duration, int total_laps, char *session_type) {
+void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_laps, char *session_type) {
     for (int lap = 0; lap < total_laps; lap++) {
         int active_cars = num_cars;
 
@@ -77,7 +76,7 @@ void simulate_sess(car_t cars[], int num_cars, int min_time, int max_time, int s
                 continue;
             }
 
-            generate_sector_times(&cars[i], min_time, max_time);
+            generate_sector_times(&cars[i], MIN_TIME, MAX_TIME);
 
             // Gestion des pannes
             if (rand() % 100 < 1) { // 1% de panne
@@ -90,7 +89,7 @@ void simulate_sess(car_t cars[], int num_cars, int min_time, int max_time, int s
 
         if (active_cars == 0) break;
 
-        system("clear");
+        // system("clear");
         printf("Tour %d:\n", lap + 1);
         display_practice_results(cars, num_cars);
         usleep(10000); // sleep for 0.2 seconds
@@ -106,40 +105,40 @@ void simulate_sess(car_t cars[], int num_cars, int min_time, int max_time, int s
         }
     }
 
-    printf("Session terminée (laps total = %d) !\n", total_laps);
     display_practice_results(cars, num_cars);
 }
 
-void simulate_qualification(car_t cars[], int session_num, const char *ville, int min_time, int max_time, int total_cars, int sprint_mode, char *filename) {
+void simulate_qualification(car_t cars[], int session_num, const char *ville, int sprint_mode, char *filename) {
     int num_cars_in_stage = ternaire_moins_criminel(session_num, 20, 15, 10, sprint_mode);
     int eliminated_cars_count = ternaire_moins_criminel(session_num, 5, 5, 0, sprint_mode);
     int session_duration = ternaire_moins_criminel(session_num, DUREE_QUALIF_1, DUREE_QUALIF_2, DUREE_QUALIF_3, sprint_mode);
 
     char *classement_file = malloc(100 * sizeof(char));
     snprintf(classement_file, 100, "data/fichiers/%s/classement.csv", ville);
-
-    load_eliminated_cars(classement_file, cars, total_cars);
+    if (session_num > 1) {
+        load_eliminated_cars(classement_file, cars, NUM_CARS);
+    }
 
     car_t eligible_cars[num_cars_in_stage];
     int eligible_index = 0;
 
-    for (int i = 0; i < total_cars; i++) {
+    for (int i = 0; i < NUM_CARS; i++) {
         if (!cars[i].out && eligible_index < num_cars_in_stage) {
             eligible_cars[eligible_index++] = cars[i];
         }
     }
 
-    int total_laps = estimate_max_laps(session_duration, (float)3 * min_time) + 1;
-    simulate_sess(eligible_cars, num_cars_in_stage, min_time, max_time, session_duration, total_laps, "qualif");
+    int total_laps = estimate_max_laps(session_duration, (float)3 * MIN_TIME) + 1;
+    simulate_sess(eligible_cars, num_cars_in_stage, session_duration, total_laps, "qualif");
 
     qsort(eligible_cars, num_cars_in_stage, sizeof(car_t), compare_cars);
 
     save_session_results(eligible_cars, num_cars_in_stage, filename, "a");
-    save_eliminated_cars(eligible_cars, num_cars_in_stage, eliminated_cars_count, session_num, cars, total_cars, ville);
+    save_eliminated_cars(eligible_cars, num_cars_in_stage, eliminated_cars_count, session_num, cars, NUM_CARS, ville);
     free(classement_file);
 }
 
-void simulate_course(int distance, int min_time, int max_time, int total_laps) {
+void simulate_course(int distance, int total_laps) {
     int shm_fd = shm_open("/cars_shm", O_CREAT | O_RDWR, 0666);
     ftruncate(shm_fd, sizeof(car_t) * NUM_CARS);
     car_t *cars = mmap(0, sizeof(car_t) * NUM_CARS, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
@@ -158,7 +157,7 @@ void simulate_course(int distance, int min_time, int max_time, int total_laps) {
         }
     }
 
-    simulate_sess(cars, NUM_CARS, min_time, max_time, 999999, total_laps, "course");
+    simulate_sess(cars, NUM_CARS, 999999, total_laps, "course");
 
     munmap(cars, sizeof(car_t) * NUM_CARS);
     shm_unlink("/cars_shm");

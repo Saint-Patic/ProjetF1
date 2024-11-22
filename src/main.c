@@ -10,12 +10,6 @@
 #include "../include/file_manager.h"
 #include "../include/utils.h"
 
-#define NUM_CARS 20
-#define MIN_TIME 25
-#define MAX_TIME 45
-#define SESSION_DISTANCE 300
-#define SPRINT_DISTANCE 100
-
 int main(int argc, char *argv[]) {
     if (argc != 2) {
         printf("Usage: %s <session_filename>\n", argv[0]);
@@ -47,14 +41,14 @@ int main(int argc, char *argv[]) {
 
     if (strcmp(session_type, "essai") == 0) {
         printf("Simulation des essais libres pour un %s.\n", special_weekend ? "week-end spécial" : "week-end normal");
-        simulate_sess(cars, NUM_CARS, MIN_TIME, MAX_TIME, 3600, 20, "essai");
+        simulate_sess(cars, NUM_CARS, 3600, 20, "essai");
         save_session_results(cars, NUM_CARS, session_file, "w");
     } else if (strcmp(session_type, "qualif") == 0 || strcmp(session_type, "shootout") == 0) {
         if (special_weekend && session_num == 1) {
             printf("Simulation du Sprint Shootout (qualifications spéciales).\n");
         } else if (!special_weekend || session_num > 1) {
             printf("Simulation des qualifications pour la course principale.\n");
-            simulate_qualification(cars, session_num, ville, MIN_TIME, MAX_TIME, NUM_CARS, special_weekend, session_file);
+            simulate_qualification(cars, session_num, ville, special_weekend, session_file);
         }
     } else if (strcmp(session_type, "course") == 0) {
         int distance_course = session_num == 1 && special_weekend ? SPRINT_DISTANCE : SESSION_DISTANCE;
@@ -64,7 +58,7 @@ int main(int argc, char *argv[]) {
         } else if (session_num > 1 || !special_weekend) {
             printf("Simulation de la course principale.\n");
         }
-        simulate_course(distance_course, MIN_TIME, MAX_TIME, total_laps);
+        simulate_course(distance_course, total_laps);
     }
 
     process_session_files(session_num, ville, session_type);

@@ -124,7 +124,6 @@ void combine_session_results(char *session_files[], int num_sessions, const char
     fprintf(output, "Meilleur temps de tour global,%.2f\n", best_overall_lap_time);
 
     fclose(output);
-    printf("Les meilleurs temps ont été enregistrés dans %s\n", output_file);
 }
 
 void process_session_files(int session_num, char *ville, char *type_session) {
@@ -156,7 +155,7 @@ void process_session_files(int session_num, char *ville, char *type_session) {
 
 
 void save_eliminated_cars(car_t eligible_cars[], int num_cars_in_stage, int eliminated_cars_count, int session_num, car_t cars[], int total_cars, const char *ville) {
-    char ranking_file_path[100];
+    char *ranking_file_path = malloc(100 * sizeof(char));
     snprintf(ranking_file_path, 100, "data/fichiers/%s/classement.csv", ville);
 
     FILE *ranking_file = fopen(ranking_file_path, "a");
@@ -193,8 +192,8 @@ void save_eliminated_cars(car_t eligible_cars[], int num_cars_in_stage, int elim
             }
         }
     }
-
     fclose(ranking_file);
+    free(ranking_file_path);
 }
 
 
@@ -207,7 +206,7 @@ void load_eliminated_cars(char *filename, car_t cars[], int total_cars) {
     
     int car_number, session_num, place;
     float lap_time;
-    char line[100];
+    char *line = malloc(100 * sizeof(char));
     
     // Mark all cars as eligible initially
     for (int i = 0; i < total_cars; i++) {
@@ -225,71 +224,81 @@ void load_eliminated_cars(char *filename, car_t cars[], int total_cars) {
         }
     }
     fclose(file);
+    free(line);
 }
 
+// Fonction pour récupérer les valeurs d'une colonne spécifique dans un fichier CSV
 char **recuperer_colonne_csv(const char *nom_fichier, const char *nom_colonne, int *nb_resultats) {
     FILE *fichier = fopen(nom_fichier, "r");
-    if (fichier == NULL) {
-        printf("Erreur lors de l'ouverture du fichier %s.\n", nom_fichier);
+    if (!fichier) {
+        printf("Erreur : Impossible d'ouvrir le fichier %s.\n", nom_fichier);
         return NULL;
     }
 
-    char ligne[1024];
-    char *colonnes[50];
+    char ligne[MAX_COLONNE];
+    char **resultats = NULL;
     int indice_colonne = -1;
-    *nb_resultats = 0; // Initialiser le compteur de résultats
+    *nb_resultats = 0;
 
-    // Lecture de la première ligne pour trouver l'index de la colonne
-    if (fgets(ligne, sizeof(ligne), fichier) != NULL) {
-        int i = 0;
-        colonnes[i] = strtok(ligne, ",");
-        while (colonnes[i] != NULL) {
-            // Comparer en supprimant les espaces de début et de fin
-            if (strcmp(trim(colonnes[i]), nom_colonne) == 0) {
-                indice_colonne = i;
-                // Supprimé: printf("Colonne \"%s\" trouvée à l'index %d\n", nom_colonne, indice_colonne);
+    // Lecture de la première ligne (en-tête)
+    if (fgets(ligne, sizeof(ligne), fichier)) {
+        char *colonne = strtok(ligne, ",");
+        int index = 0;
+
+        while (colonne) {
+            if (strcmp(trim(colonne), nom_colonne) == 0) {
+                indice_colonne = index;
+                break;
             }
-            colonnes[++i] = strtok(NULL, ",");
+            colonne = strtok(NULL, ",");
+            index++;
         }
     }
 
-
-    // Si la colonne n'est toujours pas trouvée, afficher un message d'erreur détaillé
+    // Si la colonne est introuvable
     if (indice_colonne == -1) {
-        printf("Erreur: Colonne \"%s\" introuvable dans le fichier.\n", nom_colonne);
+        printf("Erreur : Colonne \"%s\" introuvable dans le fichier.\n", nom_colonne);
         fclose(fichier);
         return NULL;
     }
 
-
-    // Allocation initiale pour le tableau de résultats
-    char **resultats = malloc(100 * sizeof(char *));
-    if (resultats == NULL) {
-        printf("Erreur d'allocation mémoire.\n");
+    // Lecture des lignes suivantes pour récupérer les valeurs
+    resultats = malloc(100 * sizeof(char *));
+    if (!resultats) {
+        printf("Erreur : Échec de l'allocation mémoire.\n");
         fclose(fichier);
         return NULL;
     }
 
-    // Lecture des lignes suivantes pour récupérer les valeurs de la colonne
-    while (fgets(ligne, sizeof(ligne), fichier) != NULL) {
-        int i = 0;
+    while (fgets(ligne, sizeof(ligne), fichier)) {
         char *valeur = NULL;
-        colonnes[i] = strtok(ligne, ",");
+        char *colonne = strtok(ligne, ",");
+        int index = 0;
 
-        while (colonnes[i] != NULL) {
-            if (i == indice_colonne) {
-                valeur = trim(colonnes[i]);
+        while (colonne) {
+            if (index == indice_colonne) {
+                valeur = trim(colonne);
+                break;
             }
-            colonnes[++i] = strtok(NULL, ",");
+            colonne = strtok(NULL, ",");
+            index++;
         }
 
-        if (valeur != NULL) {
+        if (valeur) {
             resultats[*nb_resultats] = strdup(valeur);
+            if (!resultats[*nb_resultats]) {
+                printf("Erreur : Échec de l'allocation mémoire pour la valeur.\n");
+                // Nettoyer les valeurs précédemment allouées
+                for (int i = 0; i < *nb_resultats; i++) {
+                    free(resultats[i]);
+                }
+                free(resultats);
+                fclose(fichier);
+                return NULL;
+            }
             (*nb_resultats)++;
         }
     }
-
-
 
     fclose(fichier);
     return resultats;
@@ -310,49 +319,50 @@ int test_recuperer_colonne_csv() {
     return 0;
 }
 
+// Fonction pour créer un dossier si inexistant
 void create_directory_if_not_exists(const char *path) {
     struct stat st = {0};
     if (stat(path, &st) == -1) {
         if (mkdir(path, 0700) != 0) {
             perror("Erreur lors de la création du dossier");
-        } else {
-            printf("Dossier %s créé avec succès.\n", path);
-        }
+        } 
     }
 }
 
-// Fonction pour créer un dossier pour chaque valeur de la colonne "Ville"
+// Fonction pour créer des dossiers à partir des valeurs des colonnes CSV
 void create_directories_from_csv_values(const char *csv_file, const char *course_column, const char *city_column) {
-    int nb_resultats_course, nb_resultats_city;
-    
-    // Récupérer les valeurs de la colonne "Course"
-    char **course_values = recuperer_colonne_csv(csv_file, course_column, &nb_resultats_course);
-    // Récupérer les valeurs de la colonne "Ville"
-    char **city_values = recuperer_colonne_csv(csv_file, city_column, &nb_resultats_city);
+    int nb_courses = 0, nb_cities = 0;
 
-    if (course_values != NULL && city_values != NULL && nb_resultats_course > 0 && nb_resultats_city > 0) {
-        // Créer un dossier pour chaque ville en utilisant la course correspondante
-        for (int i = 0; i < nb_resultats_course && i < nb_resultats_city; i++) {
-            // Construire le chemin complet du dossier avec "fichiers/NuméroCourse_Ville"
-            char full_path[256]; // Taille ajustable selon le besoin
-            snprintf(full_path, sizeof(full_path), "data/fichiers/%s_%s", course_values[i], city_values[i]);
+    // Récupérer les valeurs des colonnes "Course" et "Ville"
+    char **course_values = recuperer_colonne_csv(csv_file, course_column, &nb_courses);
+    char **city_values = recuperer_colonne_csv(csv_file, city_column, &nb_cities);
 
-            // Créer le dossier avec le chemin complet
-            create_directory_if_not_exists(full_path);
+    if (!course_values || !city_values || nb_courses == 0 || nb_cities == 0) {
+        printf("Erreur : Impossible de récupérer les colonnes %s et %s.\n", course_column, city_column);
+        // Libérer la mémoire si partiellement allouée
+        if (course_values) {
+            for (int i = 0; i < nb_courses; i++) free(course_values[i]);
+            free(course_values);
         }
-
-        // Libérer la mémoire
-        for (int i = 0; i < nb_resultats_course; i++) {
-            free(course_values[i]);
+        if (city_values) {
+            for (int i = 0; i < nb_cities; i++) free(city_values[i]);
+            free(city_values);
         }
-        for (int i = 0; i < nb_resultats_city; i++) {
-            free(city_values[i]);
-        }
-        free(course_values);
-        free(city_values);
-    } else {
-        printf("Aucune valeur trouvée dans les colonnes %s et %s.\n", course_column, city_column);
+        return;
     }
+
+    // Créer les dossiers pour chaque paire Course-Ville
+    for (int i = 0; i < nb_courses && i < nb_cities; i++) {
+        char path[MAX_PATH_LENGTH];
+        snprintf(path, sizeof(path), "data/fichiers/%s_%s", course_values[i], city_values[i]);
+        create_directory_if_not_exists(path);
+    }
+
+    // Libérer la mémoire
+    for (int i = 0; i < nb_courses; i++) free(course_values[i]);
+    for (int i = 0; i < nb_cities; i++) free(city_values[i]);
+    free(course_values);
+    free(city_values);
 }
 
 void generate_special_filename(const char *ville, const char *session_type, int session_num, int special_weekend, char *output_filename) {

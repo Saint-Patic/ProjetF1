@@ -3,6 +3,8 @@
 #define MAX_SESSION_ESSAI 3
 #define MAX_SESSION_QUALIF 3
 #define MAX_SESSION_COURSE 1
+#define MAX_COLONNE 256
+#define MAX_PATH_LENGTH 512
 
 #include "car.h"
 
