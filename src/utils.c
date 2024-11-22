@@ -91,6 +91,27 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
         return 0;
     }
 
+    glob_t result;          //initialisation de la  structure glob_t
+    char path_to_city[256]; 
+    int temp_num = directory_num;
+    //crée la string avec le chemin connu + le nombre du grand prix précédent
+    snprint(path_to_city, sizeof(path_to_city), "data/fichiers/%s", temp_num - 1)  
+    //glob() met les informations dans une structure 
+    int verif = glob(path_to_city, GLOB_NOSORT, NULL, &result); 
+    //vérif si resume_course.csv de la course précédente existe 
+    if (verif == 0 && temp_num > 0 ) {
+        printf("Fichiers trouvés dans '%s' :\n", path_to_city);
+        if (sizeof(result.gl_pathv)/sizeof(result.gl_pathv[0]) == 1) {
+            if (file_exists(result.gl_pathv[0])) {
+                snprint(path_to_city, sizeof(path_to_city), result.gl_pathv[0], "/resume_couse.csv");
+                if (!file_exists(path_to_city)) {
+                    printf("ERREUR: resume_course du grand prix précédent n'existe pas: %s\n", path_to_city);
+                    return 0;
+                }
+            }
+        }     
+    }
+
     return 1;
 }
 
