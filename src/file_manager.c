@@ -355,4 +355,34 @@ void create_directories_from_csv_values(const char *csv_file, const char *course
     }
 }
 
+void generate_special_filename(const char *ville, const char *session_type, int session_num, int special_weekend, char *output_filename) {
+    if (special_weekend) {
+        if (strcmp(session_type, "essai") == 0) {
+            // Les essais libres restent inchangés
+            snprintf(output_filename, 100, "data/fichiers/%s/%s_%d.csv", ville, session_type, session_num);
+        } else if (strcmp(session_type, "qualif") == 0) {
+            if (session_num >= 1 && session_num <= 3) {
+                // Qualif_1, 2, 3 deviennent sprint_shootout_1, 2, 3
+                snprintf(output_filename, 100, "data/fichiers/%s/sprint_shootout_%d.csv", ville, session_num);
+            } else if (session_num >= 4 && session_num <= 6) {
+                // Qualif_4, 5, 6 deviennent qualif_1, 2, 3
+                snprintf(output_filename, 100, "data/fichiers/%s/qualif_%d.csv", ville, session_num - 3);
+            }
+        } else if (strcmp(session_type, "course") == 0) {
+            if (session_num == 1) {
+                // Course_1 devient sprint_1
+                snprintf(output_filename, 100, "data/fichiers/%s/sprint_1.csv", ville);
+            } else if (session_num == 2) {
+                // Course_2 devient course_1
+                snprintf(output_filename, 100, "data/fichiers/%s/course_1.csv", ville);
+            }
+        } else {
+            // Nom standard pour les autres cas
+            snprintf(output_filename, 100, "data/fichiers/%s/%s_%d.csv", ville, session_type, session_num);
+        }
+    } else {
+        // Pas de changement pour un week-end normal
+        snprintf(output_filename, 100, "data/fichiers/%s/%s_%d.csv", ville, session_type, session_num);
+    }
+}
 

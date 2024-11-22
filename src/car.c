@@ -8,6 +8,7 @@
 #include <pthread.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <semaphore.h>
 #include "../include/car.h"
 #include "../include/utils.h"
 #include "../include/display.h"
@@ -17,6 +18,7 @@
 #define NUM_CARS 20 // Define NUM_CARS with an appropriate value
 
 sem_t sem; // Define the semaphore
+extern sem_t sem; // Declare the semaphore
 
 void generate_sector_times(car_t *car, int min_time, int max_time) {
     float lap_time = 0;
@@ -108,12 +110,12 @@ void simulate_sess(car_t cars[], int num_cars, int min_time, int max_time, int s
     display_practice_results(cars, num_cars);
 }
 
-void simulate_qualification(car_t cars[], int session_num, const char *ville, int min_time, int max_time, int total_cars) {
-    int num_cars_in_stage = ternaire_moins_criminel(session_num, 20, 15, 10);
-    int eliminated_cars_count = ternaire_moins_criminel(session_num, 5, 5, 0);
-    int session_duration = ternaire_moins_criminel(session_num, 720, 600, 480);
+void simulate_qualification(car_t cars[], int session_num, const char *ville, int min_time, int max_time, int total_cars, int sprint_mode, char *filename) {
+    int num_cars_in_stage = ternaire_moins_criminel(session_num, 20, 15, 10, sprint_mode);
+    int eliminated_cars_count = ternaire_moins_criminel(session_num, 5, 5, 0, sprint_mode);
+    int session_duration = ternaire_moins_criminel(session_num, DUREE_QUALIF_1, DUREE_QUALIF_2, DUREE_QUALIF_3, sprint_mode);
 
-    char classement_file[100];
+    char *classement_file = malloc(100 * sizeof(char));
     snprintf(classement_file, 100, "data/fichiers/%s/classement.csv", ville);
 
     load_eliminated_cars(classement_file, cars, total_cars);
@@ -132,11 +134,9 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, in
 
     qsort(eligible_cars, num_cars_in_stage, sizeof(car_t), compare_cars);
 
-    char session_file[100];
-    snprintf(session_file, 100, "data/fichiers/%s/qualif_%d.csv", ville, session_num);
-
-    save_session_results(eligible_cars, num_cars_in_stage, session_file, "a");
+    save_session_results(eligible_cars, num_cars_in_stage, filename, "a");
     save_eliminated_cars(eligible_cars, num_cars_in_stage, eliminated_cars_count, session_num, cars, total_cars, ville);
+    free(classement_file);
 }
 
 void simulate_course(int distance, int min_time, int max_time, int total_laps) {
@@ -164,13 +164,5 @@ void simulate_course(int distance, int min_time, int max_time, int total_laps) {
     shm_unlink("/cars_shm");
 }
 
-int ternaire_moins_criminel(int session_num, int res1, int res2, int resDefault) {
-    switch (session_num) {
-        case 1:
-            return res1;
-        case 2:
-            return res2;
-        default:
-            return resDefault;
-    }
-} // cordialement, Eloy
+
+

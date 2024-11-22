@@ -16,7 +16,7 @@ char **recuperer_colonne_csv(const char *nom_fichier, const char *nom_colonne, i
 int test_recuperer_colonne_csv();
 void create_directory_if_not_exists(const char *path);
 void create_directories_from_csv_values(const char *csv_file, const char *course_column, const char *city_column);
-void supprimer_dossiers_dans_repertoire(const char *path);
 void load_eliminated_cars(char *filename, car_t cars[], int total_cars);
+void generate_special_filename(const char *ville, const char *session_type, int session_num, int special_weekend, char *output_filename);
 
 #endif // FILE_MANAGER_H
