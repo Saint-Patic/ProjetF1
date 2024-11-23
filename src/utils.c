@@ -3,6 +3,7 @@
 #include <string.h>
 #include <time.h>
 #include <ctype.h>
+#include <glob.h>
 #include "../include/car.h"
 #include "../include/utils.h"
 #include "../include/display.h"
@@ -128,7 +129,31 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
         printf("Erreur : Le fichier %s existe déjà. Session déjà exécutée.\n", session_file);
         return 0;
     }
+    // cette vérification sert ne pas commencer un nouveau grand prix si le précédent n'a pas eu lieu
+    glob_t result;
+    char path_to_city[256];
+    int temp_num = *directory_num;  // deréférence le pointeur parce que qu'il ne peut pas être utilisé tel quelle dans la suite
 
+    // crée la string avec le chemin connu + le num de la couse précédente
+    snprintf(path_to_city, sizeof(path_to_city), "data/fichiers/%d", temp_num - 1);
+
+    // remplit le structure glob avec les résultats de la recherche 
+    int verif = glob(path_to_city, GLOB_NOSORT, NULL, &result);
+
+    // vérifie si le fichier résume_course.csv de la course précédente existe
+    if (verif == 0 && temp_num > 0) {
+        printf("ERREUR: Aucun fichier trouvé '%s':\n", path_to_city);
+        // check si un dossier à été trouvé et pas plusieurs parce qu'il ne doit pas en trouvé plus
+        if (result.gl_pathc == 1) {
+            if (file_exists(result.gl_pathv[0])) {
+                snprintf(path_to_city, sizeof(path_to_city), "%s/resume_course.csv", result.gl_pathv[0]);
+                if (!file_exists(path_to_city)) {
+                    printf("ERREUR: Le fichier resume_course n'a pas été trouvé: %s\n", path_to_city);
+                    return 0;
+                }
+            }
+        }
+    }
     return 1;
 }
 
