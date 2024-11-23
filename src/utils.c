@@ -178,8 +178,13 @@ void initialize_random() {
 }
 
 float random_float(int min, int max) {
-    return min + (float)rand() / RAND_MAX * (max - min); 
+    if (min >= max) {
+        printf("Erreur: min >= max dans random_float()\n");
+        return min; // Valeur par défaut raisonnable
+    }
+    return min + (float)rand() / RAND_MAX * (max - min);
 }
+
 
 int estimate_max_laps(int session_duration, float max_time) {
     return session_duration / max_time;
@@ -204,26 +209,15 @@ char *trim(char *str) {
     return str;
 }
 
-int ternaire_moins_criminel(int session_num, int res1, int res2, int resDefault, int sprint_mode) {
-    if (sprint_mode) {
-        switch (session_num) {
-            case 1:
-                return 12 * 60; // Q1
-            case 2:
-                return 10 * 60; // Q2
-            default:
-                return 8 * 60; // Q3
-        }
-    } else {
-            switch (session_num) {
-                case 1:
-                    return res1; // Q1
-                case 2:
-                    return res2; // Q2
-                default:
-                    return resDefault; // Q3
-        }   
-    }
+int ternaire_moins_criminel(int session_num, int res1, int res2, int resDefault) {
+    switch (session_num) {
+        case 1:
+            return res1; // Q1
+        case 2:
+            return res2; // Q2
+        default:
+            return resDefault; // Q3
+    }   
 } // cordialement, Eloy
 
 int is_special_weekend(const char *ville) {
@@ -235,21 +229,6 @@ int is_special_weekend(const char *ville) {
         if (atoi(weekend_types[ville_num - 1]) == 1) return 1;
     }
     return 0;
-}
-
-void initialize_cars(car_t cars[], int car_numbers[], int num_cars) {
-    for (int i = 0; i < num_cars; i++) {
-        cars[i].car_number = car_numbers[i];
-        cars[i].best_lap_time = 0;
-        cars[i].temps_rouler = 0;
-        cars[i].pit_stop = 0;
-        cars[i].pit_stop_nb = 1;
-        cars[i].out = 0;
-        for (int j = 0; j < NUM_SECTORS; j++) {
-            cars[i].sector_times[j] = 0;
-            cars[i].best_sector_times[j] = 0;
-        }
-    }
 }
 
 int calculate_total_laps(const char *ville, float session_distance) {

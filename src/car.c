@@ -19,6 +19,24 @@
 sem_t sem; // Define the semaphore
 extern sem_t sem; // Declare the semaphore
 
+
+
+void initialize_cars(car_t cars[], int car_numbers[], int num_cars) {
+    for (int i = 0; i < num_cars; i++) {
+        cars[i].car_number = car_numbers[i];
+        cars[i].best_lap_time = 0.0;
+        cars[i].temps_rouler = 0.0;
+        cars[i].pit_stop = 0;
+        cars[i].pit_stop_nb = 0;
+        cars[i].out = 0;
+        for (int j = 0; j < NUM_SECTORS; j++) {
+            cars[i].sector_times[j] = 0.0;
+            cars[i].best_sector_times[j] = 0.0;
+        }
+    }
+}
+
+
 /**
  * @brief Génère les temps par secteur pour une voiture et met à jour ses meilleurs temps.
  * 
@@ -150,10 +168,9 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
  * @param filename Nom du fichier où sauvegarder les résultats.
  */
 void simulate_qualification(car_t cars[], int session_num, const char *ville, int sprint_mode, char *filename, char *session_type) {
-    int num_cars_in_stage = ternaire_moins_criminel(session_num, 20, 15, 10, sprint_mode);
-    int eliminated_cars_count = ternaire_moins_criminel(session_num, 5, 5, 0, sprint_mode);
-    int session_duration = ternaire_moins_criminel(session_num, DUREE_QUALIF_1, DUREE_QUALIF_2, DUREE_QUALIF_3, sprint_mode);
-
+    int num_cars_in_stage = ternaire_moins_criminel(session_num, 20, 15, 10);
+    int eliminated_cars_count = ternaire_moins_criminel(session_num, 5, 5, 0);
+    int session_duration = ternaire_moins_criminel(session_num, DUREE_QUALIF_1, DUREE_QUALIF_2, DUREE_QUALIF_3);  
     int sem_id = semget(SEM_KEY, 1, IPC_CREAT | 0666);
     if (sem_id == -1) {
         perror("semget failed");
@@ -174,13 +191,17 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, in
 
     char *classement_file = malloc(100 * sizeof(char));
     if (sprint_mode) {
+        int session_duration = ternaire_moins_criminel(session_num, 720, 600, 480);
         snprintf(classement_file, 100, "data/fichiers/%s/classement_shootout.csv", ville);
     } else {
-        snprintf(classement_file, 100, "data/fichiers/%s/classement.csv", ville);
+        snprintf(classement_file, 100, "data/fichiers/%s/classement.csv", ville); 
     }
+
     if (session_num > 1) {
         load_eliminated_cars(classement_file, cars, NUM_CARS);
     }
+
+
 
     car_t eligible_cars[num_cars_in_stage];
     int eligible_index = 0;
