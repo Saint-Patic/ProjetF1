@@ -154,6 +154,7 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
             }
         }
     }
+    globfree(&result);
     return 1;
 }
 
