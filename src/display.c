@@ -21,35 +21,68 @@
 #define CYANBG "\x1b[46m"
 
 void display_practice_results(car_t cars[], int num_cars) {
+    //trie en fonction du temps
     qsort(cars, num_cars, sizeof(car_t), compare_cars);
 
-    printf(GREEN "===========================================================================" RESET "\n");
-    printf(CYAN"|"RESET"  "RED"##"RESET"  "CYAN"|"RESET"  "YELLOW"Secteur 1"RESET"  "CYAN"|"RESET"  "YELLOW"Secteur 2"RESET"  "CYAN"|"RESET"  "YELLOW"Secteur 3"RESET"  "CYAN"|"RESET"   Tour (s)  "CYAN"|"RESET"" REDBG "   Diff   " RESET ""CYAN"|"RESET"\n");
-    printf(GREEN "===========================================================================" RESET "\n");
+    //taille max du buffer, voir si il faut changer, j'ai mis au hasard 
+    const int MAX_BUFFER_SIZE = 10000;
+    char *buffer = malloc(MAX_BUFFER_SIZE); //voir si on peut utiliser malloc ??? !!!!
+    if (buffer == NULL) {
+        perror("ERREUR: problème de mémoire non allouée");
+        exit(EXIT_FAILURE);
+    }
+    //initialisation du buffer
+    buffer[0] = '\0';
 
-    float prev_time = 0;
+    snprintf(buffer + strlen(buffer), MAX_BUFFER_SIZE - strlen(buffer),
+             GREEN "===========================================================================" RESET "\n"
+             CYAN "|" RESET  RED "  ##  " RESET  CYAN "|" RESET  YELLOW "  Secteur 1  " RESET  CYAN "|" RESET  YELLOW "  Secteur 2  " RESET  CYAN "|" RESET  YELLOW "  Secteur 3  " RESET  CYAN "|" RESET "   Tour (s)  " CYAN "|" RESET REDBG "   Diff   " RESET "\n"
+             GREEN "===========================================================================" RESET "\n");
+
+    //ajouter les lignes de résultat
+    float prev_time = cars[0].best_lap_time;
     for (int i = 0; i < num_cars; i++) {
-        if (i == 0) prev_time = cars[i].best_lap_time;
-
         float diff = cars[i].best_lap_time - prev_time;
-        printf(CYAN"|"RESET" "RED"%3d"RESET"  "CYAN"|"RESET"   %7.2f   "CYAN"|"RESET"   %7.2f   "CYAN"|"RESET"   %7.2f   "CYAN"|"RESET"   %7.2f   "CYAN"|"RESET"   %+5.2f  "CYAN"|"RESET"\n",
-               cars[i].car_number,
-               cars[i].sector_times[0], //secteur 1
-               cars[i].sector_times[1], //secteur 2
-               cars[i].sector_times[2], //secteur 3
-               cars[i].best_lap_time,
-               i == 0 ? 0.00 : diff);
 
         if (cars[i].pit_stop) {
-            printf(BLUE" (P)\n"RESET);
+            snprintf(buffer + strlen(buffer), MAX_BUFFER_SIZE - strlen(buffer),
+                 CYAN "|" RESET " " RED "%3d" RESET "  " CYAN "|" RESET "   %7.2f   " CYAN "|" RESET "   %7.2f   " CYAN "|" RESET "   %7.2f   " CYAN "|" RESET "   %7.2f   " CYAN "|" RESET "   %+5.2f    "BLUE " (P)" RESET"\n",
+                 cars[i].car_number,
+                 cars[i].sector_times[0], // Secteur 1
+                 cars[i].sector_times[1], // Secteur 2
+                 cars[i].sector_times[2], // Secteur 3
+                 cars[i].best_lap_time,
+                 i == 0 ? 0.00 : diff);
         } else if (cars[i].out) {
-            printf(MAGENTA" (Out)\n"RESET);
+            snprintf(buffer + strlen(buffer), MAX_BUFFER_SIZE - strlen(buffer),
+                 CYAN "|" RESET " " RED "%3d" RESET "  " CYAN "|" RESET "   %7.2f   " CYAN "|" RESET "   %7.2f   " CYAN "|" RESET "   %7.2f   " CYAN "|" RESET "   %7.2f   " CYAN "|" RESET "   %+5.2f    "MAGENTA " (Out)" RESET"\n",
+                 cars[i].car_number,
+                 cars[i].sector_times[0], // Secteur 1
+                 cars[i].sector_times[1], // Secteur 2
+                 cars[i].sector_times[2], // Secteur 3
+                 cars[i].best_lap_time,
+                 i == 0 ? 0.00 : diff);
+        } else {
+            snprintf(buffer + strlen(buffer), MAX_BUFFER_SIZE - strlen(buffer),
+                 CYAN "|" RESET " " RED "%3d" RESET "  " CYAN "|" RESET "   %7.2f   " CYAN "|" RESET "   %7.2f   " CYAN "|" RESET "   %7.2f   " CYAN "|" RESET "   %7.2f   " CYAN "|" RESET "   %+5.2f  \n",
+                 cars[i].car_number,
+                 cars[i].sector_times[0], // Secteur 1
+                 cars[i].sector_times[1], // Secteur 2
+                 cars[i].sector_times[2], // Secteur 3
+                 cars[i].best_lap_time,
+                 i == 0 ? 0.00 : diff);
         }
         prev_time = cars[i].best_lap_time;
     }
-    printf(GREEN "=================================================================" RESET "\n");
-}
 
+    snprintf(buffer + strlen(buffer), MAX_BUFFER_SIZE - strlen(buffer),
+             GREEN "===========================================================================" RESET "\n");
+
+    //affiche tout le tableau
+    printf("%s", buffer);
+    free(buffer);
+    //sleep(1);
+}
 void display_overall_best_times(car_t cars[], int num_cars) {
     float overall_best_sector_times[NUM_SECTORS] = {9999.0, 9999.0, 9999.0};
     int overall_best_sector_car[NUM_SECTORS] = {-1, -1, -1}; // Ajout du tableau pour les numéros des voitures des meilleurs secteurs
