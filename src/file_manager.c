@@ -11,34 +11,51 @@
 #include "../include/file_manager.h"
 #include "../include/utils.h"
 
-
+/**
+ * @brief Extrait le type de session à partir d'un nom de fichier.
+ * 
+ * @param filename Chemin du fichier.
+ * @return Chaîne contenant le type de session ou NULL si le format est incorrect.
+ */
 char *extract_type_session(char *filename) {
-    char *type_start = strrchr(filename, '/');  // Trouver le dernier '/' dans le chemin
-    if (!type_start) type_start = filename;     // Si pas de '/', prendre le nom de fichier directement
-    else type_start++;                          // Avancer d'un caractère pour passer le '/'
+    char *type_start = strrchr(filename, '/');
+    if (!type_start) type_start = filename;
+    else type_start++;
 
-    char *underscore_pos = strchr(type_start, '_'); // Trouver le premier '_'
+    char *underscore_pos = strchr(type_start, '_');
     if (!underscore_pos) {
-        return NULL; 
-    }          // Retourner NULL si le format est incorrect
+        return NULL;
+    }
 
     size_t type_length = underscore_pos - type_start;
     char *type_session = malloc(type_length + 1);
     if (!type_session) return NULL;
 
     strncpy(type_session, type_start, type_length);
-    type_session[type_length] = '\0';           // Terminer la chaîne
+    type_session[type_length] = '\0';
 
     return type_session;
 }
 
-
+/**
+ * @brief Vérifie l'existence d'un fichier.
+ * 
+ * @param filename Chemin du fichier à vérifier.
+ * @return 1 si le fichier existe, 0 sinon.
+ */
 int file_exists(const char *filename) {
     struct stat buffer;
     return (stat(filename, &buffer) == 0);
 }
 
-
+/**
+ * @brief Sauvegarde les résultats d'une session dans un fichier.
+ * 
+ * @param cars Tableau des voitures.
+ * @param num_cars Nombre de voitures dans la session.
+ * @param filename Chemin du fichier.
+ * @param mode Mode d'ouverture du fichier ("a" pour ajout, "w" pour écrasement).
+ */
 void save_session_results(car_t cars[], int num_cars, const char *filename, const char *mode) {
     FILE *file = fopen(filename, mode);
     if (!file) {
@@ -78,11 +95,17 @@ void save_session_results(car_t cars[], int num_cars, const char *filename, cons
     fclose(file);
 }
 
+/**
+ * @brief Combine les résultats de plusieurs sessions dans un seul fichier.
+ * 
+ * @param session_files Tableau des chemins des fichiers de session.
+ * @param num_sessions Nombre de sessions.
+ * @param output_file Chemin du fichier de sortie.
+ */
 void combine_session_results(char *session_files[], int num_sessions, const char *output_file) {
     float best_sector_times[NUM_SECTORS] = {9999.0, 9999.0, 9999.0};
     float best_overall_lap_time = 9999.0;
 
-    // Parcourir chaque fichier de session pour trouver les meilleurs temps
     for (int session = 0; session < num_sessions; session++) {
         FILE *file = fopen(session_files[session], "r");
         if (!file) {
@@ -90,27 +113,22 @@ void combine_session_results(char *session_files[], int num_sessions, const char
             continue;
         }
 
-        // Ignorer la première ligne (en-tête)
         char buffer[128];
         fgets(buffer, sizeof(buffer), file);
 
-        // Lire les temps pour chaque voiture et mettre à jour les meilleurs temps
         int car_number;
         float lap_time, sector1, sector2, sector3;
         while (fscanf(file, "%d,%f,%f,%f,%f\n", &car_number, &lap_time, &sector1, &sector2, &sector3) == 5) {
-            // Meilleur temps de chaque secteur parmi les voitures de toutes les sessions
             if (sector1 < best_sector_times[0]) best_sector_times[0] = sector1;
             if (sector2 < best_sector_times[1]) best_sector_times[1] = sector2;
             if (sector3 < best_sector_times[2]) best_sector_times[2] = sector3;
 
-            // Meilleur tour global
             if (lap_time < best_overall_lap_time) best_overall_lap_time = lap_time;
         }
 
         fclose(file);
     }
 
-    // Écrire les résultats dans le fichier de sortie
     FILE *output = fopen(output_file, "w");
     if (!output) {
         perror("Erreur d'ouverture du fichier de sortie");
@@ -126,37 +144,50 @@ void combine_session_results(char *session_files[], int num_sessions, const char
     fclose(output);
 }
 
+/**
+ * @brief Traite les fichiers de session et combine les résultats si nécessaire.
+ * 
+ * @param session_num Numéro de la session actuelle.
+ * @param ville Nom de la ville.
+ * @param type_session Type de la session (essai, qualif, course).
+ */
 void process_session_files(int session_num, char *ville, char *type_session) {
     if ((strcmp(type_session, "essai") == 0 && session_num == MAX_SESSION_ESSAI) ||
         (strcmp(type_session, "qualif") == 0 && session_num == MAX_SESSION_QUALIF) ||
+        (strcmp(type_session, "shootout") == 0 && session_num == MAX_SESSION_QUALIF) ||
         (strcmp(type_session, "course") == 0 && session_num == MAX_SESSION_COURSE)) {
-        char *session_files[session_num];
+        char **session_files = malloc(session_num * sizeof(char *));  // Fix: Allocation pour les pointeurs
 
-        // Allocation et création des chemins pour chaque fichier de session
         for (int i = 0; i < session_num; i++) {
-            session_files[i] = malloc(100 * sizeof(char));  // Allocation mémoire pour chaque nom de fichier
+            session_files[i] = malloc(100 * sizeof(char));  // Allocation pour chaque chemin
             snprintf(session_files[i], 100, "data/fichiers/%s/%s_%d.csv", ville, type_session, i + 1);
         }
-        
 
         char output_file[100];
         snprintf(output_file, 100, "data/fichiers/%s/resume_%s.csv", ville, type_session);
 
-        // Appel à la fonction pour combiner les résultats des sessions
         combine_session_results(session_files, session_num, output_file);
 
-        // Libération de la mémoire allouée
         for (int i = 0; i < session_num; i++) {
-            free(session_files[i]);
+            free(session_files[i]);  // Libération sécurisée
+            session_files[i] = NULL; // Évite les erreurs futures
         }
+        free(session_files);  // Libération du tableau de pointeurs
     }
 }
 
 
-
-void save_eliminated_cars(car_t eligible_cars[], int num_cars_in_stage, int eliminated_cars_count, int session_num, car_t cars[], int total_cars, const char *ville) {
-    char *ranking_file_path = malloc(100 * sizeof(char));
-    snprintf(ranking_file_path, 100, "data/fichiers/%s/classement.csv", ville);
+/**
+ * @brief Sauvegarde les voitures éliminées lors d'une session.
+ * 
+ * @param eligible_cars Tableau des voitures encore en lice.
+ * @param num_cars_in_stage Nombre de voitures dans l'étape actuelle.
+ * @param eliminated_cars_count Nombre de voitures à éliminer.
+ * @param session_num Numéro de la session actuelle.
+ * @param cars Tableau global de toutes les voitures.
+ * @param total_cars Nombre de voiture totales dans la session
+ */
+void save_eliminated_cars(car_t eligible_cars[], int num_cars_in_stage, int eliminated_cars_count, int session_num, car_t cars[], int total_cars, const char *ville, char *ranking_file_path) {
 
     FILE *ranking_file = fopen(ranking_file_path, "a");
     if (ranking_file == NULL) {
@@ -193,7 +224,7 @@ void save_eliminated_cars(car_t eligible_cars[], int num_cars_in_stage, int elim
         }
     }
     fclose(ranking_file);
-    free(ranking_file_path);
+
 }
 
 

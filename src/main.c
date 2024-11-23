@@ -41,26 +41,20 @@ int main(int argc, char *argv[]) {
 
     if (strcmp(session_type, "essai") == 0) {
         printf("Simulation des essais libres pour un %s.\n", special_weekend ? "week-end spécial" : "week-end normal");
-        simulate_sess(cars, NUM_CARS, 3600, 20, "essai");
+        int total_laps = estimate_max_laps(DUREE_ESSAI, 3*MIN_TIME);
+        simulate_sess(cars, NUM_CARS, DUREE_ESSAI, total_laps, "essai");
         save_session_results(cars, NUM_CARS, session_file, "w");
     } else if (strcmp(session_type, "qualif") == 0 || strcmp(session_type, "shootout") == 0) {
-        if (special_weekend && session_num == 1) {
-            printf("Simulation du Sprint Shootout (qualifications spéciales).\n");
-        } else if (!special_weekend || session_num > 1) {
-            printf("Simulation des qualifications pour la course principale.\n");
-            simulate_qualification(cars, session_num, ville, special_weekend, session_file);
-        }
+        printf("Simulation des qualifications pour la course principale.\n");
+        simulate_qualification(cars, session_num, ville, special_weekend, session_file, session_type);
     } else if (strcmp(session_type, "course") == 0) {
-        int distance_course = session_num == 1 && special_weekend ? SPRINT_DISTANCE : SESSION_DISTANCE;
-        int total_laps = calculate_total_laps(ville, distance_course);
         if (session_num == 1 && special_weekend) {
             printf("Simulation de la course sprint.\n");
         } else if (session_num > 1 || !special_weekend) {
             printf("Simulation de la course principale.\n");
         }
-        simulate_course(distance_course, total_laps, ville);
+        simulate_course(special_weekend, session_num, ville);
     }
-
     process_session_files(session_num, ville, session_type);
     free(ville);
     free(session_type);

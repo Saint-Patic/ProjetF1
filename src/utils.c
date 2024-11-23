@@ -57,9 +57,22 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
 
             // Vérifie que le Sprint Shootout a été complété avant le Sprint
             char shootout_resume_file[100];
-            snprintf(shootout_resume_file, sizeof(shootout_resume_file), "data/fichiers/%s/shootout_3.csv", ville);
+            snprintf(shootout_resume_file, sizeof(shootout_resume_file), "data/fichiers/%s/resume_shootout.csv", ville);
             if (!file_exists(shootout_resume_file)) {
                 printf("Erreur : La course sprint nécessite un Sprint Shootout complet (%s).\n", shootout_resume_file);
+                return 0;
+            }
+        } else if (strcmp(session_type, "qualif") == 0) {
+            if (*session_num < 1 || *session_num > MAX_SESSION_QUALIF) {
+                printf("Erreur : Nombre maximum de qualifications dépassé (3).\n");
+                return 0;
+            }
+
+            // Vérifie que les essais ont été complétés avant les qualifications
+            char essai_resume_file[100];
+            snprintf(essai_resume_file, sizeof(essai_resume_file), "data/fichiers/%s/sprint_1.csv", ville);
+            if (!file_exists(essai_resume_file)) {
+                printf("Erreur : Les qualifications nécessitent une période de sprint préalable (%s).\n", essai_resume_file);
                 return 0;
             }
         } else if (strcmp(session_type, "course") == 0) {
@@ -70,7 +83,7 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
 
             // Vérifie que les qualifications normales ont été complétées avant la course principale
             char qualif_resume_file[100];
-            snprintf(qualif_resume_file, sizeof(qualif_resume_file), "data/fichiers/%s/qualif_3.csv", ville);
+            snprintf(qualif_resume_file, sizeof(qualif_resume_file), "data/fichiers/%s/resume_qualif.csv", ville);
             if (!file_exists(qualif_resume_file)) {
                 printf("Erreur : La course principale nécessite des qualifications normales (%s).\n", qualif_resume_file);
                 return 0;
@@ -89,7 +102,7 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
 
             // Vérifie que les essais ont été complétés avant les qualifications
             char essai_resume_file[100];
-            snprintf(essai_resume_file, sizeof(essai_resume_file), "data/fichiers/%s/essai_1.csv", ville);
+            snprintf(essai_resume_file, sizeof(essai_resume_file), "data/fichiers/%s/resume_essai.csv", ville);
             if (!file_exists(essai_resume_file)) {
                 printf("Erreur : Les qualifications nécessitent une période d'essai préalable (%s).\n", essai_resume_file);
                 return 0;
@@ -102,7 +115,7 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
 
             // Vérifie que les qualifications ont été complétées avant la course
             char qualif_resume_file[100];
-            snprintf(qualif_resume_file, sizeof(qualif_resume_file), "data/fichiers/%s/qualif_3.csv", ville);
+            snprintf(qualif_resume_file, sizeof(qualif_resume_file), "data/fichiers/%s/resume_qualif.csv", ville);
             if (!file_exists(qualif_resume_file)) {
                 printf("Erreur : La course principale nécessite des qualifications (%s).\n", qualif_resume_file);
                 return 0;

@@ -13,6 +13,7 @@
 #define MAX_TIME 45
 #define SESSION_DISTANCE 300
 #define SPRINT_DISTANCE 100
+#define SEM_KEY 1234
 
 typedef struct car{
     int car_number;
@@ -35,8 +36,8 @@ void display_overall_best_times(car_t cars[], int num_cars);
 int compare_cars(const void *a, const void *b);
 void reset_out_status_and_temps_rouler(car_t cars[], int num_cars);
 void simulate_pit_stop(car_t *car, int min_time, int max_time, char *session_type);
-void simulate_qualification(car_t cars[], int session_num, const char *ville, int sprint_mode, char *filename);
-void simulate_course(int distance, int total_laps, const char *ville);
+void simulate_qualification(car_t cars[], int session_num, const char *ville, int sprint_mode, char *filename, char *session_type);
+void simulate_course(int special_weekend, int session_num, const char *ville);
 
 
 
