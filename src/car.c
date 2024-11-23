@@ -13,8 +13,10 @@
 #include "../include/utils.h"
 #include "../include/display.h"
 #include "../include/file_manager.h"
+#include <sys/ipc.h>
+#include <sys/sem.h>
 
-
+#define SEM_KEY 1234
 
 sem_t sem; // Define the semaphore
 extern sem_t sem; // Declare the semaphore
@@ -113,6 +115,29 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, in
     int eliminated_cars_count = ternaire_moins_criminel(session_num, 5, 5, 0, sprint_mode);
     int session_duration = ternaire_moins_criminel(session_num, DUREE_QUALIF_1, DUREE_QUALIF_2, DUREE_QUALIF_3, sprint_mode);
 
+    // Create a semaphore set with one semaphore
+    int sem_id = semget(SEM_KEY, 1, IPC_CREAT | 0666);
+    if (sem_id == -1) {
+        perror("semget failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // Initialize the semaphore to 1
+    semctl(sem_id, 0, SETVAL, 1);
+
+    // Semaphore operations
+    struct sembuf sem_op;
+
+    // Lock the semaphore (P operation)
+    sem_op.sem_num = 0;
+    sem_op.sem_op = -1;
+    sem_op.sem_flg = 0;
+    if (semop(sem_id, &sem_op, 1) == -1) {
+        perror("semop lock failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // Critical section
     char *classement_file = malloc(100 * sizeof(char));
     snprintf(classement_file, 100, "data/fichiers/%s/classement.csv", ville);
     if (session_num > 1) {
@@ -136,6 +161,19 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, in
     save_session_results(eligible_cars, num_cars_in_stage, filename, "a");
     save_eliminated_cars(eligible_cars, num_cars_in_stage, eliminated_cars_count, session_num, cars, NUM_CARS, ville);
     free(classement_file);
+
+    // Unlock the semaphore (V operation)
+    sem_op.sem_op = 1;
+    if (semop(sem_id, &sem_op, 1) == -1) {
+        perror("semop unlock failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // Remove the semaphore set
+    if (semctl(sem_id, 0, IPC_RMID) == -1) {
+        perror("semctl remove failed");
+        exit(EXIT_FAILURE);
+    }
 }
 
 void simulate_course(int distance, int total_laps) {
@@ -143,19 +181,13 @@ void simulate_course(int distance, int total_laps) {
     ftruncate(shm_fd, sizeof(car_t) * NUM_CARS);
     car_t *cars = mmap(0, sizeof(car_t) * NUM_CARS, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
 
-    // Initialize cars array
+    int car_numbers[NUM_CARS];
     for (int i = 0; i < NUM_CARS; i++) {
-        cars[i].car_number = i + 1;
-        cars[i].best_lap_time = 0;
-        cars[i].temps_rouler = 0;
-        cars[i].pit_stop = 0;
-        cars[i].pit_stop_nb = 0;
-        cars[i].out = 0;
-        for (int j = 0; j < NUM_SECTORS; j++) {
-            cars[i].sector_times[j] = 0;
-            cars[i].best_sector_times[j] = 0;
-        }
+        car_numbers[i] = i + 1; // Assuming car numbers are 1, 2, 3, ...
     }
+
+    // Initialize cars array using the function from utils.c
+    initialize_cars(cars, car_numbers, NUM_CARS);
 
     simulate_sess(cars, NUM_CARS, 999999, total_laps, "course");
 
