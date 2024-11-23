@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
         } else if (session_num > 1 || !special_weekend) {
             printf("Simulation de la course principale.\n");
         }
-        simulate_course(distance_course, total_laps);
+        simulate_course(distance_course, total_laps, ville);
     }
 
     process_session_files(session_num, ville, session_type);

@@ -396,3 +396,26 @@ void generate_special_filename(const char *ville, const char *session_type, int 
     }
 }
 
+// Function to read car numbers from classement.csv
+void read_starting_grid(const char *filename, int car_numbers[], int num_cars) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        perror("Failed to open classement.csv");
+        exit(EXIT_FAILURE);
+    }
+
+    // Skip the header line
+    char buffer[256];
+    fgets(buffer, sizeof(buffer), file);
+
+    int car_number, session_num, position;
+    float best_lap_time;
+
+    while (fscanf(file, "%d,%d,%d,%f\n", &car_number, &session_num, &position, &best_lap_time) == 4) {
+        if (position > 0 && position <= num_cars) {
+            car_numbers[position - 1] = car_number;
+        }
+    }
+
+    fclose(file);
+}

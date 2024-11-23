@@ -176,20 +176,27 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, in
     }
 }
 
-void simulate_course(int distance, int total_laps) {
+void simulate_course(int distance, int total_laps, const char *ville) {
     int shm_fd = shm_open("/cars_shm", O_CREAT | O_RDWR, 0666);
     ftruncate(shm_fd, sizeof(car_t) * NUM_CARS);
     car_t *cars = mmap(0, sizeof(car_t) * NUM_CARS, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
 
     int car_numbers[NUM_CARS];
-    for (int i = 0; i < NUM_CARS; i++) {
-        car_numbers[i] = i + 1; // Assuming car numbers are 1, 2, 3, ...
-    }
+
+    // Ensure the correct path for classement.csv
+    char classement_file_path[100];
+    snprintf(classement_file_path, sizeof(classement_file_path), "data/fichiers/%s/classement.csv", ville);
+
+    // Read starting grid from classement.csv
+    read_starting_grid(classement_file_path, car_numbers, NUM_CARS);
+
+    // Display the starting grid
+    display_starting_grid(car_numbers, NUM_CARS);
 
     // Initialize cars array using the function from utils.c
     initialize_cars(cars, car_numbers, NUM_CARS);
 
-    simulate_sess(cars, NUM_CARS, 999999, total_laps, "course");
+    //simulate_sess(cars, NUM_CARS, 999999, total_laps, "course");
 
     munmap(cars, sizeof(car_t) * NUM_CARS);
     shm_unlink("/cars_shm");
