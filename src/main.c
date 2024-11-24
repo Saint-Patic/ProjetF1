@@ -39,23 +39,25 @@ int main(int argc, char *argv[]) {
 
     int special_weekend = is_special_weekend(ville);
 
-    if (strcmp(session_type, "essai") == 0) {
+    if (strcmp(session_type, "essai") == 0) { // essai libre (1 pour wk spé et 3 pour wk normal)
         printf("Simulation des essais libres pour un %s.\n", special_weekend ? "week-end spécial" : "week-end normal");
         int total_laps = estimate_max_laps(DUREE_ESSAI, 3*MIN_TIME);
         simulate_sess(cars, NUM_CARS, DUREE_ESSAI, total_laps, "essai");
         save_session_results(cars, NUM_CARS, session_file, "w");
-    } else if (strcmp(session_type, "qualif") == 0 || strcmp(session_type, "shootout") == 0) {
-        printf("Simulation des qualifications pour la course principale.\n");
+    } else if (strcmp(session_type, "shootout") == 0) { // shootout (uniquement pdt wk spé)
+        printf("Simulation du Sprint Shootout)\n");
         simulate_qualification(cars, session_num, ville, special_weekend, session_file, session_type);
-    } else if (strcmp(session_type, "course") == 0) {
-        if (session_num == 1 && special_weekend) {
-            printf("Simulation de la course sprint.\n");
-        } else if (session_num > 1 || !special_weekend) {
-            printf("Simulation de la course principale.\n");
-        }
-        simulate_course(special_weekend, session_num, ville);
+    } else if (strcmp(session_type, "sprint") == 0) { // sprint (uniquement pdt wk spé)
+        printf("Simulation du Sprint\n");
+        simulate_course(cars, special_weekend, session_num, ville, session_type);
+    } else if (strcmp(session_type, "qualif") == 0) { // qualif pour la course principale
+        printf("Simulation des qualifications pour un %s.\n", special_weekend ? "week-end spécial" : "week-end normal");
+        simulate_qualification(cars, session_num, ville, special_weekend, session_file, session_type);
+    } else if (strcmp(session_type, "course") == 0) { // course principale
+        printf("Simulation de la course principale.\n");
+        simulate_course(cars, special_weekend, session_num, ville, session_type);
     }
-    process_session_files(session_num, ville, session_type);
+    process_session_files(session_num, ville, session_type); // création fichier resume_<type>.csv
     free(ville);
     free(session_type);
     return 0;

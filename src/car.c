@@ -148,7 +148,7 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
         usleep(10000); // sleep for 0.2 seconds
     }
 
-    if (strcmp(session_type, "course") == 0) {
+    if (strcmp(session_type, "course") == 0 || strcmp(session_type, "sprint") == 0) {
         for (int i = 0; i < num_cars; i++) {
             if (!cars[i].out && cars[i].pit_stop_nb == 0) {
                 printf("La voiture %d n'a pas respecté l'arrêt obligatoire.\n", cars[i].car_number);
@@ -164,10 +164,10 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
  * @param cars Tableau de voitures.
  * @param session_num Numéro de la session actuelle.
  * @param ville Nom de la ville où se déroule l'événement.
- * @param sprint_mode Mode sprint activé ou non.
+ * @param special_weekend) { Mode sprint activé ou non.
  * @param filename Nom du fichier où sauvegarder les résultats.
  */
-void simulate_qualification(car_t cars[], int session_num, const char *ville, int sprint_mode, char *filename, char *session_type) {
+void simulate_qualification(car_t cars[], int session_num, const char *ville, int special_weekend, char *filename, char *session_type) {
     int num_cars_in_stage = ternaire_moins_criminel(session_num, 20, 15, 10);
     int eliminated_cars_count = ternaire_moins_criminel(session_num, 5, 5, 0);
     int session_duration = ternaire_moins_criminel(session_num, DUREE_QUALIF_1, DUREE_QUALIF_2, DUREE_QUALIF_3);  
@@ -190,8 +190,8 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, in
     }
 
     char *classement_file = malloc(100 * sizeof(char));
-    if (sprint_mode) {
-        int session_duration = ternaire_moins_criminel(session_num, 720, 600, 480);
+    if (special_weekend) {
+        session_duration = ternaire_moins_criminel(session_num, 720, 600, 480);
         snprintf(classement_file, 100, "data/fichiers/%s/classement_shootout.csv", ville);
     } else {
         snprintf(classement_file, 100, "data/fichiers/%s/classement.csv", ville); 
@@ -243,18 +243,21 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, in
  * @param total_laps Nombre total de tours prévus.
  * @param ville Nom de la ville où se déroule l'événement.
  */
-void simulate_course(int special_weekend, int session_num, const char *ville) {
+void simulate_course(car_t cars[], int special_weekend, int session_num, const char *ville, char *session_type) {
     int shm_fd = shm_open("/cars_shm", O_CREAT | O_RDWR, 0666);
     ftruncate(shm_fd, sizeof(car_t) * NUM_CARS);
-    car_t *cars = mmap(0, sizeof(car_t) * NUM_CARS, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
 
     int car_numbers[NUM_CARS];
-    int distance_course = session_num == 1 && special_weekend ? SPRINT_DISTANCE : SESSION_DISTANCE;
+    int distance_course = special_weekend ? SPRINT_DISTANCE : SESSION_DISTANCE;
     int total_laps = calculate_total_laps(ville, distance_course);
 
     // Ensure the correct path for classement.csv
-    char classement_file_path[100];
-    snprintf(classement_file_path, sizeof(classement_file_path), "data/fichiers/%s/classement.csv", ville);
+    char *classement_file_path = malloc(150 * sizeof(char));
+    if (special_weekend) {
+        snprintf(classement_file_path, 150, "data/fichiers/%s/classement_shootout.csv", ville);
+    } else {
+        snprintf(classement_file_path, 150, "data/fichiers/%s/classement.csv", ville); 
+    }
 
     // Read starting grid from classement.csv
     read_starting_grid(classement_file_path, car_numbers, NUM_CARS);
@@ -262,11 +265,8 @@ void simulate_course(int special_weekend, int session_num, const char *ville) {
     // Display the starting grid
     display_starting_grid(car_numbers, NUM_CARS);
 
-    // Initialize cars array using the function from utils.c
-    initialize_cars(cars, car_numbers, NUM_CARS);
-
-    //simulate_sess(cars, NUM_CARS, 999999, total_laps, "course");
-
+    //simulate_sess(cars, NUM_CARS, 999999, total_laps, session_type);
+    free(classement_file_path);
     munmap(cars, sizeof(car_t) * NUM_CARS);
     shm_unlink("/cars_shm");
 }

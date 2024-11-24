@@ -36,8 +36,8 @@ void display_overall_best_times(car_t cars[], int num_cars);
 int compare_cars(const void *a, const void *b);
 void reset_out_status_and_temps_rouler(car_t cars[], int num_cars);
 void simulate_pit_stop(car_t *car, int min_time, int max_time, char *session_type);
-void simulate_qualification(car_t cars[], int session_num, const char *ville, int sprint_mode, char *filename, char *   );
-void simulate_course(int special_weekend, int session_num, const char *ville);
+void simulate_qualification(car_t cars[], int session_num, const char *ville, int special_weekend, char *filename, char *session_type);
+void simulate_course(car_t cars[], int special_weekend, int session_num, const char *ville, char *session_type);
 void initialize_cars(car_t cars[], int car_numbers[], int num_cars);
 
 
