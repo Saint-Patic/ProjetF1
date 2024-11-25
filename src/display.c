@@ -35,9 +35,9 @@ void display_practice_results(car_t cars[], int num_cars) {
     buffer[0] = '\0';
 
     snprintf(buffer + strlen(buffer), MAX_BUFFER_SIZE - strlen(buffer),
-             GREEN "===========================================================================" RESET "\n"
-             CYAN "|" RESET  RED "  ##  " RESET  CYAN "|" RESET  YELLOW "  Secteur 1  " RESET  CYAN "|" RESET  YELLOW "  Secteur 2  " RESET  CYAN "|" RESET  YELLOW "  Secteur 3  " RESET  CYAN "|" RESET "   Tour (s)  " CYAN "|" RESET REDBG "   Diff   " RESET "\n"
-             GREEN "===========================================================================" RESET "\n");
+             GREEN "================================================================================================" RESET "\n"
+             CYAN "|" RESET  RED "  ##  " RESET  CYAN "|" RESET  YELLOW "  Secteur 1  " RESET  CYAN "|" RESET  YELLOW "  Secteur 2  " RESET  CYAN "|" RESET  YELLOW "  Secteur 3  " RESET  CYAN "|" RESET "   Tour Actuel  " CYAN "|" RESET "   Meilleur tour  "CYAN "|" RESET REDBG "   Diff   " RESET "\n"
+             GREEN "================================================================================================" RESET "\n");
 
     //ajouter les lignes de résultat
     float prev_time = cars[0].best_lap_time;
@@ -46,29 +46,32 @@ void display_practice_results(car_t cars[], int num_cars) {
 
         if (cars[i].pit_stop) {
             snprintf(buffer + strlen(buffer), MAX_BUFFER_SIZE - strlen(buffer),
-                 CYAN "|" RESET " " RED "%3d" RESET "  " CYAN "|" RESET "   %7.2f   " CYAN "|" RESET "   %7.2f   " CYAN "|" RESET "   %7.2f   " CYAN "|" RESET "   %7.2f   " CYAN "|" RESET "   %+5.2f    "BLUE " (P)" RESET"\n",
+                 CYAN "|" RESET " " RED "%3d" RESET "  " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "    %7.2f     " CYAN "|" RESET "     %7.2f      " CYAN "|" RESET "  %+5.2f    "BLUE " (P)" RESET"\n",
                  cars[i].car_number,
                  cars[i].sector_times[0], // Secteur 1
                  cars[i].sector_times[1], // Secteur 2
                  cars[i].sector_times[2], // Secteur 3
+                 cars[i].current_lap,
                  cars[i].best_lap_time,
                  i == 0 ? 0.00 : diff);
         } else if (cars[i].out) {
             snprintf(buffer + strlen(buffer), MAX_BUFFER_SIZE - strlen(buffer),
-                 CYAN "|" RESET " " RED "%3d" RESET "  " CYAN "|" RESET "   %7.2f   " CYAN "|" RESET "   %7.2f   " CYAN "|" RESET "   %7.2f   " CYAN "|" RESET "   %7.2f   " CYAN "|" RESET "   %+5.2f    "MAGENTA " (Out)" RESET"\n",
+                 CYAN "|" RESET " " RED "%3d" RESET "  " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "    %7.2f     " CYAN "|" RESET "     %7.2f      "CYAN "|" RESET "  %+5.2f     "MAGENTA " (Out)" RESET"\n",
                  cars[i].car_number,
                  cars[i].sector_times[0], // Secteur 1
                  cars[i].sector_times[1], // Secteur 2
                  cars[i].sector_times[2], // Secteur 3
+                 cars[i].current_lap,
                  cars[i].best_lap_time,
                  i == 0 ? 0.00 : diff);
         } else {
             snprintf(buffer + strlen(buffer), MAX_BUFFER_SIZE - strlen(buffer),
-                 CYAN "|" RESET " " RED "%3d" RESET "  " CYAN "|" RESET "   %7.2f   " CYAN "|" RESET "   %7.2f   " CYAN "|" RESET "   %7.2f   " CYAN "|" RESET "   %7.2f   " CYAN "|" RESET "   %+5.2f  \n",
+                 CYAN "|" RESET " " RED "%3d" RESET "  " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "    %7.2f     " CYAN "|" RESET "     %7.2f      "CYAN "|" RESET "  %+5.2f   \n",
                  cars[i].car_number,
                  cars[i].sector_times[0], // Secteur 1
                  cars[i].sector_times[1], // Secteur 2
                  cars[i].sector_times[2], // Secteur 3
+                 cars[i].current_lap,
                  cars[i].best_lap_time,
                  i == 0 ? 0.00 : diff);
         }
@@ -76,7 +79,7 @@ void display_practice_results(car_t cars[], int num_cars) {
     }
 
     snprintf(buffer + strlen(buffer), MAX_BUFFER_SIZE - strlen(buffer),
-             GREEN "===========================================================================" RESET "\n");
+             GREEN "================================================================================================" RESET "\n");
 
     //affiche tout le tableau
     printf("%s", buffer);

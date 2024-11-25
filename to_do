@@ -13,8 +13,11 @@
    3.4) affichage tous les x tours
    3.5) passage au stand au moins une fois (fait)
    3.5.1) si aucun pitstop à la fin de la course, DNF (fait)
+   3.6) mettre les out en dernier
 
 4. gérer wk de sprint (Nathan)
    4.1) modifier MAX_SESSION en plusieurs petites variables (fait)
 
 5. Sémaphore (shp_get !!) (Alexis)
+
+6. display.c : colonne en plus pour les dépassements
