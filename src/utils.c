@@ -132,47 +132,47 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
         return 0;
     }
 
-    if (!verifier_dossier_precedent(ville)) {
-        return 0;
-    }
+    // if (!verifier_dossier_precedent(ville)) {
+    //     return 0;
+    // }
 
     return 1;
 }
 
 
-int verifier_dossier_precedent(char *ville) {
-    int num_ville = atoi(ville);
-    glob_t result;
-    char path_to_city[256]; // Remplacez malloc par un tableau de taille fixe
-    int verif;
+// int verifier_dossier_precedent(char *ville) {
+//     int num_ville = atoi(ville);
+//     glob_t result;
+//     char path_to_city[256]; // Remplacez malloc par un tableau de taille fixe
+//     int verif;
 
-    snprintf(path_to_city, sizeof(path_to_city), "data/fichiers/%d_*", num_ville - 1);
+//     snprintf(path_to_city, sizeof(path_to_city), "data/fichiers/%d_*", num_ville - 1);
 
-    if (num_ville > 1) {
-        verif = glob(path_to_city, GLOB_ERR | GLOB_NOCHECK, NULL, &result);
-        if (verif == 0) {
-            printf("Fichiers correspondants : %s\n", result.gl_pathv[0]);
-            if (result.gl_pathc > 0) {
-                snprintf(path_to_city, sizeof(path_to_city), "%s/resume_course.csv", result.gl_pathv[0]);
-                if (!file_exists(path_to_city)) {
-                    printf("ERREUR: Le fichier resume_course n'a pas été trouvé: %s\n", path_to_city);
-                    globfree(&result);
-                    return 0;
-                }
-            }
-        } else if (verif == GLOB_NOMATCH) {
-            printf("Aucun fichier trouvé pour le motif : %s\n", path_to_city);
-            globfree(&result);
-            return 0;
-        } else {
-            printf("Erreur lors de la recherche de fichiers\n");
-            globfree(&result);
-            return 0;
-        }
-    }
-    globfree(&result);
-    return 1;
-}
+//     if (num_ville > 1) {
+//         verif = glob(path_to_city, GLOB_ERR | GLOB_NOCHECK, NULL, &result);
+//         if (verif == 0) {
+//             printf("Fichiers correspondants : %s\n", result.gl_pathv[0]);
+//             if (result.gl_pathc > 0) {
+//                 snprintf(path_to_city, sizeof(path_to_city), "%s/resume_course.csv", result.gl_pathv[0]);
+//                 if (!file_exists(path_to_city)) {
+//                     printf("ERREUR: Le fichier resume_course n'a pas été trouvé: %s\n", path_to_city);
+//                     globfree(&result);
+//                     return 0;
+//                 }
+//             }
+//         } else if (verif == GLOB_NOMATCH) {
+//             printf("Aucun fichier trouvé pour le motif : %s\n", path_to_city);
+//             globfree(&result);
+//             return 0;
+//         } else {
+//             printf("Erreur lors de la recherche de fichiers\n");
+//             globfree(&result);
+//             return 0;
+//         }
+//     }
+//     globfree(&result);
+//     return 1;
+// }
 
 
 
