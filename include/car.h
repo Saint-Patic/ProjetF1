@@ -26,6 +26,7 @@ typedef struct car{
     int pit_stop_nb; // nombre de pit stop effectué
     float temps_rouler; // Temps de roulage total en secondes
     int eliminate; // true si elimine pdt qualif
+    float current_lap;
 } car_t;
 
 
