@@ -46,7 +46,7 @@ void display_practice_results(car_t cars[], int num_cars) {
 
         if (cars[i].pit_stop) {
             snprintf(buffer + strlen(buffer), MAX_BUFFER_SIZE - strlen(buffer),
-                 CYAN "|" RESET " " RED "%3d" RESET "  " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "    %7.2f     " CYAN "|" RESET "     %7.2f      " CYAN "|" RESET "   %+5.2f    "BLUE " (P)" RESET"\n",
+                 CYAN "|" RESET " " RED "%3d" RESET "  " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "    %7.2f     " CYAN "|" RESET "     %7.2f      " CYAN "|" RESET "  %+5.2f    "BLUE " (P)" RESET"\n",
                  cars[i].car_number,
                  cars[i].sector_times[0], // Secteur 1
                  cars[i].sector_times[1], // Secteur 2
