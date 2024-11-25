@@ -5,6 +5,7 @@ OBJ_DIR = build
 BIN_DIR = bin
 DATA_DIR = data/fichiers
 SUBFOLDER ?= 1_Sakhir
+SUBFOLDER_2 ?= 2_Djeddah
 
 all: $(BIN_DIR)/main
 
@@ -31,6 +32,27 @@ $(OBJ_DIR)/display.o: $(SRC_DIR)/display.c include/display.h
 $(OBJ_DIR)/file_manager.o: $(SRC_DIR)/file_manager.c include/file_manager.h
 	mkdir -p $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
+
+first_session: clean $(BIN_DIR)/main
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_1.csv
+
+seconde_session: $(BIN_DIR)/main
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_2.csv
+
+djeddah: $(BIN_DIR)/main
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER_2)/essai_1.csv
+
+djeddah_complet: clean $(BIN_DIR)/main
+
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_1.csv
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_2.csv
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_3.csv
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/qualif_1.csv
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/qualif_2.csv
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/qualif_3.csv
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/course_1.csv
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER_2)/essai_1.csv
+
 
 run_sessions: $(BIN_DIR)/main
 	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_1.csv
