@@ -131,22 +131,36 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
         printf("Erreur : Le fichier %s existe déjà. Session déjà exécutée.\n", session_file);
         return 0;
     }
-
+    int num_ville = atoi(ville);
     glob_t result;
     char path_to_city[256];
-    snprintf(path_to_city, sizeof(path_to_city), "data/fichiers/%d", *directory_num - 1);
-
-    int verif = glob(path_to_city, GLOB_NOSORT, NULL, &result);
-    if (verif == 0 && *directory_num > 0) {
-        if (result.gl_pathc == 1) {
-            snprintf(path_to_city, sizeof(path_to_city), "%s/resume_course.csv", result.gl_pathv[0]);
-            if (!file_exists(path_to_city)) {
-                printf("ERREUR: Le fichier resume_course n'a pas été trouvé: %s\n", path_to_city);
-                globfree(&result);
-                return 0;
+    int verif;
+    snprintf(path_to_city, sizeof(path_to_city), "data/fichiers/%d_*", num_ville - 1);
+    //printf("%s\n", path_to_city);
+    
+    if (num_ville > 1) {
+        verif = glob(path_to_city, GLOB_ERR | GLOB_NOCHECK, NULL, &result);
+        //printf("%s\n", result.gl_pathv[0]);
+        if (verif == 0) {
+            printf("Fichiers correspondants : %s\n", result.gl_pathv[0]);
+            if (num_ville > 0) {
+                if (result.gl_pathc == 1) {
+                snprintf(path_to_city, sizeof(path_to_city), "%s/resume_course.csv", result.gl_pathv[0]);
+                if (!file_exists(path_to_city)) {
+                    printf("ERREUR: Le fichier resume_course n'a pas été trouvé: %s\n", path_to_city);
+                    return 0;
+                    }
+                }
             }
         }
+        else if (verif == GLOB_NOMATCH) {
+            printf("Aucun fichier trouvé pour le motif : %s\n", path_to_city);
+        } 
+        else {
+            printf("Erreur lors de la recherche de fichiers\n");
+        }
     }
+        
     globfree(&result);
     return 1;
 }
@@ -172,13 +186,6 @@ float random_float(int min, int max) {
     }
     return min + (float)rand() / RAND_MAX * (max - min); 
 }
-
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include "../include/utils.h"
 
 /**
  * @brief Estime le nombre maximum de tours possibles en fonction de la durée de la session et du temps maximum d'un tour.
