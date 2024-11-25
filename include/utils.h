@@ -11,5 +11,6 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
 int ternaire_moins_criminel(int session_num, int res1, int res2, int resDefault);
 int is_special_weekend(const char *ville);
 int calculate_total_laps(const char *ville, float session_distance);
+int verifier_dossier_precedent(char *ville);
 
 #endif
