@@ -66,6 +66,9 @@ void generate_sector_times(car_t *car, int min_time, int max_time) {
     if (car->best_lap_time == 0 || lap_time < car->best_lap_time) {
         car->best_lap_time = lap_time;
     }
+    else{
+        car->current_lap = lap_time;
+    }
 
     car->temps_rouler += lap_time;
 }
@@ -121,6 +124,17 @@ void reset_out_status_and_temps_rouler(car_t cars[], int num_cars) {
  * @param session_type Type de session ("course", "essai", etc.).
  */
 void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_laps, char *session_type) {
+    // Initialize semaphore
+    int sem_id = semget(SEM_KEY, 1, IPC_CREAT | 0666);
+    if (sem_id == -1) {
+        perror("semget failed");
+        exit(EXIT_FAILURE);
+    }
+
+    semctl(sem_id, 0, SETVAL, 1);
+
+    struct sembuf sem_op;
+
     // Simule un tour de la session
     for (int lap = 0; lap < total_laps; lap++) {
         int active_cars = num_cars;
@@ -128,21 +142,41 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
         // fais tourner les voitures pour le nieme tour de la session
         for (int i = 0; i < num_cars; i++) {
 
+            // Lock the semaphore (P operation)
+            sem_op.sem_num = 0;
+            sem_op.sem_op = -1;
+            sem_op.sem_flg = 0;
+            if (semop(sem_id, &sem_op, 1) == -1) {
+                perror("semop lock failed");
+                exit(EXIT_FAILURE);
+            }
+
             // Si la voiture est sortie, passe à la suivante
             if (cars[i].out) {
                 active_cars--;
+                // Unlock the semaphore (V operation)
+                sem_op.sem_op = 1;
+                if (semop(sem_id, &sem_op, 1) == -1) {
+                    perror("semop unlock failed");
+                    exit(EXIT_FAILURE);
+                }
                 continue;
             }
 
             // Simule un arrêt au stand si nécessaire
             if (cars[i].pit_stop) {
                 simulate_pit_stop(&cars[i], MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION, session_type);
+                // Unlock the semaphore (V operation)
+                sem_op.sem_op = 1;
+                if (semop(sem_id, &sem_op, 1) == -1) {
+                    perror("semop unlock failed");
+                    exit(EXIT_FAILURE);
+                }
                 continue;
             }
 
             // Génère les temps de roulage pour le secteur et les meilleurs temps
             generate_sector_times(&cars[i], MIN_TIME, MAX_TIME);
-
 
             // Simule une panne si le tirage aléatoire est inférieur à 1%   
             if (rand() % 100 < 1) { // 1% de panne
@@ -150,6 +184,14 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
                 cars[i].pit_stop = 0;
                 active_cars--;
             }
+
+            // Unlock the semaphore (V operation)
+            sem_op.sem_op = 1;
+            if (semop(sem_id, &sem_op, 1) == -1) {
+                perror("semop unlock failed");
+                exit(EXIT_FAILURE);
+            }
+
             // porte de sortie pour les sessions d'essais et de qualifications
             if (cars[i].temps_rouler > session_duration) return;
         }
@@ -158,7 +200,7 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
         if (active_cars == 0) break;
 
         // Affiche les résultats du tour
-        system("clear");
+        //system("clear");
         printf("Tour %d:\n", lap + 1);
         display_practice_results(cars, num_cars);
         usleep(10000); // sleep for 0.2 seconds
@@ -172,6 +214,12 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
                 cars[i].out = 1;
             }
         }
+    }
+
+    // Remove the semaphore set
+    if (semctl(sem_id, 0, IPC_RMID) == -1) {
+        perror("semctl remove failed");
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -188,26 +236,6 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, in
     int num_cars_in_stage = ternaire_moins_criminel(session_num, 20, 15, 10); // nbr de voitures qui roulent
     int eliminated_cars_count = ternaire_moins_criminel(session_num, 5, 5, 0); // nbr de voitures éliminées à la fin de la simul
     int session_duration = ternaire_moins_criminel(session_num, DUREE_QUALIF_1, DUREE_QUALIF_2, DUREE_QUALIF_3);  // durée de la session
-    
-    // ##### init sémaphore #####
-    int sem_id = semget(SEM_KEY, 1, IPC_CREAT | 0666);
-    if (sem_id == -1) {
-        perror("semget failed");
-        exit(EXIT_FAILURE);
-    }
-
-    semctl(sem_id, 0, SETVAL, 1);
-
-    struct sembuf sem_op;
-
-    sem_op.sem_num = 0;
-    sem_op.sem_op = -1;
-    sem_op.sem_flg = 0;
-    if (semop(sem_id, &sem_op, 1) == -1) {
-        perror("semop lock failed");
-        exit(EXIT_FAILURE);
-    }
-    // ##### init sémaphore #####
 
     // choix du fichier pour save les résultats 
     char *classement_file = malloc(100 * sizeof(char));
@@ -222,7 +250,6 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, in
     if (session_num > 1) {
         load_eliminated_cars(classement_file, cars, NUM_CARS);
     }
-
 
     // ##### init voiture pouvant participer à la qualif #####
     car_t eligible_cars[num_cars_in_stage];
@@ -242,19 +269,6 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, in
     save_session_results(eligible_cars, num_cars_in_stage, filename, "a");
     save_eliminated_cars(eligible_cars, num_cars_in_stage, eliminated_cars_count, session_num, cars, NUM_CARS, ville, classement_file);
     free(classement_file);
-
-    // Unlock the semaphore (V operation)
-    sem_op.sem_op = 1;
-    if (semop(sem_id, &sem_op, 1) == -1) {
-        perror("semop unlock failed");
-        exit(EXIT_FAILURE);
-    }
-
-    // Remove the semaphore set
-    if (semctl(sem_id, 0, IPC_RMID) == -1) {
-        perror("semctl remove failed");
-        exit(EXIT_FAILURE);
-    }
 }
 
 
@@ -266,15 +280,18 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, in
  * @param ville Nom de la ville où se déroule l'événement.
  */
 void simulate_course(car_t cars[], int special_weekend, int session_num, const char *ville, char *session_type) {
-    int shm_fd = shm_open("/cars_shm", O_CREAT | O_RDWR, 0666);
-    ftruncate(shm_fd, sizeof(car_t) * NUM_CARS);
-
+    
     int car_numbers[NUM_CARS];
     int distance_course = special_weekend ? SPRINT_DISTANCE : SESSION_DISTANCE;
     int total_laps = calculate_total_laps(ville, distance_course);
 
     // Ensure the correct path for classement.csv
     char *classement_file_path = malloc(150 * sizeof(char));
+    if (classement_file_path == NULL) {
+        perror("malloc failed");
+        exit(EXIT_FAILURE);
+    }
+
     if (special_weekend) {
         snprintf(classement_file_path, 150, "data/fichiers/%s/classement_shootout.csv", ville);
     } else {
@@ -287,10 +304,13 @@ void simulate_course(car_t cars[], int special_weekend, int session_num, const c
     // Display the starting grid
     display_starting_grid(car_numbers, NUM_CARS);
 
+    // Start the race
+    printf("La course commence !\n");
+    sleep(1); // Simulate the start delay
+
     //simulate_sess(cars, NUM_CARS, 999999, total_laps, session_type);
+
     free(classement_file_path);
-    munmap(cars, sizeof(car_t) * NUM_CARS);
-    shm_unlink("/cars_shm");
 }
 
 
