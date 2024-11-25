@@ -228,37 +228,59 @@ void save_eliminated_cars(car_t eligible_cars[], int num_cars_in_stage, int elim
 }
 
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <sys/stat.h>
+#include "../include/car.h"
+#include "../include/utils.h"
+
+/**
+ * @brief Charge les voitures éliminées depuis un fichier et marque les voitures concernées dans un tableau.
+ *
+ * @param filename Nom du fichier contenant les voitures éliminées.
+ * @param cars Tableau de voitures à mettre à jour.
+ * @param total_cars Nombre total de voitures dans le tableau.
+ */
 void load_eliminated_cars(char *filename, car_t cars[], int total_cars) {
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
         printf("Erreur lors de l'ouverture de %s\n", filename);
         return;
     }
-    
+
     int car_number, session_num, place;
     float lap_time;
-    char *line = malloc(100 * sizeof(char));
-    
-    // Mark all cars as eligible initially
+    char line[100];
+
+    // Marquer toutes les voitures comme éligibles au départ
     for (int i = 0; i < total_cars; i++) {
         cars[i].out = 0;
     }
-    
-    // Read each line to mark cars that are already eliminated
+
+    // Lire chaque ligne pour identifier les voitures éliminées
     while (fgets(line, sizeof(line), file)) {
         sscanf(line, "%d,%d,%d,%f", &car_number, &session_num, &place, &lap_time);
         for (int i = 0; i < total_cars; i++) {
-            if (cars[i].car_number == car_number) { 
+            if (cars[i].car_number == car_number) {
                 cars[i].out = 1;
                 break;
             }
         }
     }
+
     fclose(file);
-    free(line);
 }
 
-// Fonction pour récupérer les valeurs d'une colonne spécifique dans un fichier CSV
+/**
+ * @brief Récupère les valeurs d'une colonne spécifique dans un fichier CSV.
+ *
+ * @param nom_fichier Chemin du fichier CSV.
+ * @param nom_colonne Nom de la colonne à extraire.
+ * @param nb_resultats Pointeur vers une variable pour stocker le nombre de résultats trouvés.
+ * @return Un tableau de chaînes contenant les valeurs de la colonne, ou NULL en cas d'erreur.
+ */
 char **recuperer_colonne_csv(const char *nom_fichier, const char *nom_colonne, int *nb_resultats) {
     FILE *fichier = fopen(nom_fichier, "r");
     if (!fichier) {
@@ -266,12 +288,12 @@ char **recuperer_colonne_csv(const char *nom_fichier, const char *nom_colonne, i
         return NULL;
     }
 
-    char ligne[MAX_COLONNE];
+    char ligne[256];
     char **resultats = NULL;
     int indice_colonne = -1;
     *nb_resultats = 0;
 
-    // Lecture de la première ligne (en-tête)
+    // Lecture de l'en-tête pour trouver l'index de la colonne
     if (fgets(ligne, sizeof(ligne), fichier)) {
         char *colonne = strtok(ligne, ",");
         int index = 0;
@@ -293,7 +315,7 @@ char **recuperer_colonne_csv(const char *nom_fichier, const char *nom_colonne, i
         return NULL;
     }
 
-    // Lecture des lignes suivantes pour récupérer les valeurs
+    // Lire les lignes suivantes pour récupérer les valeurs
     resultats = malloc(100 * sizeof(char *));
     if (!resultats) {
         printf("Erreur : Échec de l'allocation mémoire.\n");
@@ -319,7 +341,7 @@ char **recuperer_colonne_csv(const char *nom_fichier, const char *nom_colonne, i
             resultats[*nb_resultats] = strdup(valeur);
             if (!resultats[*nb_resultats]) {
                 printf("Erreur : Échec de l'allocation mémoire pour la valeur.\n");
-                // Nettoyer les valeurs précédemment allouées
+                // Nettoyage en cas d'erreur
                 for (int i = 0; i < *nb_resultats; i++) {
                     free(resultats[i]);
                 }
@@ -335,32 +357,27 @@ char **recuperer_colonne_csv(const char *nom_fichier, const char *nom_colonne, i
     return resultats;
 }
 
-// exemple d'utilisation de recuperer_colonne_csv
-int test_recuperer_colonne_csv() {
-    int nb_resultats;
-    char **resultats = recuperer_colonne_csv("../data/liste_circuits.csv", "Ville", &nb_resultats);
-
-    if (resultats != NULL) {
-        for (int i = 0; resultats[i] != NULL; i++) {
-            printf("Résultat %d: %s\n", i + 1, resultats[i]);
-            free(resultats[i]);
-        }
-        free(resultats);
-    }
-    return 0;
-}
-
-// Fonction pour créer un dossier si inexistant
+/**
+ * @brief Crée un répertoire s'il n'existe pas déjà.
+ *
+ * @param path Chemin du répertoire à créer.
+ */
 void create_directory_if_not_exists(const char *path) {
     struct stat st = {0};
     if (stat(path, &st) == -1) {
         if (mkdir(path, 0700) != 0) {
             perror("Erreur lors de la création du dossier");
-        } 
+        }
     }
 }
 
-// Fonction pour créer des dossiers à partir des valeurs des colonnes CSV
+/**
+ * @brief Crée des répertoires basés sur les colonnes d'un fichier CSV.
+ *
+ * @param csv_file Chemin du fichier CSV.
+ * @param course_column Nom de la colonne contenant les informations sur la course.
+ * @param city_column Nom de la colonne contenant les informations sur la ville.
+ */
 void create_directories_from_csv_values(const char *csv_file, const char *course_column, const char *city_column) {
     int nb_courses = 0, nb_cities = 0;
 
@@ -370,7 +387,7 @@ void create_directories_from_csv_values(const char *csv_file, const char *course
 
     if (!course_values || !city_values || nb_courses == 0 || nb_cities == 0) {
         printf("Erreur : Impossible de récupérer les colonnes %s et %s.\n", course_column, city_column);
-        // Libérer la mémoire si partiellement allouée
+        // Nettoyage en cas d'erreur
         if (course_values) {
             for (int i = 0; i < nb_courses; i++) free(course_values[i]);
             free(course_values);
@@ -382,9 +399,9 @@ void create_directories_from_csv_values(const char *csv_file, const char *course
         return;
     }
 
-    // Créer les dossiers pour chaque paire Course-Ville
+    // Créer les répertoires pour chaque paire Course-Ville
     for (int i = 0; i < nb_courses && i < nb_cities; i++) {
-        char path[MAX_PATH_LENGTH];
+        char path[256];
         snprintf(path, sizeof(path), "data/fichiers/%s_%s", course_values[i], city_values[i]);
         create_directory_if_not_exists(path);
     }
@@ -396,38 +413,13 @@ void create_directories_from_csv_values(const char *csv_file, const char *course
     free(city_values);
 }
 
-void generate_special_filename(const char *ville, const char *session_type, int session_num, int special_weekend, char *output_filename) {
-    if (special_weekend) {
-        if (strcmp(session_type, "essai") == 0) {
-            // Les essais libres restent inchangés
-            snprintf(output_filename, 100, "data/fichiers/%s/%s_%d.csv", ville, session_type, session_num);
-        } else if (strcmp(session_type, "qualif") == 0) {
-            if (session_num >= 1 && session_num <= 3) {
-                // Qualif_1, 2, 3 deviennent sprint_shootout_1, 2, 3
-                snprintf(output_filename, 100, "data/fichiers/%s/sprint_shootout_%d.csv", ville, session_num);
-            } else if (session_num >= 4 && session_num <= 6) {
-                // Qualif_4, 5, 6 deviennent qualif_1, 2, 3
-                snprintf(output_filename, 100, "data/fichiers/%s/qualif_%d.csv", ville, session_num - 3);
-            }
-        } else if (strcmp(session_type, "course") == 0) {
-            if (session_num == 1) {
-                // Course_1 devient sprint_1
-                snprintf(output_filename, 100, "data/fichiers/%s/sprint_1.csv", ville);
-            } else if (session_num == 2) {
-                // Course_2 devient course_1
-                snprintf(output_filename, 100, "data/fichiers/%s/course_1.csv", ville);
-            }
-        } else {
-            // Nom standard pour les autres cas
-            snprintf(output_filename, 100, "data/fichiers/%s/%s_%d.csv", ville, session_type, session_num);
-        }
-    } else {
-        // Pas de changement pour un week-end normal
-        snprintf(output_filename, 100, "data/fichiers/%s/%s_%d.csv", ville, session_type, session_num);
-    }
-}
-
-// Function to read car numbers from classement.csv
+/**
+ * @brief Modifie l'ordre des numéros de voiture dans car_numbers pour qu'il respecte l'ordre de départs défini par les qualifs
+ *
+ * @param filename Chemin du fichier CSV.
+ * @param car_number liste des numéros des voitures sur la grille
+ * @param num_cars Nombre de voiture sur la grille de départ
+ */
 void read_starting_grid(const char *filename, int car_numbers[], int num_cars) {
     FILE *file = fopen(filename, "r");
     if (!file) {

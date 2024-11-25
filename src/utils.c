@@ -9,12 +9,16 @@
 #include "../include/display.h"
 #include "../include/file_manager.h"
 
-// Fonction pour effectuer toutes les vérifications
-//session_file: chemin du fichier
-//ville: le nom de la ville seul
-//session_type: type de la course qualif, etc
-//seesion_num: essai 1, essai 2, etc
-//directory_num: numéro avant le nom de la ville
+/**
+ * @brief Vérifie la validité des paramètres pour une session de course.
+ * 
+ * @param session_file Chemin du fichier décrivant la session.
+ * @param ville Nom de la ville où se déroule la session.
+ * @param session_type Type de la session ("essai", "qualif", "course", etc.).
+ * @param session_num Numéro de la session (1 pour Essai 1, 2 pour Qualif 2, etc.).
+ * @param directory_num Numéro de la course associé au répertoire de fichiers.
+ * @return 1 si les paramètres sont valides, 0 sinon.
+ */
 int verifier_parametres(char *session_file, char *ville, char *session_type, int *session_num, int *directory_num) {
     if (ville == NULL) {
         printf("Erreur d'allocation mémoire\n");
@@ -27,10 +31,10 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
         return 0;
     }
 
-    int special_weekend = is_special_weekend(ville);
+    int special_weekend = is_special_weekend(ville); // Vérifie si le week-end est spécial
 
-    // Vérifications pour les week-ends spéciaux
     if (special_weekend) {
+        // Vérifications spécifiques aux week-ends spéciaux
         if (strcmp(session_type, "essai") == 0) {
             if (*session_num != 1) {
                 printf("Erreur : Pour un week-end spécial, il n'y a qu'une seule période d'essai.\n");
@@ -41,8 +45,6 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
                 printf("Erreur : Nombre maximum de Sprint Shootout dépassé (3).\n");
                 return 0;
             }
-
-            // Vérifie que l'essai a été effectué avant le Sprint Shootout
             char essai_resume_file[100];
             snprintf(essai_resume_file, sizeof(essai_resume_file), "data/fichiers/%s/essai_1.csv", ville);
             if (!file_exists(essai_resume_file)) {
@@ -54,8 +56,6 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
                 printf("Erreur : Nombre maximum de courses sprint dépassé (1).\n");
                 return 0;
             }
-
-            // Vérifie que le Sprint Shootout a été complété avant le Sprint
             char shootout_resume_file[100];
             snprintf(shootout_resume_file, sizeof(shootout_resume_file), "data/fichiers/%s/resume_shootout.csv", ville);
             if (!file_exists(shootout_resume_file)) {
@@ -67,8 +67,6 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
                 printf("Erreur : Nombre maximum de qualifications dépassé (3).\n");
                 return 0;
             }
-
-            // Vérifie que les essais ont été complétés avant les qualifications
             char essai_resume_file[100];
             snprintf(essai_resume_file, sizeof(essai_resume_file), "data/fichiers/%s/sprint_1.csv", ville);
             if (!file_exists(essai_resume_file)) {
@@ -80,8 +78,6 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
                 printf("Erreur : Nombre maximum de courses principales dépassé (1).\n");
                 return 0;
             }
-
-            // Vérifie que les qualifications normales ont été complétées avant la course principale
             char qualif_resume_file[100];
             snprintf(qualif_resume_file, sizeof(qualif_resume_file), "data/fichiers/%s/resume_qualif.csv", ville);
             if (!file_exists(qualif_resume_file)) {
@@ -99,8 +95,6 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
                 printf("Erreur : Nombre maximum de qualifications dépassé (3).\n");
                 return 0;
             }
-
-            // Vérifie que les essais ont été complétés avant les qualifications
             char essai_resume_file[100];
             snprintf(essai_resume_file, sizeof(essai_resume_file), "data/fichiers/%s/resume_essai.csv", ville);
             if (!file_exists(essai_resume_file)) {
@@ -112,8 +106,6 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
                 printf("Erreur : Nombre maximum de courses principales dépassé (1).\n");
                 return 0;
             }
-
-            // Vérifie que les qualifications ont été complétées avant la course
             char qualif_resume_file[100];
             snprintf(qualif_resume_file, sizeof(qualif_resume_file), "data/fichiers/%s/resume_qualif.csv", ville);
             if (!file_exists(qualif_resume_file)) {
@@ -123,13 +115,11 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
         }
     }
 
-    // Vérifie que le numéro de session est valide
     if (*session_num < 1) {
         printf("Erreur : Numéro de session invalide.\n");
         return 0;
     }
 
-    // Vérifie que le fichier de la session précédente existe
     char prev_session_file[100];
     snprintf(prev_session_file, sizeof(prev_session_file), "data/fichiers/%s/%s_%d.csv", ville, session_type, *session_num - 1);
     if (*session_num > 1 && !file_exists(prev_session_file)) {
@@ -137,33 +127,23 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
         return 0;
     }
 
-    // Vérifie que le fichier de la session actuelle n'existe pas déjà
     if (file_exists(session_file)) {
         printf("Erreur : Le fichier %s existe déjà. Session déjà exécutée.\n", session_file);
         return 0;
     }
-    // cette vérification sert ne pas commencer un nouveau grand prix si le précédent n'a pas eu lieu
+
     glob_t result;
     char path_to_city[256];
-    int temp_num = *directory_num;  // deréférence le pointeur parce que qu'il ne peut pas être utilisé tel quelle dans la suite
+    snprintf(path_to_city, sizeof(path_to_city), "data/fichiers/%d", *directory_num - 1);
 
-    // crée la string avec le chemin connu + le num de la couse précédente
-    snprintf(path_to_city, sizeof(path_to_city), "data/fichiers/%d", temp_num - 1);
-
-    // remplit le structure glob avec les résultats de la recherche 
     int verif = glob(path_to_city, GLOB_NOSORT, NULL, &result);
-
-    // vérifie si le fichier résume_course.csv de la course précédente existe
-    if (verif == 0 && temp_num > 0) {
-        printf("ERREUR: Aucun fichier trouvé '%s':\n", path_to_city);
-        // check si un dossier à été trouvé et pas plusieurs parce qu'il ne doit pas en trouvé plus
+    if (verif == 0 && *directory_num > 0) {
         if (result.gl_pathc == 1) {
-            if (file_exists(result.gl_pathv[0])) {
-                snprintf(path_to_city, sizeof(path_to_city), "%s/resume_course.csv", result.gl_pathv[0]);
-                if (!file_exists(path_to_city)) {
-                    printf("ERREUR: Le fichier resume_course n'a pas été trouvé: %s\n", path_to_city);
-                    return 0;
-                }
+            snprintf(path_to_city, sizeof(path_to_city), "%s/resume_course.csv", result.gl_pathv[0]);
+            if (!file_exists(path_to_city)) {
+                printf("ERREUR: Le fichier resume_course n'a pas été trouvé: %s\n", path_to_city);
+                globfree(&result);
+                return 0;
             }
         }
     }
@@ -171,25 +151,52 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
     return 1;
 }
 
-
-
+/**
+ * @brief Initialise les nombres aléatoires.
+ */
 void initialize_random() {
     srand(time(NULL));
 }
 
+/**
+ * @brief Génère un nombre aléatoire entre une valeur minimale et maximale.
+ * 
+ * @param min Valeur minimale.
+ * @param max Valeur maximale.
+ * @return Un float aléatoire compris entre [min, max].
+ */
 float random_float(int min, int max) {
     if (min >= max) {
         printf("Erreur: min >= max dans random_float()\n");
         return min; // Valeur par défaut raisonnable
     }
-    return min + (float)rand() / RAND_MAX * (max - min);
+    return min + (float)rand() / RAND_MAX * (max - min); 
 }
 
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include "../include/utils.h"
+
+/**
+ * @brief Estime le nombre maximum de tours possibles en fonction de la durée de la session et du temps maximum d'un tour.
+ *
+ * @param session_duration Durée de la session en secondes.
+ * @param max_time Temps maximal pour un tour en secondes.
+ * @return Le nombre estimé de tours.
+ */
 int estimate_max_laps(int session_duration, float max_time) {
     return session_duration / max_time;
 }
 
+/**
+ * @brief Supprime les espaces en début et en fin de chaîne de caractères.
+ *
+ * @param str La chaîne de caractères à nettoyer.
+ * @return Un pointeur vers la chaîne nettoyée.
+ */
 char *trim(char *str) {
     char *end;
 
@@ -209,6 +216,15 @@ char *trim(char *str) {
     return str;
 }
 
+/**
+ * @brief Renvoie une valeur en fonction du numéro de session, permettant d'éviter les conditions ternaires complexes.
+ *
+ * @param session_num Numéro de la session (1, 2 ou autre).
+ * @param res1 Résultat à retourner si session_num == 1.
+ * @param res2 Résultat à retourner si session_num == 2.
+ * @param resDefault Résultat par défaut si session_num n'est ni 1 ni 2.
+ * @return La valeur correspondante au cas.
+ */
 int ternaire_moins_criminel(int session_num, int res1, int res2, int resDefault) {
     switch (session_num) {
         case 1:
@@ -217,20 +233,48 @@ int ternaire_moins_criminel(int session_num, int res1, int res2, int resDefault)
             return res2; // Q2
         default:
             return resDefault; // Q3
-    }   
-} // cordialement, Eloy
+    }
+}
 
+/**
+ * @brief Vérifie si un week-end est spécial (Sprint).
+ *
+ * @param ville La ville où se déroule l'événement.
+ * @return 1 si le week-end est spécial, 0 sinon.
+ */
 int is_special_weekend(const char *ville) {
     int nb_resultats;
     char **weekend_types = recuperer_colonne_csv("data/liste_circuits.csv", "Sprint", &nb_resultats);
     int ville_num = atoi(ville);
 
     if (ville_num > 0 && ville_num <= nb_resultats) {
-        if (atoi(weekend_types[ville_num - 1]) == 1) return 1;
+        int result = atoi(weekend_types[ville_num - 1]);
+
+        // Libération de la mémoire
+        for (int i = 0; i < nb_resultats; i++) {
+            free(weekend_types[i]);
+        }
+        free(weekend_types);
+
+        return result == 1;
     }
+
+    // Libération de la mémoire
+    for (int i = 0; i < nb_resultats; i++) {
+        free(weekend_types[i]);
+    }
+    free(weekend_types);
+
     return 0;
 }
 
+/**
+ * @brief Calcule le nombre total de tours en fonction de la distance de la session et de la longueur du circuit.
+ *
+ * @param ville La ville où se déroule l'événement.
+ * @param session_distance Distance totale de la session en mètres.
+ * @return Le nombre estimé de tours.
+ */
 int calculate_total_laps(const char *ville, float session_distance) {
     int nb_resultats;
     char **circuit_distance = recuperer_colonne_csv("data/liste_circuits.csv", "taille (km)", &nb_resultats);
