@@ -33,6 +33,7 @@ void initialize_cars(car_t cars[], int car_numbers[], int num_cars) {
             cars[i].sector_times[j] = 0.0;
             cars[i].best_sector_times[j] = 0.0;
         }
+        cars[i].current_lap = 0.0;
     }
 }
 
@@ -56,18 +57,16 @@ void generate_sector_times(car_t *car, int min_time, int max_time) {
         }
 
         // Probabilité de faire un pit stop
-        if (rand() % 100 < 20 && i == NUM_SECTORS - 1) { // 20% chance of pit stop
+        if (rand() % 100 < 5 && i == NUM_SECTORS - 1) { // 20% chance of pit stop
             car->pit_stop_duration = random_float(MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION);
             car->pit_stop = 1;
         }
     }
+    car->current_lap = lap_time;
 
     // Mise à jour du meilleur temps pour la voiture
     if (car->best_lap_time == 0 || lap_time < car->best_lap_time) {
         car->best_lap_time = lap_time;
-    }
-    else{
-        car->current_lap = lap_time;
     }
 
     car->temps_rouler += lap_time;
@@ -86,6 +85,7 @@ void simulate_pit_stop(car_t *car, int min_time, int max_time, char *session_typ
     car->temps_rouler += pit_stop_time;
     car->pit_stop_nb++;
     car->pit_stop = 0; // Une fois effectué, désactive l'indicateur
+    car->current_lap += pit_stop_time;
 }
 
 /**
@@ -193,7 +193,18 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
             }
 
             // porte de sortie pour les sessions d'essais et de qualifications
-            if (cars[i].temps_rouler > session_duration) return;
+            if (strcmp(session_type, "essai") == 0 || strcmp(session_type, "qualif") == 0) {
+                if (cars[i].temps_rouler > session_duration) return;
+            }
+
+            // Switch positions if current lap time is greater
+            if (strcmp(session_type, "course") == 0 || strcmp(session_type, "sprint") == 0) {
+                if (i > 0 && cars[i].current_lap < cars[i-1].current_lap) {
+                    car_t temp = cars[i];
+                    cars[i] = cars[i-1];
+                    cars[i-1] = temp;
+                }
+            }
         }
 
         // si toutes les voitures sont out, ne sert à rien de simuler la suite
@@ -308,10 +319,11 @@ void simulate_course(car_t cars[], int special_weekend, int session_num, const c
     printf("La course commence !\n");
     sleep(1); // Simulate the start delay
 
-    //simulate_sess(cars, NUM_CARS, 999999, total_laps, session_type);
+    simulate_sess(cars, NUM_CARS, 999999, 3, session_type);
 
     free(classement_file_path);
 }
+
 
 
 
