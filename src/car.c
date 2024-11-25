@@ -29,6 +29,7 @@ void initialize_cars(car_t cars[], int car_numbers[], int num_cars) {
         cars[i].pit_stop = 0;
         cars[i].pit_stop_nb = 0;
         cars[i].out = 0;
+        cars[i].current_lap = 0;
         for (int j = 0; j < NUM_SECTORS; j++) {
             cars[i].sector_times[j] = 0.0;
             cars[i].best_sector_times[j] = 0.0;
@@ -46,10 +47,10 @@ void initialize_cars(car_t cars[], int car_numbers[], int num_cars) {
  * @param max_time Temps maximum possible pour un secteur.
  */
 void generate_sector_times(car_t *car, int min_time, int max_time) {
-    float lap_time = 0;
+    car->current_lap = 0;
     for (int i = 0; i < NUM_SECTORS; i++) { // génération des 3 secteurs pour 1 voiture
         car->sector_times[i] = random_float(min_time, max_time);
-        lap_time += car->sector_times[i];
+        car->current_lap += car->sector_times[i];
 
         // Mise à jour des meilleurs temps pour les secteurs
         if (car->best_sector_times[i] == 0 || car->sector_times[i] < car->best_sector_times[i]) {
@@ -57,19 +58,20 @@ void generate_sector_times(car_t *car, int min_time, int max_time) {
         }
 
         // Probabilité de faire un pit stop
-        if (rand() % 100 < 5 && i == NUM_SECTORS - 1) { // 20% chance of pit stop
+        if (rand() % 100 < 15 && i == NUM_SECTORS - 1) { // 20% chance of pit stop
             car->pit_stop_duration = random_float(MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION);
             car->pit_stop = 1;
         }
     }
-    car->current_lap = lap_time;
+ 
+
 
     // Mise à jour du meilleur temps pour la voiture
-    if (car->best_lap_time == 0 || lap_time < car->best_lap_time) {
-        car->best_lap_time = lap_time;
+    if (car->best_lap_time == 0 || car->current_lap < car->best_lap_time) {
+        car->best_lap_time = car->current_lap;
     }
 
-    car->temps_rouler += lap_time;
+    car->temps_rouler += car->current_lap;
 }
 
 /**
@@ -179,7 +181,7 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
             generate_sector_times(&cars[i], MIN_TIME, MAX_TIME);
 
             // Simule une panne si le tirage aléatoire est inférieur à 1%   
-            if (rand() % 100 < 1) { // 1% de panne
+            if (rand() % 500 < 1) { // 1% de panne
                 cars[i].out = 1;
                 cars[i].pit_stop = 0;
                 active_cars--;
