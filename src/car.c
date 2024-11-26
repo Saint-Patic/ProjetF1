@@ -213,10 +213,10 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
         if (active_cars == 0) break;
 
         // Affiche les résultats du tour
-        //system("clear");
+        system("clear");
         printf("Tour %d:\n", lap + 1);
         display_practice_results(cars, num_cars);
-        usleep(10000); // sleep for 0.2 seconds
+        usleep(500000); // sleep for 0.2 seconds
     }
 
     // Pour les courses et sprints, les voitures sont obligés de faire au moins un pit-stop => Si aucun pit-stop : elimine
@@ -292,7 +292,7 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, in
  * @param total_laps Nombre total de tours prévus.
  * @param ville Nom de la ville où se déroule l'événement.
  */
-void simulate_course(car_t cars[], int special_weekend, int session_num, const char *ville, char *session_type) {
+void simulate_course(car_t cars[], int special_weekend, int session_num, const char *ville, char *session_type, char *session_file) {
     
     int car_numbers[NUM_CARS];
     int distance_course = special_weekend ? SPRINT_DISTANCE : SESSION_DISTANCE;
@@ -314,18 +314,15 @@ void simulate_course(car_t cars[], int special_weekend, int session_num, const c
     // Read starting grid from classement.csv
     read_starting_grid(classement_file_path, car_numbers, NUM_CARS);
 
-    // Display the starting grid
-    display_starting_grid(car_numbers, NUM_CARS);
+    // // Display the starting grid
+    // display_starting_grid(car_numbers, NUM_CARS);
 
-    // Start the race
-    printf("La course commence !\n");
+    // // Start the race
+    // printf("La course commence !\n");
     sleep(1); // Simulate the start delay
 
-    simulate_sess(cars, NUM_CARS, 999999, 3, session_type);
+    simulate_sess(cars, NUM_CARS, 999999, total_laps, session_type);
+    save_session_results(cars, NUM_CARS, session_file, "w");
 
     free(classement_file_path);
 }
-
-
-
-

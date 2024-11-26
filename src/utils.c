@@ -3,7 +3,9 @@
 #include <string.h>
 #include <time.h>
 #include <ctype.h>
-#include <glob.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "../include/car.h"
 #include "../include/utils.h"
 #include "../include/display.h"
@@ -132,48 +134,58 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
         return 0;
     }
 
-    // if (!verifier_dossier_precedent(ville)) {
-    //     return 0;
-    // }
+    if (!verifier_dossier_precedent(ville)) {
+        return 0;
+    }
 
     return 1;
 }
 
 
-// int verifier_dossier_precedent(char *ville) {
-//     int num_ville = atoi(ville);
-//     glob_t result;
-//     char path_to_city[256]; // Remplacez malloc par un tableau de taille fixe
-//     int verif;
+int verifier_dossier_precedent(char *ville) {
+    int num_ville = atoi(ville);
+    char dir_path[256];
+    char resume_file[512];
+    DIR *dir;
+    struct dirent *entry;
+    int found = 0;
 
-//     snprintf(path_to_city, sizeof(path_to_city), "data/fichiers/%d_*", num_ville - 1);
+    if (num_ville <= 1) {
+        return 1; // Pas de dossier précédent pour la première ville
+    }
 
-//     if (num_ville > 1) {
-//         verif = glob(path_to_city, GLOB_ERR | GLOB_NOCHECK, NULL, &result);
-//         if (verif == 0) {
-//             printf("Fichiers correspondants : %s\n", result.gl_pathv[0]);
-//             if (result.gl_pathc > 0) {
-//                 snprintf(path_to_city, sizeof(path_to_city), "%s/resume_course.csv", result.gl_pathv[0]);
-//                 if (!file_exists(path_to_city)) {
-//                     printf("ERREUR: Le fichier resume_course n'a pas été trouvé: %s\n", path_to_city);
-//                     globfree(&result);
-//                     return 0;
-//                 }
-//             }
-//         } else if (verif == GLOB_NOMATCH) {
-//             printf("Aucun fichier trouvé pour le motif : %s\n", path_to_city);
-//             globfree(&result);
-//             return 0;
-//         } else {
-//             printf("Erreur lors de la recherche de fichiers\n");
-//             globfree(&result);
-//             return 0;
-//         }
-//     }
-//     globfree(&result);
-//     return 1;
-// }
+    snprintf(dir_path, sizeof(dir_path), "data/fichiers/%d_", num_ville - 1);
 
+    dir = opendir("data/fichiers");
+    if (!dir) {
+        perror("Erreur lors de l'ouverture du répertoire");
+        return 0;
+    }
+
+    // Recherche du dossier correspondant
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_type == DT_DIR && strncmp(entry->d_name, dir_path, strlen(dir_path)) == 0) {
+            found = 1;
+            snprintf(resume_file, sizeof(resume_file), "data/fichiers/%s/resume_course.csv", entry->d_name);
+            break;
+        }
+    }
+
+    closedir(dir);
+
+    if (!found) {
+        printf("Aucun dossier trouvé pour le motif : %s\n", dir_path);
+        return 0;
+    }
+
+    // Vérifie si le fichier "resume_course.csv" existe
+    if (!file_exists(resume_file)) {
+        printf("ERREUR: Le fichier resume_course n'a pas été trouvé : %s\n", resume_file);
+        return 0;
+    }
+
+    return 1;
+}
 
 
 /**
