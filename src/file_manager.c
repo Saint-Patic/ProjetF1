@@ -442,3 +442,21 @@ void read_starting_grid(const char *filename, int car_numbers[], int num_cars) {
 
     fclose(file);
 }
+
+/**
+ * @brief Vérifie l'existence d'un fichier et le crée avec un en-tête si nécessaire.
+ *
+ * @param filename Chemin du fichier.
+ */
+void creer_fichier_points(const char *filename) {
+    struct stat buffer;
+    if (stat(filename, &buffer) != 0) { // Fichier n'existe pas
+        FILE *file = fopen(filename, "w");
+        if (!file) {
+            perror("Erreur lors de la création du fichier de points");
+            exit(EXIT_FAILURE);
+        }
+        fprintf(file, "Car Number,Points\n");
+        fclose(file);
+    }
+}

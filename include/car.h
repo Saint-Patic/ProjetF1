@@ -14,6 +14,8 @@
 #define SESSION_DISTANCE 300
 #define SPRINT_DISTANCE 100
 #define SEM_KEY 1234
+#define POINTS_SPRINT {8, 7, 6, 5, 4, 3, 2, 1}
+#define POINTS_COURSE {25, 18, 15, 12, 10, 8, 6, 4, 2, 1}
 
 typedef struct car{
     int car_number;
@@ -27,6 +29,7 @@ typedef struct car{
     float temps_rouler; // Temps de roulage total en secondes
     int eliminate; // true si elimine pdt qualif
     float current_lap;
+    int nb_points; // nombre de points obtenus lors de la simul
 } car_t;
 
 
@@ -40,6 +43,7 @@ void simulate_pit_stop(car_t *car, int min_time, int max_time, char *session_typ
 void simulate_qualification(car_t cars[], int session_num, const char *ville, int special_weekend, char *filename, char *session_type);
 void simulate_course(car_t cars[], int special_weekend, int session_num, const char *ville, char *session_type, char *file_session);
 void initialize_cars(car_t cars[], int car_numbers[], int num_cars);
+void gestion_points(const char *classement_filename, const char *points_filename, int meilleur_tour_voiture, int is_sprint);
 
 
 
