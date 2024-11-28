@@ -150,7 +150,6 @@ void gestion_points(const char *classement_filename, const char *points_filename
         num_cars++;
     }
     fclose(classement_file);
-
     // Charger les points actuels depuis points.csv
     FILE *points_file = fopen(points_filename, "r");
     if (!points_file) {
@@ -310,6 +309,7 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
         system("clear");
         printf("Tour %d:\n", lap + 1);
         display_practice_results(cars, num_cars);
+        display_overall_best_times(cars, num_cars);
         usleep(10000); // sleep for 0.2 seconds
     }
 
