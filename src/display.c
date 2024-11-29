@@ -87,26 +87,12 @@ void display_practice_results(car_t cars[], int num_cars) {
     //sleep(1);
 }
 void display_overall_best_times(car_t cars[], int num_cars) {
-    float overall_best_sector_times[NUM_SECTORS] = {9999.0, 9999.0, 9999.0};
+    float overall_best_sector_times[NUM_SECTORS] = {cars[NUM_CARS - 1].best_sector_times[0],cars[NUM_CARS - 1].best_sector_times[1], cars[NUM_CARS - 1].best_sector_times[2]};
     int overall_best_sector_car[NUM_SECTORS] = {-1, -1, -1}; // Ajout du tableau pour les numéros des voitures des meilleurs secteurs
-    float overall_best_lap_time = 9999.0;
+    float overall_best_lap_time = cars[NUM_CARS - 1].best_lap_time;
     int best_lap_car = -1; // Ajout du numéro de la voiture au meilleur tour
 
-    for (int i = 0; i < num_cars; i++) {
-        for (int j = 0; j < NUM_SECTORS; j++) {
-            if (cars[i].best_sector_times[j] > 0 && cars[i].best_sector_times[j] < overall_best_sector_times[j]) {
-                overall_best_sector_times[j] = cars[i].best_sector_times[j];
-                overall_best_sector_car[j] = cars[i].car_number; // Stockez le numéro de la voiture
-            }
-        }
-
-        if (cars[i].best_lap_time > 0 && cars[i].best_lap_time < overall_best_lap_time) {
-            overall_best_lap_time = cars[i].best_lap_time;
-            best_lap_car = cars[i].car_number; // Stockez le numéro de la voiture pour le meilleur tour global
-        }
-    }
-
-    printf("\n=== Meilleurs temps par section et général de la période d'essai ===\n");
+    printf("\n=== Meilleurs temps par section et général ===\n");
     for (int i = 0; i < NUM_SECTORS; i++) {
         printf("Meilleur temps secteur %d : Voiture n°%d en "RED"%.2f"RESET" secondes\n", i + 1, overall_best_sector_car[i], overall_best_sector_times[i]);
     }

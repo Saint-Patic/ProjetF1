@@ -7,6 +7,7 @@
 #include <semaphore.h>
 #include <pthread.h>
 #include <fcntl.h>
+#include <float.h>
 #include <sys/mman.h>
 #include <semaphore.h>
 #include <sys/ipc.h>
@@ -23,21 +24,21 @@ extern sem_t sem; // Declare the semaphore
 
 void initialize_cars(car_t cars[], int car_numbers[]) {
     for (int i = 0; i < NUM_CARS; i++) {
-        cars[i].car_number = car_numbers[i];
+        cars[i].car_number = car_numbers[i]; // 21e voiture fictive
         cars[i].best_lap_time = 0.0;
         cars[i].temps_rouler = 0.0;
         cars[i].pit_stop = 0;
         cars[i].pit_stop_nb = 0;
-        cars[i].out = 0;
-        cars[i].current_lap = 0;
+        cars[i].out = (i == NUM_CARS - 1) ? 1 : 0; // 21e voiture inactive
+        cars[i].current_lap = 0.0;
         for (int j = 0; j < NUM_SECTORS; j++) {
             cars[i].sector_times[j] = 0.0;
             cars[i].best_sector_times[j] = 0.0;
         }
-        cars[i].current_lap = 0.0;
         cars[i].nb_points = 0;
     }
 }
+
 
 
 /**
@@ -71,7 +72,6 @@ void generate_sector_times(car_t *car, int min_time, int max_time) {
     if (car->best_lap_time == 0 || car->current_lap < car->best_lap_time) {
         car->best_lap_time = car->current_lap;
     }
-
     car->temps_rouler += car->current_lap;
 }
 
@@ -102,19 +102,6 @@ int compare_cars(const void *a, const void *b) {
     car_t *carA = (car_t *)a;
     car_t *carB = (car_t *)b;
     return (carA->best_lap_time > carB->best_lap_time) ? 1 : -1;
-}
-
-/**
- * @brief Réinitialise le statut "out" et le temps de roulage pour un tableau de voitures.
- * 
- * @param cars Tableau de voitures.
- * @param num_cars Nombre de voitures dans le tableau.
- */
-void reset_out_status_and_temps_rouler(car_t cars[], int num_cars) {
-    for (int i = 0; i < num_cars; i++) {
-        cars[i].out = 0;
-        cars[i].temps_rouler = 0;
-    }
 }
 
 
@@ -206,6 +193,23 @@ void gestion_points(const char *classement_filename, const char *points_filename
 }
 
 
+/**
+ * @brief Enregistre les meilleurs temps des 3 secteurs et du circuit en général dans une voiture imiganaire
+ * @param cars Tableau de voitures
+ */
+void find_overall_best_times(car_t cars[]) {
+    for (int i = 0; i < NUM_CARS - 1; i++) { // Parcourt les 20 premières voitures
+        if (cars[NUM_CARS - 1].best_lap_time == 0 ||cars[i].best_lap_time < cars[NUM_CARS - 1].best_lap_time) {
+            cars[NUM_CARS - 1].best_lap_time = cars[i].best_lap_time;
+        }
+        for (int j = 0; j < NUM_SECTORS; j++) {
+            if (cars[NUM_CARS - 1].best_sector_times[j] == 0 || cars[i].best_sector_times[j] < cars[NUM_CARS - 1].best_sector_times[j]) {
+                cars[NUM_CARS - 1].best_sector_times[j] = cars[i].best_sector_times[j];
+            }
+        }
+    }
+}
+
 
 
 
@@ -233,10 +237,9 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
     // Simule un tour de la session
     for (int lap = 0; lap < total_laps; lap++) {
         int active_cars = num_cars;
-
         // fais tourner les voitures pour le nieme tour de la session
         for (int i = 0; i < num_cars; i++) {
-
+            if (i == NUM_CARS - 1) continue;
             // Lock the semaphore (P operation)
             sem_op.sem_num = 0;
             sem_op.sem_op = -1;
@@ -272,6 +275,7 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
 
             // Génère les temps de roulage pour le secteur et les meilleurs temps
             generate_sector_times(&cars[i], MIN_TIME, MAX_TIME);
+            find_overall_best_times(cars);
 
             // Simule une panne si le tirage aléatoire est inférieur à 1%   
             if (rand() % 500 < 1) { // 1% de panne
@@ -310,7 +314,7 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
         printf("Tour %d:\n", lap + 1);
         display_practice_results(cars, num_cars);
         display_overall_best_times(cars, num_cars);
-        usleep(10000); // sleep for 0.2 seconds
+        usleep(200000); // sleep for 0.2 seconds
     }
 
     // Pour les courses et sprints, les voitures sont obligés de faire au moins un pit-stop => Si aucun pit-stop : elimine
@@ -362,6 +366,7 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, in
     car_t eligible_cars[num_cars_in_stage];
     int eligible_index = 0;
     for (int i = 0; i < NUM_CARS - 1; i++) {
+        printf("statut voiture fictive: %d\n", cars[NUM_CARS - 1].out);
         if (!cars[i].out && eligible_index < num_cars_in_stage) {
             eligible_cars[eligible_index++] = cars[i];
         }
@@ -370,9 +375,7 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, in
 
     int total_laps = estimate_max_laps(session_duration, (float)3 * MIN_TIME) + 1;
     simulate_sess(eligible_cars, num_cars_in_stage, session_duration, total_laps, session_type);
-
     qsort(eligible_cars, num_cars_in_stage, sizeof(car_t), compare_cars);
-
     save_session_results(eligible_cars, num_cars_in_stage, filename, "a");
     save_eliminated_cars(eligible_cars, num_cars_in_stage, eliminated_cars_count, session_num, cars, NUM_CARS - 1, ville, classement_file);
     free(classement_file);

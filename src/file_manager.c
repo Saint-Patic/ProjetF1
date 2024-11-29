@@ -61,7 +61,7 @@ int file_exists(const char *filename) {
 void save_session_results(car_t cars[], int num_cars, const char *filename, const char *mode) {
     FILE *file = fopen(filename, mode);
     if (!file) {
-        perror("Erreur d'ouverture du fichier");
+        perror("save_session_results: Erreur d'ouverture du fichier");
         return;
     }
 
@@ -193,7 +193,7 @@ void save_eliminated_cars(car_t eligible_cars[], int num_cars_in_stage, int elim
 
     FILE *ranking_file = fopen(ranking_file_path, "a");
     if (ranking_file == NULL) {
-        printf("Erreur lors de l'ouverture de %s\n", ranking_file_path);
+        printf("save_eliminated_cars : Erreur lors de l'ouverture de %s\n", ranking_file_path);
         return;
     }
 
@@ -240,7 +240,7 @@ void save_eliminated_cars(car_t eligible_cars[], int num_cars_in_stage, int elim
 void load_eliminated_cars(char *filename, car_t cars[], int total_cars) {
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
-        printf("Erreur lors de l'ouverture de %s\n", filename);
+        printf("load_eliminated_cars: Erreur lors de l'ouverture de %s\n", filename);
         return;
     }
 
