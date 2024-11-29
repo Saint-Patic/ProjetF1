@@ -6,6 +6,8 @@
 #include <string.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <ctype.h>
+
 #include "../include/car.h"
 #include "../include/display.h"
 #include "../include/file_manager.h"
@@ -227,14 +229,6 @@ void save_eliminated_cars(car_t eligible_cars[], int num_cars_in_stage, int elim
 
 }
 
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <sys/stat.h>
-#include "../include/car.h"
-#include "../include/utils.h"
 
 /**
  * @brief Charge les voitures éliminées depuis un fichier et marque les voitures concernées dans un tableau.

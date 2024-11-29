@@ -21,8 +21,8 @@ extern sem_t sem; // Declare the semaphore
 
 
 
-void initialize_cars(car_t cars[], int car_numbers[], int num_cars) {
-    for (int i = 0; i < num_cars; i++) {
+void initialize_cars(car_t cars[], int car_numbers[]) {
+    for (int i = 0; i < NUM_CARS; i++) {
         cars[i].car_number = car_numbers[i];
         cars[i].best_lap_time = 0.0;
         cars[i].temps_rouler = 0.0;
@@ -130,8 +130,8 @@ void reset_out_status_and_temps_rouler(car_t cars[], int num_cars) {
 void gestion_points(const char *classement_filename, const char *points_filename, int meilleur_tour_voiture, int is_sprint) {
     int points_sprint[] = POINTS_SPRINT;
     int points_course[] = POINTS_COURSE;
-    int existing_points[NUM_CARS] = {0};
-    int car_numbers[NUM_CARS] = {0}; // Pour stocker les numéros de voitures depuis classement.csv
+    int existing_points[NUM_CARS - 1] = {0};
+    int car_numbers[NUM_CARS - 1] = {0}; // Pour stocker les numéros de voitures depuis classement.csv
     int num_cars = 0;
 
     // Charger le classement des voitures depuis classement.csv
@@ -163,7 +163,7 @@ void gestion_points(const char *classement_filename, const char *points_filename
     // Charger les points existants
     int car_number, points;
     while (fscanf(points_file, "%d,%d\n", &car_number, &points) == 2) {
-        if (car_number < 1 || car_number > NUM_CARS) {
+        if (car_number < 1 || car_number > NUM_CARS - 1) {
             fprintf(stderr, "Numéro de voiture invalide : %d\n", car_number);
             continue;
         }
@@ -197,7 +197,7 @@ void gestion_points(const char *classement_filename, const char *points_filename
     }
 
     fprintf(points_file, "Car Number,Points\n");
-    for (int i = 0; i < NUM_CARS; i++) {
+    for (int i = 0; i < NUM_CARS - 1; i++) {
         if (existing_points[i] > 0) {
             fprintf(points_file, "%d,%d\n", i + 1, existing_points[i]);
         }
@@ -355,13 +355,13 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, in
 
     // chargement des voitures éliminées si la session n'est pas la première
     if (session_num > 1) {
-        load_eliminated_cars(classement_file, cars, NUM_CARS);
+        load_eliminated_cars(classement_file, cars, NUM_CARS - 1);
     }
 
     // ##### init voiture pouvant participer à la qualif #####
     car_t eligible_cars[num_cars_in_stage];
     int eligible_index = 0;
-    for (int i = 0; i < NUM_CARS; i++) {
+    for (int i = 0; i < NUM_CARS - 1; i++) {
         if (!cars[i].out && eligible_index < num_cars_in_stage) {
             eligible_cars[eligible_index++] = cars[i];
         }
@@ -374,7 +374,7 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, in
     qsort(eligible_cars, num_cars_in_stage, sizeof(car_t), compare_cars);
 
     save_session_results(eligible_cars, num_cars_in_stage, filename, "a");
-    save_eliminated_cars(eligible_cars, num_cars_in_stage, eliminated_cars_count, session_num, cars, NUM_CARS, ville, classement_file);
+    save_eliminated_cars(eligible_cars, num_cars_in_stage, eliminated_cars_count, session_num, cars, NUM_CARS - 1, ville, classement_file);
     free(classement_file);
 }
 
@@ -388,7 +388,7 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, in
  */
 void simulate_course(car_t cars[], int special_weekend, int session_num, const char *ville, char *session_type, char *session_file) {
     
-    int car_numbers[NUM_CARS];
+    int car_numbers[NUM_CARS - 1];
     int distance_course = special_weekend ? SPRINT_DISTANCE : SESSION_DISTANCE;
     int total_laps = calculate_total_laps(ville, distance_course);
     int meilleur_tour_voiture = -1;
@@ -418,7 +418,7 @@ void simulate_course(car_t cars[], int special_weekend, int session_num, const c
     snprintf(input_file, 150, "data/fichiers/%s", ville);
 
     // Read starting grid from classement.csv
-    read_starting_grid(classement_file_path, car_numbers, NUM_CARS);
+    read_starting_grid(classement_file_path, car_numbers, NUM_CARS - 1);
 
     // // Display the starting grid
     // display_starting_grid(car_numbers, NUM_CARS);
@@ -427,10 +427,10 @@ void simulate_course(car_t cars[], int special_weekend, int session_num, const c
     // printf("La course commence !\n");
     sleep(1); // Simulate the start delay
 
-    simulate_sess(cars, NUM_CARS, 999999, total_laps, session_type);
-    save_session_results(cars, NUM_CARS, session_file, "w");
+    simulate_sess(cars, NUM_CARS - 1, 999999, total_laps, session_type);
+    save_session_results(cars, NUM_CARS - 1 , session_file, "w");
 
-    for (int i = 0; i < NUM_CARS; i++) {
+    for (int i = 0; i < NUM_CARS - 1; i++) {
         if (!cars[i].out && cars[i].best_lap_time < meilleur_tour_temps) {
             meilleur_tour_temps = cars[i].best_lap_time;
             meilleur_tour_voiture = cars[i].car_number;
