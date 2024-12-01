@@ -106,12 +106,12 @@ void display_overall_best_times(car_t cars[], int num_cars) {
         }
     }
 
-    printf("\n=== Meilleurs temps par section et général de la période d'essai ===\n");
+    printf(GREEN"\n==="RESET YELLOW" Meilleurs temps par section et général de la période d'essai"RESET GREEN" ===\n"RESET);
     for (int i = 0; i < NUM_SECTORS; i++) {
-        printf("Meilleur temps secteur %d : Voiture n°%d en "RED"%.2f"RESET" secondes\n", i + 1, overall_best_sector_car[i], overall_best_sector_times[i]);
+        printf(MAGENTA"Meilleur temps secteur %d :"RESET" Voiture n°%d en "RED"%.2f"RESET" secondes\n", i + 1, overall_best_sector_car[i], overall_best_sector_times[i]);
     }
-    printf("Meilleur temps de tour global : Voiture n°%d en "CYAN"%.2f"RESET" secondes\n", best_lap_car, overall_best_lap_time);
-    printf("=======================================================\n");
+    printf(MAGENTA"Meilleur temps de tour global :"RESET" Voiture n°%d en "CYAN"%.2f"RESET" secondes\n", best_lap_car, overall_best_lap_time);
+    printf(GREEN"=======================================================\n"RESET);
 }
 
 void display_starting_grid(int car_numbers[], int num_cars) {
