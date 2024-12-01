@@ -6,6 +6,8 @@
 #include <string.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <ctype.h>
+
 #include "../include/car.h"
 #include "../include/display.h"
 #include "../include/file_manager.h"
@@ -59,14 +61,14 @@ int file_exists(const char *filename) {
 void save_session_results(car_t cars[], int num_cars, const char *filename, const char *mode) {
     FILE *file = fopen(filename, mode);
     if (!file) {
-        perror("Erreur d'ouverture du fichier");
+        perror("save_session_results: Erreur d'ouverture du fichier");
         return;
     }
 
     fprintf(file, "Car Number,Best Lap Time,Sector 1 Time,Sector 2 Time,Sector 3 Time\n");
 
-    float best_overall_sector_times[NUM_SECTORS] = {0};
-    float best_overall_lap_time = 0;
+    float overall_best_sector_times[NUM_SECTORS] = {cars[NUM_CARS - 1].best_sector_times[0],cars[NUM_CARS - 1].best_sector_times[1], cars[NUM_CARS - 1].best_sector_times[2]};
+    float overall_best_lap_time = cars[NUM_CARS - 1].best_lap_time;
 
     for (int i = 0; i < num_cars; i++) {
         fprintf(file, "%d,%.2f,%.2f,%.2f,%.2f\n",
@@ -76,21 +78,12 @@ void save_session_results(car_t cars[], int num_cars, const char *filename, cons
                 cars[i].best_sector_times[1],
                 cars[i].best_sector_times[2]);
 
-        for (int j = 0; j < NUM_SECTORS; j++) {
-            if (best_overall_sector_times[j] == 0 || cars[i].best_sector_times[j] < best_overall_sector_times[j]) {
-                best_overall_sector_times[j] = cars[i].best_sector_times[j];
-            }
-        }
-
-        if (best_overall_lap_time == 0 || cars[i].best_lap_time < best_overall_lap_time) {
-            best_overall_lap_time = cars[i].best_lap_time;
-        }
     }
     fprintf(file, "\nBest Sector Times\n");
-    fprintf(file, "Sector 1,%.2f\n", best_overall_sector_times[0]);
-    fprintf(file, "Sector 2,%.2f\n", best_overall_sector_times[1]);
-    fprintf(file, "Sector 3,%.2f\n", best_overall_sector_times[2]);
-    fprintf(file, "Best Overall Lap,%.2f\n", best_overall_lap_time);
+    fprintf(file, "Sector 1,%.2f\n", overall_best_sector_times[0]);
+    fprintf(file, "Sector 2,%.2f\n", overall_best_sector_times[1]);
+    fprintf(file, "Sector 3,%.2f\n", overall_best_sector_times[2]);
+    fprintf(file, "Best Overall Lap,%.2f\n", overall_best_lap_time);
 
     fclose(file);
 }
@@ -191,7 +184,7 @@ void save_eliminated_cars(car_t eligible_cars[], int num_cars_in_stage, int elim
 
     FILE *ranking_file = fopen(ranking_file_path, "a");
     if (ranking_file == NULL) {
-        printf("Erreur lors de l'ouverture de %s\n", ranking_file_path);
+        printf("save_eliminated_cars : Erreur lors de l'ouverture de %s\n", ranking_file_path);
         return;
     }
 
@@ -228,14 +221,6 @@ void save_eliminated_cars(car_t eligible_cars[], int num_cars_in_stage, int elim
 }
 
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <sys/stat.h>
-#include "../include/car.h"
-#include "../include/utils.h"
-
 /**
  * @brief Charge les voitures éliminées depuis un fichier et marque les voitures concernées dans un tableau.
  *
@@ -246,7 +231,7 @@ void save_eliminated_cars(car_t eligible_cars[], int num_cars_in_stage, int elim
 void load_eliminated_cars(char *filename, car_t cars[], int total_cars) {
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
-        printf("Erreur lors de l'ouverture de %s\n", filename);
+        printf("load_eliminated_cars: Erreur lors de l'ouverture de %s\n", filename);
         return;
     }
 

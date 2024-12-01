@@ -8,7 +8,7 @@
 #define DUREE_QUALIF_2 900 // Temps maximum de la période d'essai
 #define DUREE_QUALIF_3 720 // Temps maximum de la période d'essai
 #define DUREE_ESSAI 3600 // Temps maximum de la période d'essai
-#define NUM_CARS 20
+#define NUM_CARS 21
 #define MIN_TIME 25
 #define MAX_TIME 45
 #define SESSION_DISTANCE 300
@@ -38,12 +38,12 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
 void display_practice_results(car_t cars[], int num_cars);
 void display_overall_best_times(car_t cars[], int num_cars);
 int compare_cars(const void *a, const void *b);
-void reset_out_status_and_temps_rouler(car_t cars[], int num_cars);
 void simulate_pit_stop(car_t *car, int min_time, int max_time, char *session_type);
 void simulate_qualification(car_t cars[], int session_num, const char *ville, int special_weekend, char *filename, char *session_type);
 void simulate_course(car_t cars[], int special_weekend, int session_num, const char *ville, char *session_type, char *file_session);
-void initialize_cars(car_t cars[], int car_numbers[], int num_cars);
+void initialize_cars(car_t cars[], int car_numbers[]);
 void gestion_points(const char *classement_filename, const char *points_filename, int meilleur_tour_voiture, int is_sprint);
+void find_overall_best_times(car_t cars[], int num_cars);
 
 
 
