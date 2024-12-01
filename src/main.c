@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
 
     srand(time(NULL));
     car_t cars[MAX_NUM_CARS];
-    int car_numbers[MAX_NUM_CARS] = {1, 11, 44, 63, 16, 55, 4, 81, 14, 18, 10, 31, 23, 2, 22, 3, 77, 24, 20, 27, 0};
+    int car_numbers[MAX_NUM_CARS] = {1, 11, 44, 63, 16, 55, 4, 81, 14, 18, 10, 31, 23, 2, 22, 3, 77, 24, 20, 27, 1000};
     initialize_cars(cars, car_numbers);
 
     printf("===== Début de la session: %s =====\n\n", session_file);

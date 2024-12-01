@@ -67,8 +67,8 @@ void save_session_results(car_t cars[], int num_cars, const char *filename, cons
 
     fprintf(file, "Car Number,Best Lap Time,Sector 1 Time,Sector 2 Time,Sector 3 Time\n");
 
-    float overall_best_sector_times[NUM_SECTORS] = {cars[MAX_NUM_CARS - 1].best_sector_times[0],cars[MAX_NUM_CARS - 1].best_sector_times[1], cars[MAX_NUM_CARS - 1].best_sector_times[2]};
-    float overall_best_lap_time = cars[MAX_NUM_CARS - 1].best_lap_time;
+    float overall_best_sector_times[NUM_SECTORS] = {cars[num_cars].best_sector_times[0],cars[num_cars].best_sector_times[1], cars[num_cars].best_sector_times[2]};
+    float overall_best_lap_time = cars[num_cars].best_lap_time;
 
     for (int i = 0; i < num_cars; i++) {
         fprintf(file, "%d,%.2f,%.2f,%.2f,%.2f\n",
