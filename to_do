@@ -22,6 +22,7 @@
 5. Sémaphore (shm_get !!) (Alexis)
 
 6. display.c : colonne en plus pour les dépassements
+   tout afficher dans un bloc
 
 
 Sem: les 20 voitures doivent avoir acces au best s1, s2, s3 et tour
