@@ -204,7 +204,8 @@ void find_overall_best_times(car_t cars[], int num_cars) {
             cars[NUM_CARS - 1].best_lap_time = cars[i].best_lap_time;
         }
         for (int j = 0; j < num_cars; j++) { // comparaison pour les secteurs
-            if (cars[NUM_CARS - 1].best_sector_times[j] == 0 || cars[i].best_sector_times[j] < cars[NUM_CARS - 1].best_sector_times[j]) {
+            if (cars[NUM_CARS - 1].best_sector_times[j] == 0 || 
+                cars[i].best_sector_times[j] < cars[NUM_CARS - 1].best_sector_times[j]) {
                 cars[NUM_CARS - 1].best_sector_times[j] = cars[i].best_sector_times[j];
             }
         }
@@ -276,7 +277,7 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
 
             // Génère les temps de roulage pour le secteur et les meilleurs temps
             generate_sector_times(&cars[i], MIN_TIME, MAX_TIME);
-            find_overall_best_times(cars, num_cars);
+            // find_overall_best_times(cars, num_cars);
 
             // Simule une panne si le tirage aléatoire est inférieur à 1%   
             if (rand() % 500 < 1) { // 1% de panne
@@ -311,11 +312,11 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
         if (active_cars == 0) break;
 
         // Affiche les résultats du tour
-        // system("clear");
+        system("clear");
         // printf("Tour %d:\n", lap + 1);
         display_practice_results(cars, num_cars);
         display_overall_best_times(cars, num_cars);
-        usleep(200000); // sleep for 0.2 seconds
+        usleep(20000); // sleep for 0.2 seconds
     }
 
     // Pour les courses et sprints, les voitures sont obligés de faire au moins un pit-stop => Si aucun pit-stop : elimine
@@ -438,7 +439,7 @@ void simulate_course(car_t cars[], int special_weekend, int session_num, const c
             meilleur_tour_voiture = cars[i].car_number;
         }
     }
-    gestion_points(input_file, points_file, meilleur_tour_voiture, special_weekend);
+    // gestion_points(input_file, points_file, meilleur_tour_voiture, special_weekend);
 
     free(classement_file_path);
     free(input_file);
