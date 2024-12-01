@@ -26,7 +26,7 @@ void display_practice_results(car_t cars[], int num_cars) {
 
     //taille max du buffer, voir si il faut changer, j'ai mis au hasard 
     const int MAX_BUFFER_SIZE = 10000;
-    char *buffer = malloc(MAX_BUFFER_SIZE); //voir si on peut utiliser malloc ??? !!!!
+    char *buffer = malloc(MAX_BUFFER_SIZE*sizeof(char)); //voir si on peut utiliser malloc ??? !!!!
     if (buffer == NULL) {
         perror("ERREUR: problème de mémoire non allouée");
         exit(EXIT_FAILURE);
@@ -90,7 +90,7 @@ void display_overall_best_times(car_t cars[], int num_cars) {
     float overall_best_sector_times[NUM_SECTORS] = {cars[NUM_CARS - 1].best_sector_times[0],cars[NUM_CARS - 1].best_sector_times[1], cars[NUM_CARS - 1].best_sector_times[2]};
     int overall_best_sector_car[NUM_SECTORS] = {-1, -1, -1}; // Ajout du tableau pour les numéros des voitures des meilleurs secteurs
     float overall_best_lap_time = cars[NUM_CARS - 1].best_lap_time;
-    int best_lap_car = -1; // Ajout du numéro de la voiture au meilleur tour
+    int best_lap_car = cars[0].car_number; // Ajout du numéro de la voiture au meilleur tour
 
     printf("\n=== Meilleurs temps par section et général ===\n");
     for (int i = 0; i < NUM_SECTORS; i++) {

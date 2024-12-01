@@ -43,7 +43,7 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, in
 void simulate_course(car_t cars[], int special_weekend, int session_num, const char *ville, char *session_type, char *file_session);
 void initialize_cars(car_t cars[], int car_numbers[]);
 void gestion_points(const char *classement_filename, const char *points_filename, int meilleur_tour_voiture, int is_sprint);
-void find_overall_best_times(car_t cars[]);
+void find_overall_best_times(car_t cars[], int num_cars);
 
 
 

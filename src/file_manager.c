@@ -67,8 +67,8 @@ void save_session_results(car_t cars[], int num_cars, const char *filename, cons
 
     fprintf(file, "Car Number,Best Lap Time,Sector 1 Time,Sector 2 Time,Sector 3 Time\n");
 
-    float best_overall_sector_times[NUM_SECTORS] = {0};
-    float best_overall_lap_time = 0;
+    float overall_best_sector_times[NUM_SECTORS] = {cars[NUM_CARS - 1].best_sector_times[0],cars[NUM_CARS - 1].best_sector_times[1], cars[NUM_CARS - 1].best_sector_times[2]};
+    float overall_best_lap_time = cars[NUM_CARS - 1].best_lap_time;
 
     for (int i = 0; i < num_cars; i++) {
         fprintf(file, "%d,%.2f,%.2f,%.2f,%.2f\n",
@@ -78,21 +78,12 @@ void save_session_results(car_t cars[], int num_cars, const char *filename, cons
                 cars[i].best_sector_times[1],
                 cars[i].best_sector_times[2]);
 
-        for (int j = 0; j < NUM_SECTORS; j++) {
-            if (best_overall_sector_times[j] == 0 || cars[i].best_sector_times[j] < best_overall_sector_times[j]) {
-                best_overall_sector_times[j] = cars[i].best_sector_times[j];
-            }
-        }
-
-        if (best_overall_lap_time == 0 || cars[i].best_lap_time < best_overall_lap_time) {
-            best_overall_lap_time = cars[i].best_lap_time;
-        }
     }
     fprintf(file, "\nBest Sector Times\n");
-    fprintf(file, "Sector 1,%.2f\n", best_overall_sector_times[0]);
-    fprintf(file, "Sector 2,%.2f\n", best_overall_sector_times[1]);
-    fprintf(file, "Sector 3,%.2f\n", best_overall_sector_times[2]);
-    fprintf(file, "Best Overall Lap,%.2f\n", best_overall_lap_time);
+    fprintf(file, "Sector 1,%.2f\n", overall_best_sector_times[0]);
+    fprintf(file, "Sector 2,%.2f\n", overall_best_sector_times[1]);
+    fprintf(file, "Sector 3,%.2f\n", overall_best_sector_times[2]);
+    fprintf(file, "Best Overall Lap,%.2f\n", overall_best_lap_time);
 
     fclose(file);
 }

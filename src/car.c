@@ -197,12 +197,13 @@ void gestion_points(const char *classement_filename, const char *points_filename
  * @brief Enregistre les meilleurs temps des 3 secteurs et du circuit en général dans une voiture imiganaire
  * @param cars Tableau de voitures
  */
-void find_overall_best_times(car_t cars[]) {
-    for (int i = 0; i < NUM_CARS - 1; i++) { // Parcourt les 20 premières voitures
-        if (cars[NUM_CARS - 1].best_lap_time == 0 ||cars[i].best_lap_time < cars[NUM_CARS - 1].best_lap_time) {
+void find_overall_best_times(car_t cars[], int num_cars) {
+    // Parcourt les x premières voitures
+    for (int i = 0; i < num_cars - 1; i++) { // comparaison pour le tour complet 
+        if (cars[NUM_CARS - 1].best_lap_time == 0 || cars[i].best_lap_time < cars[NUM_CARS - 1].best_lap_time) {
             cars[NUM_CARS - 1].best_lap_time = cars[i].best_lap_time;
         }
-        for (int j = 0; j < NUM_SECTORS; j++) {
+        for (int j = 0; j < num_cars; j++) { // comparaison pour les secteurs
             if (cars[NUM_CARS - 1].best_sector_times[j] == 0 || cars[i].best_sector_times[j] < cars[NUM_CARS - 1].best_sector_times[j]) {
                 cars[NUM_CARS - 1].best_sector_times[j] = cars[i].best_sector_times[j];
             }
@@ -275,7 +276,7 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
 
             // Génère les temps de roulage pour le secteur et les meilleurs temps
             generate_sector_times(&cars[i], MIN_TIME, MAX_TIME);
-            find_overall_best_times(cars);
+            find_overall_best_times(cars, num_cars);
 
             // Simule une panne si le tirage aléatoire est inférieur à 1%   
             if (rand() % 500 < 1) { // 1% de panne
@@ -310,8 +311,8 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
         if (active_cars == 0) break;
 
         // Affiche les résultats du tour
-        system("clear");
-        printf("Tour %d:\n", lap + 1);
+        // system("clear");
+        // printf("Tour %d:\n", lap + 1);
         display_practice_results(cars, num_cars);
         display_overall_best_times(cars, num_cars);
         usleep(200000); // sleep for 0.2 seconds
@@ -347,7 +348,6 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, in
     int num_cars_in_stage = ternaire_moins_criminel(session_num, 20, 15, 10); // nbr de voitures qui roulent
     int eliminated_cars_count = ternaire_moins_criminel(session_num, 5, 5, 0); // nbr de voitures éliminées à la fin de la simul
     int session_duration = ternaire_moins_criminel(session_num, DUREE_QUALIF_1, DUREE_QUALIF_2, DUREE_QUALIF_3);  // durée de la session
-
     // choix du fichier pour save les résultats 
     char *classement_file = malloc(100 * sizeof(char));
     if (special_weekend) {
@@ -366,7 +366,6 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, in
     car_t eligible_cars[num_cars_in_stage];
     int eligible_index = 0;
     for (int i = 0; i < NUM_CARS - 1; i++) {
-        printf("statut voiture fictive: %d\n", cars[NUM_CARS - 1].out);
         if (!cars[i].out && eligible_index < num_cars_in_stage) {
             eligible_cars[eligible_index++] = cars[i];
         }
