@@ -44,13 +44,13 @@ int main(int argc, char *argv[]) {
         save_session_results(cars, MAX_NUM_CARS - 1, session_file, "w");
     } else if (strcmp(session_type, "shootout") == 0) { // shootout (uniquement pdt wk spé)
         printf("Simulation du Sprint Shootout)\n");
-        simulate_qualification(cars, session_num, ville, special_weekend, session_file, session_type);
+        simulate_qualification(cars, session_num, ville, session_file, session_type);
     } else if (strcmp(session_type, "sprint") == 0) { // sprint (uniquement pdt wk spé)
         printf("Simulation du Sprint\n");
         simulate_course(cars, special_weekend, session_num, ville, session_type, session_file);
     } else if (strcmp(session_type, "qualif") == 0) { // qualif pour la course principale
         printf("Simulation des qualifications pour un %s.\n", special_weekend ? "week-end spécial" : "week-end normal");
-        simulate_qualification(cars, session_num, ville, special_weekend, session_file, session_type);
+        simulate_qualification(cars, session_num, ville, session_file, session_type);
     } else if (strcmp(session_type, "course") == 0) { // course principale
         printf("Simulation de la course principale.\n");
         simulate_course(cars, special_weekend, session_num, ville, session_type, session_file);

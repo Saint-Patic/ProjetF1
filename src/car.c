@@ -315,8 +315,8 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
         // Affiche les résultats du tour
         system("clear");
         // printf("Tour %d:\n", lap + 1);
-        display_practice_results(cars, num_cars);
-        display_overall_best_times(cars, num_cars);
+        display_practice_results(cars, num_cars, session_type);
+        display_overall_best_times(cars, num_cars, session_type);
         usleep(200000); // sleep for 0.2 seconds
     }
 
@@ -343,19 +343,19 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
  * @param cars Tableau de voitures.
  * @param session_num Numéro de la session actuelle.
  * @param ville Nom de la ville où se déroule l'événement.
- * @param special_weekend) { Mode sprint activé ou non.
  * @param filename Nom du fichier où sauvegarder les résultats.
  */
-void simulate_qualification(car_t cars[], int session_num, const char *ville, int special_weekend, char *filename, char *session_type) {
+void simulate_qualification(car_t cars[], int session_num, const char *ville, char *filename, char *session_type) {
     int num_cars_in_stage = ternaire_moins_criminel(session_num, 20, 15, 10); // nbr de voitures qui roulent
     int eliminated_cars_count = ternaire_moins_criminel(session_num, 5, 5, 0); // nbr de voitures éliminées à la fin de la simul
-    int session_duration = ternaire_moins_criminel(session_num, DUREE_QUALIF_1, DUREE_QUALIF_2, DUREE_QUALIF_3);  // durée de la session
+    int session_duration;  // durée de la session
     // choix du fichier pour save les résultats 
     char *classement_file = malloc(100 * sizeof(char));
-    if (special_weekend) {
+    if (strcmp(session_type, "shootout") == 0) {
         session_duration = ternaire_moins_criminel(session_num, 720, 600, 480);
         snprintf(classement_file, 100, "data/fichiers/%s/classement_shootout.csv", ville); // si wk spé
     } else {
+        session_duration = ternaire_moins_criminel(session_num, DUREE_QUALIF_1, DUREE_QUALIF_2, DUREE_QUALIF_3); 
         snprintf(classement_file, 100, "data/fichiers/%s/classement.csv", ville); // si wk normal
     }
 
@@ -390,10 +390,8 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, in
  * @param ville Nom de la ville où se déroule l'événement.
  */
 void simulate_course(car_t cars[], int special_weekend, int session_num, const char *ville, char *session_type, char *session_file) {
-    
-    int car_numbers[MAX_NUM_CARS - 1];
-    int distance_course = special_weekend ? SPRINT_DISTANCE : SESSION_DISTANCE;
-    int total_laps = calculate_total_laps(ville, distance_course);
+
+    int distance_course;
     const char *points_file = "data/gestion_points.csv";
 
     // Créer le fichier de points s'il n'existe pas
@@ -408,25 +406,28 @@ void simulate_course(car_t cars[], int special_weekend, int session_num, const c
         exit(EXIT_FAILURE);
     }
 
-    if (special_weekend) {
+    if (strcmp(session_type, "sprint") == 0) {
+        distance_course = SPRINT_DISTANCE;
         snprintf(classement_file_path, 150, "data/fichiers/%s/classement_shootout.csv", ville);
     } else {
+        distance_course = SESSION_DISTANCE;  
         snprintf(classement_file_path, 150, "data/fichiers/%s/classement.csv", ville); 
     }
 
 
+    int total_laps = calculate_total_laps(ville, distance_course);
     char *input_file = malloc(150 * sizeof(char));
     snprintf(input_file, 150, "data/fichiers/%s", ville);
 
-    // Read starting grid from classement.csv
-    read_starting_grid(classement_file_path, car_numbers, MAX_NUM_CARS - 1);
+    // // Read starting grid from classement.csv
+    // read_starting_grid(classement_file_path, car_numbers, MAX_NUM_CARS - 1);
 
     // // Display the starting grid
     // display_starting_grid(car_numbers, MAX_NUM_CARS);
 
     // // Start the race
     // printf("La course commence !\n");
-    sleep(1); // Simulate the start delay
+    // sleep(1); // Simulate the start delay
 
     simulate_sess(cars, MAX_NUM_CARS - 1, 999999, total_laps, session_type);
     save_session_results(cars, MAX_NUM_CARS - 1 , session_file, "w");

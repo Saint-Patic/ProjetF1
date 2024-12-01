@@ -35,11 +35,9 @@ typedef struct car{
 
 void generate_sector_times(car_t *car, int min_time, int max_time);
 void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_laps, char *session_type);
-void display_practice_results(car_t cars[], int num_cars);
-void display_overall_best_times(car_t cars[], int num_cars);
 int compare_cars(const void *a, const void *b);
 void simulate_pit_stop(car_t *car, int min_time, int max_time, char *session_type);
-void simulate_qualification(car_t cars[], int session_num, const char *ville, int special_weekend, char *filename, char *session_type);
+void simulate_qualification(car_t cars[], int session_num, const char *ville, char *filename, char *session_type);
 void simulate_course(car_t cars[], int special_weekend, int session_num, const char *ville, char *session_type, char *file_session);
 void initialize_cars(car_t cars[], int car_numbers[]);
 void gestion_points(const char *classement_filename, const char *points_filename, int meilleur_tour_voiture, int is_sprint);

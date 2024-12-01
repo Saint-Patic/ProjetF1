@@ -92,6 +92,9 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
         if (strcmp(session_type, "essai") == 0 && *session_num > MAX_SESSION_ESSAI) {
             printf("Erreur : Nombre maximum d'essais dépassé (%d).\n", MAX_SESSION_ESSAI);
             return 0;
+        } else if (strcmp(session_type, "shootout") == 0 ||strcmp(session_type, "sprint") == 0) {
+            printf("Erreur : Il n'y a pas de %s pour un week-end normal\n", session_type);
+            return 0;
         } else if (strcmp(session_type, "qualif") == 0) {
             if (*session_num < 1 || *session_num > MAX_SESSION_QUALIF) {
                 printf("Erreur : Nombre maximum de qualifications dépassé (3).\n");
