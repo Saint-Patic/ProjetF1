@@ -29,9 +29,8 @@ int main(int argc, char *argv[]) {
     }
 
     srand(time(NULL));
-
-    car_t cars[NUM_CARS];
-    int car_numbers[NUM_CARS] = {1, 11, 44, 63, 16, 55, 4, 81, 14, 18, 10, 31, 23, 2, 22, 3, 77, 24, 20, 27, 0};
+    car_t cars[MAX_NUM_CARS];
+    int car_numbers[MAX_NUM_CARS] = {1, 11, 44, 63, 16, 55, 4, 81, 14, 18, 10, 31, 23, 2, 22, 3, 77, 24, 20, 27, 0};
     initialize_cars(cars, car_numbers);
 
     printf("===== Début de la session: %s =====\n\n", session_file);
@@ -41,8 +40,8 @@ int main(int argc, char *argv[]) {
     if (strcmp(session_type, "essai") == 0) { // essai libre (1 pour wk spé et 3 pour wk normal)
         printf("Simulation des essais libres pour un %s.\n", special_weekend ? "week-end spécial" : "week-end normal");
         int total_laps = estimate_max_laps(DUREE_ESSAI, 3*MIN_TIME);
-        simulate_sess(cars, NUM_CARS - 1, DUREE_ESSAI, total_laps, "essai");
-        save_session_results(cars, NUM_CARS - 1, session_file, "w");
+        simulate_sess(cars, MAX_NUM_CARS - 1, DUREE_ESSAI, total_laps, "essai");
+        save_session_results(cars, MAX_NUM_CARS - 1, session_file, "w");
     } else if (strcmp(session_type, "shootout") == 0) { // shootout (uniquement pdt wk spé)
         printf("Simulation du Sprint Shootout)\n");
         simulate_qualification(cars, session_num, ville, special_weekend, session_file, session_type);

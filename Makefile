@@ -39,6 +39,12 @@ first_session: clean $(BIN_DIR)/main
 seconde_session: $(BIN_DIR)/main
 	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_2.csv
 
+qualif_session: $(BIN_DIR)/main
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_1.csv
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_2.csv
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_3.csv
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/qualif_1.csv
+
 djeddah: $(BIN_DIR)/main
 	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER_2)/essai_1.csv
 

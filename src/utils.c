@@ -264,7 +264,7 @@ int ternaire_moins_criminel(int session_num, int res1, int res2, int resDefault)
         default:
             return resDefault; // Q3
     }
-}
+} // Cordialment, Eloy
 
 /**
  * @brief Vérifie si un week-end est spécial (Sprint).
@@ -318,4 +318,19 @@ int calculate_total_laps(const char *ville, float session_distance) {
     free(circuit_distance);
 
     return circuit_length > 0 ? estimate_max_laps(session_distance, circuit_length) + 1 : 0;
+}
+
+void trier_voitures_sans_imaginaire(car_t cars[], int num_cars) {
+    // Nombre de voitures réelles
+    int num_voitures_reelles = num_cars - 1; 
+
+    // Créez un tableau temporaire pour les voitures réelles
+    car_t voitures_reelles[num_voitures_reelles];
+    memcpy(voitures_reelles, cars, num_voitures_reelles * sizeof(car_t));
+
+    // Trie les voitures réelles en fonction de leur meilleur temps au tour
+    qsort(voitures_reelles, num_voitures_reelles, sizeof(car_t), compare_cars);
+
+    // Réinjectez les résultats triés dans le tableau original
+    memcpy(cars, voitures_reelles, num_voitures_reelles * sizeof(car_t));
 }

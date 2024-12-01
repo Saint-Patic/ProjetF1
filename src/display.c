@@ -26,13 +26,14 @@
 #include "../include/car.h"
 #include "../include/display.h"
 
-#define BUFFER_INCREMENT 1024
+
 
 void display_practice_results(car_t cars[], int num_cars) {
     // Trie les voitures par temps
-    qsort(cars, num_cars, sizeof(car_t), compare_cars);
+    trier_voitures_sans_imaginaire(cars,num_cars);
 
     // Initialisation d'un buffer dynamique avec une taille initiale
+
     size_t buffer_size = BUFFER_INCREMENT;
     char *buffer = malloc(buffer_size);
     if (!buffer) {
@@ -43,7 +44,7 @@ void display_practice_results(car_t cars[], int num_cars) {
     // Initialise le buffer
     buffer[0] = '\0';
     size_t current_length = 0;
-
+    
     // Ajoute l'en-tête au buffer
     const char *header =
         GREEN "================================================================================================" RESET "\n"
@@ -65,8 +66,8 @@ void display_practice_results(car_t cars[], int num_cars) {
     // Ajoute les résultats ligne par ligne
     float prev_time = cars[0].best_lap_time;
     for (int i = 0; i < num_cars; i++) {
-        char line[512];
         float diff = cars[i].best_lap_time - prev_time;
+        char line[512];
 
         // Crée la ligne correspondante
         if (cars[i].pit_stop) {
@@ -130,9 +131,8 @@ void display_practice_results(car_t cars[], int num_cars) {
     }
     strcat(buffer, footer);
 
-<<<<<<< HEAD
     printf(GREEN"\n==="RESET YELLOW" Meilleurs temps par section et général de la période d'essai"RESET GREEN" ===\n"RESET);
-=======
+
     // Affiche tout le tableau
     printf("%s", buffer);
 
@@ -141,13 +141,12 @@ void display_practice_results(car_t cars[], int num_cars) {
 }
 
 void display_overall_best_times(car_t cars[], int num_cars) {
-    float overall_best_sector_times[NUM_SECTORS] = {cars[NUM_CARS - 1].best_sector_times[0],cars[NUM_CARS - 1].best_sector_times[1], cars[NUM_CARS - 1].best_sector_times[2]};
+    float overall_best_sector_times[NUM_SECTORS] = {cars[MAX_NUM_CARS - 1].best_sector_times[0],cars[MAX_NUM_CARS - 1].best_sector_times[1], cars[MAX_NUM_CARS - 1].best_sector_times[2]};
     int overall_best_sector_car[NUM_SECTORS] = {-1, -1, -1}; // Ajout du tableau pour les numéros des voitures des meilleurs secteurs
-    float overall_best_lap_time = cars[NUM_CARS - 1].best_lap_time;
+    float overall_best_lap_time = cars[MAX_NUM_CARS - 1].best_lap_time;
     int best_lap_car = cars[0].car_number; // Ajout du numéro de la voiture au meilleur tour
 
     printf("\n=== Meilleurs temps par section et général ===\n");
->>>>>>> e66c682038af0ed4a6e3b82336c218cfaced6850
     for (int i = 0; i < NUM_SECTORS; i++) {
         printf(MAGENTA"Meilleur temps secteur %d :"RESET" Voiture n°%d en "RED"%.2f"RESET" secondes\n", i + 1, overall_best_sector_car[i], overall_best_sector_times[i]);
     }

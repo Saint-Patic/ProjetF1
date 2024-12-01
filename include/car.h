@@ -8,7 +8,7 @@
 #define DUREE_QUALIF_2 900 // Temps maximum de la période d'essai
 #define DUREE_QUALIF_3 720 // Temps maximum de la période d'essai
 #define DUREE_ESSAI 3600 // Temps maximum de la période d'essai
-#define NUM_CARS 21
+#define MAX_NUM_CARS 21
 #define MIN_TIME 25
 #define MAX_TIME 45
 #define SESSION_DISTANCE 300
