@@ -144,7 +144,7 @@ void display_overall_best_times(car_t cars[], int num_cars, char *session_type) 
     float overall_best_sector_times[NUM_SECTORS] = {cars[num_cars].best_sector_times[0],cars[num_cars].best_sector_times[1], cars[num_cars].best_sector_times[2]};
     int overall_best_sector_car[NUM_SECTORS] = {-1, -1, -1}; // Ajout du tableau pour les numéros des voitures des meilleurs secteurs
     float overall_best_lap_time = cars[num_cars].best_lap_time;
-    int best_lap_car = cars[0].car_number; // Ajout du numéro de la voiture au meilleur tour
+    int best_lap_car = -1; // Ajout du numéro de la voiture au meilleur tour
 
     printf("\n=== Meilleurs temps par section et général pour %s ===\n", session_type);
     for (int i = 0; i < NUM_SECTORS; i++) {
