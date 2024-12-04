@@ -163,19 +163,18 @@ void gestion_points(car_t cars[], const char *input_file, const char *output_fil
     }
 
     // Attribuer les points selon le classement
-    for (int i = 0; i < car_count && i < MAX_NUM_CARS; i++) {
+    for (int i = 0; i < MAX_NUM_CARS - 1; i++) {
         cars[i].nb_points = points_distribution[i];
     }
 
     // Ajouter un point bonus pour le meilleur temps au tour
     int best_lap_index = 0;
-    for (int i = 1; i < car_count; i++) {
+    for (int i = 1; i < MAX_NUM_CARS - 1; i++) {
         if (cars[i].best_lap_time < cars[best_lap_index].best_lap_time) {
             best_lap_index = i;
         }
     }
-    cars[best_lap_index].nb_points += 1;
-
+    cars[best_lap_index].nb_points += 1; // Ajouter un point bonus pour le meilleur temps au tour
     // Écrire les résultats dans le fichier de sortie
     FILE *file_out = fopen(output_file, "w");
     if (!file_out) {
@@ -183,7 +182,7 @@ void gestion_points(car_t cars[], const char *input_file, const char *output_fil
         exit(EXIT_FAILURE);
     }
     fprintf(file_out, "Car Number,Points\n");
-    for (int i = 0; i < car_count; i++) {
+    for (int i = 0; i < MAX_NUM_CARS - 1; i++) {
         fprintf(file_out, "%d,%d\n", cars[i].car_number, cars[i].nb_points);
     }
     fclose(file_out);
@@ -390,8 +389,8 @@ void simulate_course(car_t cars[], int special_weekend, int session_num, const c
 
 
     int total_laps = calculate_total_laps(ville, distance_course);
-    char *input_file = malloc(150 * sizeof(char));
-    snprintf(input_file, 150, "data/fichiers/%s/gestion_points.csv", ville);
+    char *output_file = malloc(150 * sizeof(char));
+    snprintf(output_file, 150, "data/fichiers/%s/gestion_points.csv", ville);
 
     // // Read starting grid from classement.csv
     // read_starting_grid(classement_file_path, car_numbers, MAX_NUM_CARS - 1);
@@ -405,9 +404,8 @@ void simulate_course(car_t cars[], int special_weekend, int session_num, const c
 
     simulate_sess(cars, MAX_NUM_CARS - 1, 999999, total_laps, session_type);
     save_session_results(cars, MAX_NUM_CARS - 1 , session_file, "w");
-    gestion_points(cars, classement_file_path, input_file, session_type);
-
-
+    gestion_points(cars, session_file, output_file, session_type);
+    
     free(classement_file_path);
-    free(input_file);
+    free(output_file);
 }
