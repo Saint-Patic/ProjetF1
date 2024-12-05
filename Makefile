@@ -77,7 +77,7 @@ run_sessions_special: $(BIN_DIR)/main
 	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/qualif_2.csv
 	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/qualif_3.csv
 	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/course_1.csv
-	
+
 clean:
 	rm -rf $(OBJ_DIR)/*.o $(BIN_DIR)/main $(DATA_DIR)/*/
 	rm -f data/gestion_points.csv
@@ -90,3 +90,6 @@ clean_files:
 
 clean_o:
 	rm -rf $(OBJ_DIR) $(BIN_DIR)/main
+
+clean_and_run: clean run_sessions
+
