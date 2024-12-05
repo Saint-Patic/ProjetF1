@@ -322,3 +322,5 @@ int calculate_total_laps(const char *ville, float session_distance) {
 
     return circuit_length > 0 ? estimate_max_laps(session_distance, circuit_length) + 1 : 0;
 }
+
+
