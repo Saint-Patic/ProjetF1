@@ -29,15 +29,36 @@
 
 
 void display_practice_results(car_t cars[], int num_cars, char *session_type) {
-    // Trie les voitures par temps
-    if (strcmp(session_type, "course") == 0 || strcmp(session_type, "sprint") == 0) {
-        qsort(cars, num_cars, sizeof(car_t), compare_tour_cars);
-    } else {
-        qsort(cars, num_cars, sizeof(car_t), compare_cars);
+    int compare_function(const void *a, const void *b) {
+        car_t *car_a = (car_t *)a;
+        car_t *car_b = (car_t *)b;
+
+
+
+        // Sinon, tri par temps (temps_rouler ou best_lap_time selon le contexte)
+        if (strcmp(session_type, "course") == 0 || strcmp(session_type, "sprint") == 0) {
+            // Place les voitures "out" en dernier
+            if (car_a->out && car_b->out) return 0; // Les deux sont "out", ordre inchangé
+            if (car_a->out) return 1; // "car_a" est "out", elle passe après
+            if (car_b->out) return -1; // "car_b" est "out", elle passe après
+            return (car_a->temps_rouler > car_b->temps_rouler) - (car_a->temps_rouler < car_b->temps_rouler);
+        } else {
+            return (car_a->best_lap_time > car_b->best_lap_time) - (car_a->best_lap_time < car_b->best_lap_time);
+        }
     }
 
-    // Initialisation d'un buffer dynamique avec une taille initiale
+    // Détermine les colonnes et la méthode de tri selon le type de session
+    char *nom_de_colonne;
+    if (strcmp(session_type, "course") == 0 || strcmp(session_type, "sprint") == 0) {
+        nom_de_colonne = " Temps rouler ";
+    } else {
+        nom_de_colonne = " Meilleur tour ";
+    }
 
+    // Trie les voitures selon la fonction définie
+    qsort(cars, num_cars, sizeof(car_t), compare_function);
+
+    // Initialisation d'un buffer dynamique avec une taille initiale
     size_t buffer_size = BUFFER_INCREMENT;
     char *buffer = malloc(buffer_size);
     if (!buffer) {
@@ -48,12 +69,14 @@ void display_practice_results(car_t cars[], int num_cars, char *session_type) {
     // Initialise le buffer
     buffer[0] = '\0';
     size_t current_length = 0;
-    
-    // Ajoute l'en-tête au buffer
-    const char *header =
+
+    // Construit l'en-tête dynamique
+    char header[512];
+    snprintf(header, sizeof(header),
         GREEN "================================================================================================" RESET "\n"
-        CYAN "|" RESET RED "  ##  " RESET CYAN "|" RESET YELLOW "  Secteur 1  " RESET CYAN "|" RESET YELLOW "  Secteur 2  " RESET CYAN "|" RESET YELLOW "  Secteur 3  " RESET CYAN "|" RESET "   Tour Actuel  " CYAN "|" RESET "   Meilleur tour  " CYAN "|" RESET REDBG "   Diff   " RESET "\n"
-        GREEN "================================================================================================" RESET "\n";
+        CYAN "|" RESET RED "  ##  " RESET CYAN "|" RESET YELLOW "  Secteur 1  " RESET CYAN "|" RESET YELLOW "  Secteur 2  " RESET CYAN "|" RESET YELLOW "  Secteur 3  " RESET CYAN "|" RESET "   Tour Actuel  " CYAN "|" RESET "  %s  " CYAN "|" RESET REDBG "   Diff   " RESET "\n"
+        GREEN "================================================================================================" RESET "\n",
+        nom_de_colonne);
 
     size_t header_length = strlen(header);
     if (current_length + header_length >= buffer_size) {
@@ -68,9 +91,16 @@ void display_practice_results(car_t cars[], int num_cars, char *session_type) {
     current_length += header_length;
 
     // Ajoute les résultats ligne par ligne
-    float prev_time = cars[0].best_lap_time;
+    float prev_value = (strcmp(session_type, "course") == 0 || strcmp(session_type, "sprint") == 0)
+                           ? cars[0].temps_rouler
+                           : cars[0].best_lap_time;
+
     for (int i = 0; i < num_cars; i++) {
-        float diff = cars[i].best_lap_time - prev_time;
+        float current_value = (strcmp(session_type, "course") == 0 || strcmp(session_type, "sprint") == 0)
+                                  ? cars[i].temps_rouler
+                                  : cars[i].best_lap_time;
+
+        float diff = current_value - prev_value;
         char line[512];
 
         // Crée la ligne correspondante
@@ -82,7 +112,7 @@ void display_practice_results(car_t cars[], int num_cars, char *session_type) {
                 cars[i].sector_times[1],
                 cars[i].sector_times[2],
                 cars[i].current_lap,
-                cars[i].best_lap_time,
+                current_value,
                 i == 0 ? 0.00 : diff);
         } else if (cars[i].out) {
             snprintf(line, sizeof(line),
@@ -92,7 +122,7 @@ void display_practice_results(car_t cars[], int num_cars, char *session_type) {
                 cars[i].sector_times[1],
                 cars[i].sector_times[2],
                 cars[i].current_lap,
-                cars[i].best_lap_time,
+                current_value,
                 i == 0 ? 0.00 : diff);
         } else {
             snprintf(line, sizeof(line),
@@ -102,7 +132,7 @@ void display_practice_results(car_t cars[], int num_cars, char *session_type) {
                 cars[i].sector_times[1],
                 cars[i].sector_times[2],
                 cars[i].current_lap,
-                cars[i].best_lap_time,
+                current_value,
                 i == 0 ? 0.00 : diff);
         }
 
@@ -118,7 +148,7 @@ void display_practice_results(car_t cars[], int num_cars, char *session_type) {
         strcat(buffer, line);
         current_length += line_length;
 
-        prev_time = cars[i].best_lap_time;
+        prev_value = current_value;
     }
 
     // Ajoute la ligne de fin
@@ -135,7 +165,7 @@ void display_practice_results(car_t cars[], int num_cars, char *session_type) {
     }
     strcat(buffer, footer);
 
-    printf(GREEN"\n==="RESET YELLOW" Meilleurs temps par section et général pour %s "RESET GREEN" ===\n"RESET, session_type);
+    printf(GREEN "\n===" RESET YELLOW " Résultats de la session %s " RESET GREEN " ===\n" RESET, session_type);
 
     // Affiche tout le tableau
     printf("%s", buffer);
@@ -143,6 +173,8 @@ void display_practice_results(car_t cars[], int num_cars, char *session_type) {
     // Libère la mémoire
     free(buffer);
 }
+
+
 
 void display_overall_best_times(car_t cars[], int num_cars, char *session_type) {
     float overall_best_sector_times[NUM_SECTORS] = {cars[num_cars].best_sector_times[0],cars[num_cars].best_sector_times[1], cars[num_cars].best_sector_times[2]};

@@ -301,7 +301,7 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
         // printf("Tour %d:\n", lap + 1);
         display_practice_results(cars, num_cars, session_type);
         display_overall_best_times(cars, num_cars, session_type);
-        usleep(10000); // sleep for 0.2 seconds
+        usleep(1000000); // sleep for 0.2 seconds
     }
 
     // Pour les courses et sprints, les voitures sont obligés de faire au moins un pit-stop => Si aucun pit-stop : elimine
