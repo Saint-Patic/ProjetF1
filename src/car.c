@@ -34,8 +34,10 @@ void initialize_cars(car_t cars[], int car_numbers[]) {
         for (int j = 0; j < NUM_SECTORS; j++) {
             cars[i].sector_times[j] = 0.0;
             cars[i].best_sector_times[j] = 0.0;
+            cars[i].best_cars_sector[j] = -1;
         }
         cars[i].nb_points = 0;
+        cars[i].best_cars_tour = -1;
     }
 }
 
@@ -105,6 +107,12 @@ int compare_cars(const void *a, const void *b) {
 }
 
 
+int compare_tour_cars(const void *a, const void *b) {
+    car_t *carA = (car_t *)a;
+    car_t *carB = (car_t *)b;
+    return (carA->temps_rouler > carB->temps_rouler) ? 1 : -1;
+}
+
 /**
  * @brief Enregistre les meilleurs temps des 3 secteurs et du circuit en général dans une voiture imiganaire
  * @param cars Tableau de voitures
@@ -115,11 +123,13 @@ void find_overall_best_times(car_t cars[], int num_cars) {
     for (int i = 0; i < num_cars; i++) { // comparaison pour le tour complet 
         if (cars[num_cars].best_lap_time == 0 || cars[i].best_lap_time < cars[num_cars].best_lap_time) {
             cars[num_cars].best_lap_time = cars[i].best_lap_time;
+            cars[num_cars].best_cars_tour = cars[i].car_number;
         }
         for (int j = 0; j < NUM_SECTORS; j++) { // comparaison pour les secteurs
             if (cars[num_cars].best_sector_times[j] == 0 || 
                 cars[i].best_sector_times[j] < cars[num_cars].best_sector_times[j]) {
                 cars[num_cars].best_sector_times[j] = cars[i].best_sector_times[j];
+                cars[num_cars].best_cars_sector[j] = cars[i].car_number;
             }
         }
     }
@@ -291,7 +301,7 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
         // printf("Tour %d:\n", lap + 1);
         display_practice_results(cars, num_cars, session_type);
         display_overall_best_times(cars, num_cars, session_type);
-        usleep(2000); // sleep for 0.2 seconds
+        usleep(10000); // sleep for 0.2 seconds
     }
 
     // Pour les courses et sprints, les voitures sont obligés de faire au moins un pit-stop => Si aucun pit-stop : elimine
@@ -396,7 +406,7 @@ void simulate_course(car_t cars[], int special_weekend, int session_num, const c
     // read_starting_grid(classement_file_path, car_numbers, MAX_NUM_CARS - 1);
 
     // // Display the starting grid
-    // display_starting_grid(car_numbers, MAX_NUM_CARS);
+    // display_starting_grid(MAX_NUM_CARS - 1, MAX_NUM_CARS);
 
     // // Start the race
     // printf("La course commence !\n");
