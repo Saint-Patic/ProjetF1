@@ -55,7 +55,6 @@ int main(int argc, char *argv[]) {
         printf("Simulation de la course principale.\n");
         simulate_course(cars, special_weekend, session_num, ville, session_type, session_file);
     }
-    printf("filename : %s\n", session_file);
     process_session_files(session_num, ville, session_type); // création fichier resume_<type>.csv
     free(ville);
     free(session_type);

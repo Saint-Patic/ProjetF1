@@ -33,14 +33,12 @@ void display_practice_results(car_t cars[], int num_cars, char *session_type) {
         car_t *car_a = (car_t *)a;
         car_t *car_b = (car_t *)b;
 
-
-
         // Sinon, tri par temps (temps_rouler ou best_lap_time selon le contexte)
         if (strcmp(session_type, "course") == 0 || strcmp(session_type, "sprint") == 0) {
             // Place les voitures "out" en dernier
-            if (car_a->out && car_b->out) return 0; // Les deux sont "out", ordre inchangé
             if (car_a->out) return 1; // "car_a" est "out", elle passe après
             if (car_b->out) return -1; // "car_b" est "out", elle passe après
+            if (car_a->out && car_b->out) return 0; // Les deux sont "out", ordre inchangé
             return (car_a->temps_rouler > car_b->temps_rouler) - (car_a->temps_rouler < car_b->temps_rouler);
         } else {
             return (car_a->best_lap_time > car_b->best_lap_time) - (car_a->best_lap_time < car_b->best_lap_time);
