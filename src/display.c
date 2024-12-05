@@ -20,12 +20,6 @@
 #define MAGENTABG "\x1b[45m" 
 #define CYANBG "\x1b[46m"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "../include/car.h"
-#include "../include/display.h"
-
 
 
 void display_practice_results(car_t cars[], int num_cars, char *session_type) {
