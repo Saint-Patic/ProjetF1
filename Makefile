@@ -33,6 +33,47 @@ $(OBJ_DIR)/file_manager.o: $(SRC_DIR)/file_manager.c include/file_manager.h
 	mkdir -p $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
+## commandes de bases
+
+clean_run: clean run_sessions # supprimer tous les dossiers et lancer une simulation classique
+
+clean_run_spe : clean run_sessions_special # supprimer tous les dossier et lance une simulation de sprint
+
+run_sessions: $(BIN_DIR)/main # lance une simulation. Sakhir par défaut. Pour simuler une autre journée, ajouter SUBFOLDER=x_ville
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_1.csv
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_2.csv
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_3.csv
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/qualif_1.csv
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/qualif_2.csv
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/qualif_3.csv
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/course_1.csv
+
+run_sessions_special: $(BIN_DIR)/main # lance une simulation pour un week de sprint. Même principe pour SUBFOLDER que run_session
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_1.csv
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/shootout_1.csv
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/shootout_2.csv
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/shootout_3.csv
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/sprint_1.csv
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/qualif_1.csv
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/qualif_2.csv
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/qualif_3.csv
+	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/course_1.csv
+
+## commandes spécifiques pour les tests
+
+clean:
+	rm -rf $(OBJ_DIR)/*.o $(BIN_DIR)/main $(DATA_DIR)/*/
+	rm -f data/gestion_points.csv
+
+clean_dirs:
+	rm -rf $(DATA_DIR)/*/
+
+clean_files:
+	rm -f $(DATA_DIR)/fichiers/*
+
+clean_o:
+	rm -rf $(OBJ_DIR) $(BIN_DIR)/main
+
 first_session: clean $(BIN_DIR)/main
 	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_1.csv
 
@@ -57,39 +98,3 @@ djeddah_complet: clean $(BIN_DIR)/main
 	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/qualif_3.csv
 	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/course_1.csv
 	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER_2)/essai_1.csv
-
-run_sessions: $(BIN_DIR)/main
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_1.csv
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_2.csv
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_3.csv
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/qualif_1.csv
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/qualif_2.csv
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/qualif_3.csv
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/course_1.csv
-
-run_sessions_special: $(BIN_DIR)/main
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_1.csv
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/shootout_1.csv
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/shootout_2.csv
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/shootout_3.csv
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/sprint_1.csv
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/qualif_1.csv
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/qualif_2.csv
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/qualif_3.csv
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/course_1.csv
-
-clean:
-	rm -rf $(OBJ_DIR)/*.o $(BIN_DIR)/main $(DATA_DIR)/*/
-	rm -f data/gestion_points.csv
-
-clean_dirs:
-	rm -rf $(DATA_DIR)/*/
-
-clean_files:
-	rm -f $(DATA_DIR)/fichiers/*
-
-clean_o:
-	rm -rf $(OBJ_DIR) $(BIN_DIR)/main
-
-clean_and_run: clean run_sessions
-
