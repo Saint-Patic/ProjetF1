@@ -45,8 +45,10 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, ch
 void simulate_course(car_t cars[], const char *ville, char *session_type, char *session_file);
 void initialize_cars(car_t cars[], int car_numbers[]);
 void find_overall_best_times(car_t cars[], int num_cars);
-void gestion_points(car_t cars[], const char *input_file, const char *output_file, const char *type_session);
+void gestion_points(const char *classement_filename, const char *points_filename, int meilleur_tour_voiture, int is_sprint);
 int compare_tour_cars(const void *a, const void *b);
+void init_semaphore();
+void destroy_semaphore();
 
 
 
