@@ -9,16 +9,34 @@
 #include <fcntl.h>
 #include <float.h>
 #include <sys/mman.h>
-#include <semaphore.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
+#include <sys/shm.h> // Include this header for shared memory functions
 #include "../include/car.h"
 #include "../include/utils.h"
 #include "../include/display.h"
 #include "../include/file_manager.h"
 
-sem_t sem; // Define the semaphore
-extern sem_t sem; // Declare the semaphore
+#define SHM_KEY 12345 // Clé pour la mémoire partagée
+#define SEM_NAME "/car_sim_semaphore" // Nom du sémaphore
+
+sem_t *sem; // Define the semaphore
+
+
+// Fonction pour initialiser le sémaphore global
+void init_semaphore() {
+    sem = sem_open(SEM_NAME, O_CREAT, 0644, 1); // Valeur initiale du sémaphore : 1 (sémaphore binaire)
+    if (sem == SEM_FAILED) {
+        perror("Erreur lors de l'initialisation du sémaphore");
+        exit(EXIT_FAILURE);
+    }
+}
+
+// Fonction pour détruire le sémaphore à la fin du programme
+void destroy_semaphore() {
+    sem_close(sem);
+    sem_unlink(SEM_NAME);
+}
 
 
 
@@ -105,8 +123,7 @@ int compare_cars(const void *a, const void *b) {
     car_t *carB = (car_t *)b;
     return (carA->best_lap_time > carB->best_lap_time) ? 1 : -1;
 }
-
-
+    
 int compare_tour_cars(const void *a, const void *b) {
     car_t *carA = (car_t *)a;
     car_t *carB = (car_t *)b;
@@ -114,28 +131,14 @@ int compare_tour_cars(const void *a, const void *b) {
 }
 
 /**
- * @brief Enregistre les meilleurs temps des 3 secteurs et du circuit en général dans une voiture imiganaire
- * @param cars Tableau de voitures
- * @param num_cars Nombre de voitures dans la course
+ * @brief Attribue les points aux voitures en fonction du classement et sauvegarde les résultats.
+ *
+ * @param cars Tableau de voitures.
+ * @param num_cars Nombre de voitures dans la course.
+ * @param meilleur_tour_voiture Numéro de la voiture ayant réalisé le meilleur tour.
+ * @param is_sprint Indique si la session est un sprint (1) ou une course classique (0).
+ * @param filename Chemin du fichier de points.
  */
-void find_overall_best_times(car_t cars[], int num_cars) {
-    // Parcourt les x premières voitures
-    for (int i = 0; i < num_cars; i++) { // comparaison pour le tour complet 
-        if (cars[num_cars].best_lap_time == 0 || cars[i].best_lap_time < cars[num_cars].best_lap_time) {
-            cars[num_cars].best_lap_time = cars[i].best_lap_time;
-            cars[num_cars].best_cars_tour = cars[i].car_number;
-        }
-        for (int j = 0; j < NUM_SECTORS; j++) { // comparaison pour les secteurs
-            if (cars[num_cars].best_sector_times[j] == 0 || 
-                cars[i].best_sector_times[j] < cars[num_cars].best_sector_times[j]) {
-                cars[num_cars].best_sector_times[j] = cars[i].best_sector_times[j];
-                cars[num_cars].best_cars_sector[j] = cars[i].car_number;
-            }
-        }
-    }
-}
-
-
 void gestion_points(car_t cars[], const char *input_file, const char *output_file, const char *type_session) {
     FILE *file_in = fopen(input_file, "r");
     if (!file_in) {
@@ -231,6 +234,30 @@ void gestion_points(car_t cars[], const char *input_file, const char *output_fil
 }
 
 
+/**
+ * @brief Enregistre les meilleurs temps des 3 secteurs et du circuit en général dans une voiture imiganaire
+ * @param cars Tableau de voitures
+ * @param num_cars Nombre de voitures dans la course
+ */
+void find_overall_best_times(car_t cars[], int num_cars) {
+    // Parcourt les x premières voitures
+    for (int i = 0; i < num_cars; i++) { // comparaison pour le tour complet 
+        if (cars[num_cars].best_lap_time == 0 || cars[i].best_lap_time < cars[num_cars].best_lap_time) {
+            cars[num_cars].best_lap_time = cars[i].best_lap_time;
+            cars[num_cars].best_cars_tour = cars[i].car_number;
+        }
+        for (int j = 0; j < NUM_SECTORS; j++) { // comparaison pour les secteurs
+            if (cars[num_cars].best_sector_times[j] == 0 || 
+                cars[i].best_sector_times[j] < cars[num_cars].best_sector_times[j]) {
+                cars[num_cars].best_sector_times[j] = cars[i].best_sector_times[j];
+                cars[num_cars].best_cars_sector[j] = cars[i].car_number;
+            }
+        }
+    }
+}
+
+
+
 
 
 /**
@@ -243,115 +270,85 @@ void gestion_points(car_t cars[], const char *input_file, const char *output_fil
  * @param session_type Type de session ("course", "essai", etc.).
  */
 void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_laps, char *session_type) {
-    // Initialize semaphore
-    int sem_id = semget(SEM_KEY, 1, IPC_CREAT | 0666);
-    if (sem_id == -1) {
-        perror("semget failed");
+    pid_t pids[num_cars];
+    int shm_id;
+    car_t *shared_cars;
+
+    // Crée et attache le segment de mémoire partagée
+    shm_id = shmget(SHM_KEY, sizeof(car_t) * MAX_NUM_CARS, IPC_CREAT | 0666);
+    if (shm_id < 0) {
+        perror("Erreur lors de la création de la mémoire partagée");
         exit(EXIT_FAILURE);
     }
 
-    semctl(sem_id, 0, SETVAL, 1);
-
-    struct sembuf sem_op;
-
-    // Simule un tour de la session
-    for (int lap = 0; lap < total_laps; lap++) {
-        int active_cars = num_cars;
-        // fais tourner les voitures pour le nieme tour de la session
-        for (int i = 0; i < num_cars; i++) {
-            if (i == MAX_NUM_CARS - 1) continue;
-            // Lock the semaphore (P operation)
-            sem_op.sem_num = 0;
-            sem_op.sem_op = -1;
-            sem_op.sem_flg = 0;
-            if (semop(sem_id, &sem_op, 1) == -1) {
-                perror("semop lock failed");
-                exit(EXIT_FAILURE);
-            }
-
-            // Si la voiture est sortie, passe à la suivante
-            if (cars[i].out) {
-                active_cars--;
-                // Unlock the semaphore (V operation)
-                sem_op.sem_op = 1;
-                if (semop(sem_id, &sem_op, 1) == -1) {
-                    perror("semop unlock failed");
-                    exit(EXIT_FAILURE);
-                }
-                continue;
-            }
-
-            // Simule un arrêt au stand si nécessaire
-            if (cars[i].pit_stop) {
-                simulate_pit_stop(&cars[i], MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION, session_type);
-                // Unlock the semaphore (V operation)
-                sem_op.sem_op = 1;
-                if (semop(sem_id, &sem_op, 1) == -1) {
-                    perror("semop unlock failed");
-                    exit(EXIT_FAILURE);
-                }
-                continue;
-            }
-
-            // Génère les temps de roulage pour le secteur et les meilleurs temps
-            generate_sector_times(&cars[i], MIN_TIME, MAX_TIME);
-            find_overall_best_times(cars, num_cars);
-
-            // Simule une panne si le tirage aléatoire est inférieur à 1%   
-            if (rand() % 500 < 1) { // 1% de panne
-                cars[i].out = 1;
-                cars[i].pit_stop = 0;
-                active_cars--;
-            }
-
-            // Unlock the semaphore (V operation)
-            sem_op.sem_op = 1;
-            if (semop(sem_id, &sem_op, 1) == -1) {
-                perror("semop unlock failed");
-                exit(EXIT_FAILURE);
-            }
-
-            // porte de sortie pour les sessions d'essais et de qualifications
-            if (strcmp(session_type, "essai") == 0 || strcmp(session_type, "qualif") == 0) {
-                if (cars[i].temps_rouler > session_duration) return;
-            }
-
-            // Switch positions if current lap time is greater
-            if (strcmp(session_type, "course") == 0 || strcmp(session_type, "sprint") == 0) {
-                if (i > 0 && cars[i].current_lap < cars[i-1].current_lap) {
-                    car_t temp = cars[i];
-                    cars[i] = cars[i-1];
-                    cars[i-1] = temp;
-                }
-            }
-        }
-
-        // si toutes les voitures sont out, ne sert à rien de simuler la suite
-        if (active_cars == 0) break;
-
-        // Affiche les résultats du tour
-        system("clear");
-        // printf("Tour %d:\n", lap + 1);
-        display_practice_results(cars, num_cars, session_type);
-        display_overall_best_times(cars, num_cars, session_type);
-        strcmp(session_type, "course") == 0 ? usleep(10000) : usleep(10000); // sleep for 0.2 seconds
-    }
-
-    // Pour les courses et sprints, les voitures sont obligés de faire au moins un pit-stop => Si aucun pit-stop : elimine
-    if (strcmp(session_type, "course") == 0 || strcmp(session_type, "sprint") == 0) {
-        for (int i = 0; i < num_cars; i++) {
-            if (!cars[i].out && cars[i].pit_stop_nb == 0) {
-                printf("La voiture %d n'a pas respecté l'arrêt obligatoire.\n", cars[i].car_number);
-                cars[i].out = 1;
-            }
-        }
-    }
-
-    // Remove the semaphore set
-    if (semctl(sem_id, 0, IPC_RMID) == -1) {
-        perror("semctl remove failed");
+    shared_cars = (car_t *)shmat(shm_id, NULL, 0);
+    if (shared_cars == (car_t *)-1) {
+        perror("Erreur d'attachement mémoire");
         exit(EXIT_FAILURE);
     }
+
+    // Copie initiale des voitures dans la mémoire partagée
+    memcpy(shared_cars, cars, sizeof(car_t) * num_cars);
+
+    // Initialisation du sémaphore
+    init_semaphore();
+
+    // Créer un processus pour chaque voiture
+    for (int i = 0; i < num_cars; i++) {
+        pids[i] = fork();
+        if (pids[i] < 0) {
+            perror("Erreur lors du fork");
+            exit(EXIT_FAILURE);
+        } else if (pids[i] == 0) {
+            // Processus enfant : Simulation pour une voiture
+
+            srand(time(NULL) ^ getpid());  // Initialisation aléatoire unique pour chaque processus
+
+            for (int lap = 0; lap < total_laps; lap++) {
+                if (shared_cars[i].out) break;
+
+                sem_wait(sem); // Verrouillage du sémaphore
+                if (shared_cars[i].pit_stop) {
+                    simulate_pit_stop(&shared_cars[i], MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION, session_type);
+                } else {
+                    generate_sector_times(&shared_cars[i], MIN_TIME, MAX_TIME);
+                    if (rand() % 500 < 1) shared_cars[i].out = 1; // 1% de chance de panne
+                }
+                sem_post(sem); // Déverrouillage du sémaphore
+
+                // Fin de session si la durée est dépassée
+                if (strcmp(session_type, "essai") == 0 || strcmp(session_type, "qualif") == 0) {
+                    if (shared_cars[i].temps_rouler > session_duration) break;
+                }
+            }
+
+            shmdt(shared_cars); // Détache la mémoire partagée
+            exit(0);  // Le processus enfant se termine
+        }
+    }
+
+    // Attendre la fin de tous les processus enfants
+    for (int i = 0; i < num_cars; i++) {
+        waitpid(pids[i], NULL, 0);
+    }
+
+    // Mise à jour des voitures après simulation
+    memcpy(cars, shared_cars, sizeof(car_t) * num_cars);
+
+    // Détache et libère la mémoire partagée
+    shmdt(shared_cars);
+    shmctl(shm_id, IPC_RMID, NULL);
+
+    // Destruction du sémaphore
+    destroy_semaphore();
+
+    // Calcul des meilleurs temps et affichage des résultats
+    find_overall_best_times(cars, num_cars);
+    system("clear");
+    display_practice_results(cars, num_cars, session_type);
+    display_overall_best_times(cars, num_cars, session_type);
+    strcmp(session_type, "course") == 0 ? usleep(1000000) : usleep(1000000);
+
 }
 
 /**
@@ -403,10 +400,9 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, ch
  * @brief Simule une session de course.
  * 
  * @param distance Distance de la course en km.
- * @param total_laps Nombre total de tours prévus.
  * @param ville Nom de la ville où se déroule l'événement.
  */
-void simulate_course(car_t cars[], int special_weekend, int session_num, const char *ville, char *session_type, char *session_file) {
+void simulate_course(car_t cars[], const char *ville, char *session_type, char *session_file, int  car_numbers[]) {
 
     int distance_course;
     const char *points_file = "data/gestion_points.csv";
@@ -429,15 +425,15 @@ void simulate_course(car_t cars[], int special_weekend, int session_num, const c
 
     int total_laps = calculate_total_laps(ville, distance_course);
 
-    // // Read starting grid from classement.csv
-    // read_starting_grid(classement_file_path, car_numbers, MAX_NUM_CARS - 1);
+    // Read starting grid from classement.csv
+    read_starting_grid(classement_file_path, MAX_NUM_CARS - 1, cars, car_numbers);
 
-    // // Display the starting grid
-    // display_starting_grid(MAX_NUM_CARS - 1, MAX_NUM_CARS);
+    // Display the starting grid
+    display_starting_grid(car_numbers, MAX_NUM_CARS);
 
-    // // Start the race
-    // printf("La course commence !\n");
-    // sleep(1); // Simulate the start delay
+    // Start the race
+    printf("La course commence !\n");
+    sleep(1); // Simulate the start delay
 
     simulate_sess(cars, MAX_NUM_CARS - 1, 999999, total_laps, session_type);
     save_session_results(cars, MAX_NUM_CARS - 1 , session_file, "w");

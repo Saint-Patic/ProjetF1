@@ -19,6 +19,6 @@ char **recuperer_colonne_csv(const char *nom_fichier, const char *nom_colonne, i
 void create_directory_if_not_exists(const char *path);
 void create_directories_from_csv_values(const char *csv_file, const char *course_column, const char *city_column);
 void load_eliminated_cars(char *filename, car_t cars[], int total_cars);
-void read_starting_grid(const char *filename, int car_numbers[], int num_cars);
+void read_starting_grid(const char *filename, int num_cars, car_t cars[], int car_numbers[]);
 
 #endif // FILE_MANAGER_H
