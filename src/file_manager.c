@@ -399,13 +399,13 @@ void create_directories_from_csv_values(const char *csv_file, const char *course
 }
 
 /**
- * @brief Modifie l'ordre des numéros de voiture dans car_numbers pour qu'il respecte l'ordre de départs défini par les qualifs
+ * @brief Modifie l'ordre des numéros de voiture dans CAR_NUMBERS pour qu'il respecte l'ordre de départs défini par les qualifs
  *
  * @param filename Chemin du fichier CSV.
  * @param car_number liste des numéros des voitures sur la grille
  * @param num_cars Nombre de voiture sur la grille de départ
  */
-void read_starting_grid(const char *filename, int car_numbers[], int num_cars) {
+void read_starting_grid(const char *filename, int num_cars, car_t cars[], int car_numbers[]) {
     FILE *file = fopen(filename, "r");
     if (!file) {
         perror("Failed to open classement.csv");
@@ -419,13 +419,28 @@ void read_starting_grid(const char *filename, int car_numbers[], int num_cars) {
     int car_number, session_num, position;
     float best_lap_time;
 
+    // Temporaire pour réorganiser les voitures
+    car_t reordered_cars[MAX_NUM_CARS - 1];
+    for (int i = 0; i < MAX_NUM_CARS - 1; i++) {
+        reordered_cars[i] = cars[i];
+    }
+
     while (fscanf(file, "%d,%d,%d,%f\n", &car_number, &session_num, &position, &best_lap_time) == 4) {
         if (position > 0 && position <= num_cars) {
             car_numbers[position - 1] = car_number;
+
+            // Trouver la voiture correspondante et la placer dans la nouvelle position
+            for (int i = 0; i < MAX_NUM_CARS; i++) {
+                if (reordered_cars[i].car_number == car_number) {
+                    cars[position - 1] = reordered_cars[i];
+                    break;
+                }
+            }
         }
     }
 
     fclose(file);
 }
+
 
 

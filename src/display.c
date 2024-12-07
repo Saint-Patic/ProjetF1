@@ -183,6 +183,7 @@ void display_overall_best_times(car_t cars[], int num_cars, char *session_type) 
 }
 
 void display_starting_grid(int car_numbers[], int num_cars) {
+    system("clear");
     printf("=== Starting Grid ===\n");
     for (int i = 0; i < num_cars; i++) {
         printf("Position %d: Car Number %d\n", i + 1, car_numbers[i]);

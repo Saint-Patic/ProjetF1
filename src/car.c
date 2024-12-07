@@ -244,15 +244,18 @@ void find_overall_best_times(car_t cars[], int num_cars) {
     for (int i = 0; i < num_cars; i++) { // comparaison pour le tour complet 
         if (cars[num_cars].best_lap_time == 0 || cars[i].best_lap_time < cars[num_cars].best_lap_time) {
             cars[num_cars].best_lap_time = cars[i].best_lap_time;
+            cars[num_cars].best_cars_tour = cars[i].car_number;
         }
         for (int j = 0; j < NUM_SECTORS; j++) { // comparaison pour les secteurs
             if (cars[num_cars].best_sector_times[j] == 0 || 
                 cars[i].best_sector_times[j] < cars[num_cars].best_sector_times[j]) {
                 cars[num_cars].best_sector_times[j] = cars[i].best_sector_times[j];
+                cars[num_cars].best_cars_sector[j] = cars[i].car_number;
             }
         }
     }
 }
+
 
 
 
@@ -341,10 +344,11 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
 
     // Calcul des meilleurs temps et affichage des résultats
     find_overall_best_times(cars, num_cars);
-    //system("clear");
-    usleep(2000000);
+    system("clear");
     display_practice_results(cars, num_cars, session_type);
     display_overall_best_times(cars, num_cars, session_type);
+    strcmp(session_type, "course") == 0 ? usleep(1000000) : usleep(1000000);
+
 }
 
 /**
@@ -396,10 +400,9 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, ch
  * @brief Simule une session de course.
  * 
  * @param distance Distance de la course en km.
- * @param total_laps Nombre total de tours prévus.
  * @param ville Nom de la ville où se déroule l'événement.
  */
-void simulate_course(car_t cars[], const char *ville, char *session_type, char *session_file) {
+void simulate_course(car_t cars[], const char *ville, char *session_type, char *session_file, int  car_numbers[]) {
 
     int distance_course;
     const char *points_file = "data/gestion_points.csv";
@@ -422,15 +425,15 @@ void simulate_course(car_t cars[], const char *ville, char *session_type, char *
 
     int total_laps = calculate_total_laps(ville, distance_course);
 
-    // // Read starting grid from classement.csv
-    // read_starting_grid(classement_file_path, car_numbers, MAX_NUM_CARS - 1);
+    // Read starting grid from classement.csv
+    read_starting_grid(classement_file_path, MAX_NUM_CARS - 1, cars, car_numbers);
 
-    // // Display the starting grid
-    // display_starting_grid(MAX_NUM_CARS - 1, MAX_NUM_CARS);
+    // Display the starting grid
+    display_starting_grid(car_numbers, MAX_NUM_CARS);
 
-    // // Start the race
-    // printf("La course commence !\n");
-    // sleep(1); // Simulate the start delay
+    // Start the race
+    printf("La course commence !\n");
+    sleep(1); // Simulate the start delay
 
     simulate_sess(cars, MAX_NUM_CARS - 1, 999999, total_laps, session_type);
     save_session_results(cars, MAX_NUM_CARS - 1 , session_file, "w");
