@@ -9,16 +9,34 @@
 #include <fcntl.h>
 #include <float.h>
 #include <sys/mman.h>
-#include <semaphore.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
+#include <sys/shm.h> // Include this header for shared memory functions
 #include "../include/car.h"
 #include "../include/utils.h"
 #include "../include/display.h"
 #include "../include/file_manager.h"
 
-sem_t sem; // Define the semaphore
-extern sem_t sem; // Declare the semaphore
+#define SHM_KEY 12345 // Clé pour la mémoire partagée
+#define SEM_NAME "/car_sim_semaphore" // Nom du sémaphore
+
+sem_t *sem; // Define the semaphore
+
+
+// Fonction pour initialiser le sémaphore global
+void init_semaphore() {
+    sem = sem_open(SEM_NAME, O_CREAT, 0644, 1); // Valeur initiale du sémaphore : 1 (sémaphore binaire)
+    if (sem == SEM_FAILED) {
+        perror("Erreur lors de l'initialisation du sémaphore");
+        exit(EXIT_FAILURE);
+    }
+}
+
+// Fonction pour détruire le sémaphore à la fin du programme
+void destroy_semaphore() {
+    sem_close(sem);
+    sem_unlink(SEM_NAME);
+}
 
 
 
@@ -34,10 +52,8 @@ void initialize_cars(car_t cars[], int car_numbers[]) {
         for (int j = 0; j < NUM_SECTORS; j++) {
             cars[i].sector_times[j] = 0.0;
             cars[i].best_sector_times[j] = 0.0;
-            cars[i].best_cars_sector[j] = -1;
         }
         cars[i].nb_points = 0;
-        cars[i].best_cars_tour = -1;
     }
 }
 
@@ -107,11 +123,93 @@ int compare_cars(const void *a, const void *b) {
 }
 
 
-int compare_tour_cars(const void *a, const void *b) {
-    car_t *carA = (car_t *)a;
-    car_t *carB = (car_t *)b;
-    return (carA->temps_rouler > carB->temps_rouler) ? 1 : -1;
+/**
+ * @brief Attribue les points aux voitures en fonction du classement et sauvegarde les résultats.
+ *
+ * @param cars Tableau de voitures.
+ * @param num_cars Nombre de voitures dans la course.
+ * @param meilleur_tour_voiture Numéro de la voiture ayant réalisé le meilleur tour.
+ * @param is_sprint Indique si la session est un sprint (1) ou une course classique (0).
+ * @param filename Chemin du fichier de points.
+ */
+void gestion_points(const char *classement_filename, const char *points_filename, int meilleur_tour_voiture, int is_sprint) {
+    int points_sprint[] = POINTS_SPRINT;
+    int points_course[] = POINTS_COURSE;
+    int existing_points[MAX_NUM_CARS - 1] = {0};
+    int car_numbers[MAX_NUM_CARS - 1] = {0}; // Pour stocker les numéros de voitures depuis classement.csv
+    int num_cars = 0;
+
+    // Charger le classement des voitures depuis classement.csv
+    FILE *classement_file = fopen(classement_filename, "r");
+    if (!classement_file) {
+        perror("Erreur lors de l'ouverture du fichier de classement");
+        exit(EXIT_FAILURE);
+    }
+
+    // Ignorer l'en-tête
+    char buffer[256];
+    fgets(buffer, sizeof(buffer), classement_file);
+
+    // Lire les numéros de voiture
+    while (fscanf(classement_file, "%d,%*f,%*f,%*f,%*f\n", &car_numbers[num_cars]) == 1) {
+        num_cars++;
+    }
+    fclose(classement_file);
+    // Charger les points actuels depuis points.csv
+    FILE *points_file = fopen(points_filename, "r");
+    if (!points_file) {
+        perror("Erreur lors de l'ouverture du fichier de points");
+        exit(EXIT_FAILURE);
+    }
+
+    // Ignorer l'en-tête
+    fgets(buffer, sizeof(buffer), points_file);
+
+    // Charger les points existants
+    int car_number, points;
+    while (fscanf(points_file, "%d,%d\n", &car_number, &points) == 2) {
+        if (car_number < 1 || car_number > MAX_NUM_CARS - 1) {
+            fprintf(stderr, "Numéro de voiture invalide : %d\n", car_number);
+            continue;
+        }
+        existing_points[car_number - 1] = points;
+    }
+    fclose(points_file);
+
+    // Attribution des points selon le classement
+    int *points_tableau = is_sprint ? points_sprint : points_course;
+    int max_places = is_sprint ? 8 : 10;
+
+    for (int i = 0; i < num_cars && i < max_places; i++) {
+        existing_points[car_numbers[i] - 1] += points_tableau[i];
+    }
+
+    // Point bonus pour le meilleur tour
+    if (!is_sprint && meilleur_tour_voiture > 0) {
+        for (int i = 0; i < num_cars; i++) {
+            if (car_numbers[i] == meilleur_tour_voiture && i < 10) {
+                existing_points[meilleur_tour_voiture - 1] += 1;
+                break;
+            }
+        }
+    }
+
+    // Sauvegarde des nouveaux points dans points.csv
+    points_file = fopen(points_filename, "w");
+    if (!points_file) {
+        perror("Erreur lors de la sauvegarde des points");
+        exit(EXIT_FAILURE);
+    }
+
+    fprintf(points_file, "Car Number,Points\n");
+    for (int i = 0; i < MAX_NUM_CARS - 1; i++) {
+        if (existing_points[i] > 0) {
+            fprintf(points_file, "%d,%d\n", i + 1, existing_points[i]);
+        }
+    }
+    fclose(points_file);
 }
+
 
 /**
  * @brief Enregistre les meilleurs temps des 3 secteurs et du circuit en général dans une voiture imiganaire
@@ -123,111 +221,14 @@ void find_overall_best_times(car_t cars[], int num_cars) {
     for (int i = 0; i < num_cars; i++) { // comparaison pour le tour complet 
         if (cars[num_cars].best_lap_time == 0 || cars[i].best_lap_time < cars[num_cars].best_lap_time) {
             cars[num_cars].best_lap_time = cars[i].best_lap_time;
-            cars[num_cars].best_cars_tour = cars[i].car_number;
         }
         for (int j = 0; j < NUM_SECTORS; j++) { // comparaison pour les secteurs
             if (cars[num_cars].best_sector_times[j] == 0 || 
                 cars[i].best_sector_times[j] < cars[num_cars].best_sector_times[j]) {
                 cars[num_cars].best_sector_times[j] = cars[i].best_sector_times[j];
-                cars[num_cars].best_cars_sector[j] = cars[i].car_number;
             }
         }
     }
-}
-
-
-void gestion_points(car_t cars[], const char *input_file, const char *output_file, const char *type_session) {
-    FILE *file_in = fopen(input_file, "r");
-    if (!file_in) {
-        perror("Erreur lors de l'ouverture du fichier d'entrée");
-        exit(EXIT_FAILURE);
-    }
-
-    char line[1024];
-    int car_count = 0;
-
-    // Lire l'en-tête et ignorer
-    fgets(line, sizeof(line), file_in);
-    // Lire les données des voitures
-    while (fgets(line, sizeof(line), file_in)) {
-        // Ne lie que les 20 voitures qui roulent
-        if (strncmp(line, "Best Sector Times", 17) == 0 || car_count >= MAX_NUM_CARS - 1) {
-            break; // Arrêter la lecture des données
-        }
-        sscanf(line, "%d,%f,%f,%f,%f",
-               &cars[car_count].car_number,
-               &cars[car_count].best_lap_time,
-               &cars[car_count].sector_times[0],
-               &cars[car_count].sector_times[1],
-               &cars[car_count].sector_times[2]);
-        cars[car_count].nb_points = 0;
-        car_count++;
-    }
-    fclose(file_in);
-
-    // Déterminer les points attribuables
-    int points_distribution[MAX_NUM_CARS - 1] = {0};
-    if (strcmp(type_session, "course") == 0) {
-        int course_points[] = POINTS_COURSE;
-        memcpy(points_distribution, course_points, sizeof(course_points));
-    } else if (strcmp(type_session, "sprint") == 0) {
-        int sprint_points[] = POINTS_SPRINT;
-        memcpy(points_distribution, sprint_points, sizeof(sprint_points));
-    }
-    // Attribuer les points selon le classement
-    for (int i = 0; i < car_count; i++) {
-        cars[i].nb_points = points_distribution[i];
-    }
-    // Ajouter un point bonus pour le meilleur temps au tour
-    int best_lap_index = 0;
-    for (int i = 1; i < car_count; i++) {
-        if (cars[i].best_lap_time < cars[best_lap_index].best_lap_time) {
-            best_lap_index = i;
-        }
-    }
-    cars[best_lap_index].nb_points += 1; // Ajouter un point bonus pour le meilleur temps au tour
-    // Charger les points existants depuis le fichier de sortie, si disponible
-    FILE *file_out = fopen(output_file, "r");
-    if (file_out) {
-        // Lire l'en-tête et ignorer
-        fgets(line, sizeof(line), file_out);
-
-        // Lire les points existants
-        while (fgets(line, sizeof(line), file_out)) {
-            int car_number, existing_points;
-            sscanf(line, "%d,%d", &car_number, &existing_points);
-
-            // Ajouter les points existants aux voitures correspondantes
-            for (int i = 0; i < car_count; i++) {
-                if (cars[i].car_number == car_number) {
-                    cars[i].nb_points += existing_points;
-                    break;
-                }
-            }
-        }
-        fclose(file_out);
-    }
-    // Trier les voitures par nombre de points (ordre décroissant)
-    for (int i = 0; i < car_count - 1; i++) {
-        for (int j = i + 1; j < car_count; j++) {
-            if (cars[i].nb_points < cars[j].nb_points) {
-                car_t temp = cars[i];
-                cars[i] = cars[j];
-                cars[j] = temp;
-            }
-        }
-    }
-    // Sauvegarder les résultats mis à jour dans le fichier de sortie
-    file_out = fopen(output_file, "w");
-    if (!file_out) {
-        perror("Erreur lors de l'ouverture du fichier de sortie");
-        exit(EXIT_FAILURE);
-    }
-    fprintf(file_out, "Car Number,Points\n");
-    for (int i = 0; i < car_count; i++) {
-        fprintf(file_out, "%d,%d\n", cars[i].car_number, cars[i].nb_points);
-    }
-    fclose(file_out);
 }
 
 
@@ -243,115 +244,84 @@ void gestion_points(car_t cars[], const char *input_file, const char *output_fil
  * @param session_type Type de session ("course", "essai", etc.).
  */
 void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_laps, char *session_type) {
-    // Initialize semaphore
-    int sem_id = semget(SEM_KEY, 1, IPC_CREAT | 0666);
-    if (sem_id == -1) {
-        perror("semget failed");
+    pid_t pids[num_cars];
+    int shm_id;
+    car_t *shared_cars;
+
+    // Crée et attache le segment de mémoire partagée
+    shm_id = shmget(SHM_KEY, sizeof(car_t) * MAX_NUM_CARS, IPC_CREAT | 0666);
+    if (shm_id < 0) {
+        perror("Erreur lors de la création de la mémoire partagée");
         exit(EXIT_FAILURE);
     }
 
-    semctl(sem_id, 0, SETVAL, 1);
-
-    struct sembuf sem_op;
-
-    // Simule un tour de la session
-    for (int lap = 0; lap < total_laps; lap++) {
-        int active_cars = num_cars;
-        // fais tourner les voitures pour le nieme tour de la session
-        for (int i = 0; i < num_cars; i++) {
-            if (i == MAX_NUM_CARS - 1) continue;
-            // Lock the semaphore (P operation)
-            sem_op.sem_num = 0;
-            sem_op.sem_op = -1;
-            sem_op.sem_flg = 0;
-            if (semop(sem_id, &sem_op, 1) == -1) {
-                perror("semop lock failed");
-                exit(EXIT_FAILURE);
-            }
-
-            // Si la voiture est sortie, passe à la suivante
-            if (cars[i].out) {
-                active_cars--;
-                // Unlock the semaphore (V operation)
-                sem_op.sem_op = 1;
-                if (semop(sem_id, &sem_op, 1) == -1) {
-                    perror("semop unlock failed");
-                    exit(EXIT_FAILURE);
-                }
-                continue;
-            }
-
-            // Simule un arrêt au stand si nécessaire
-            if (cars[i].pit_stop) {
-                simulate_pit_stop(&cars[i], MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION, session_type);
-                // Unlock the semaphore (V operation)
-                sem_op.sem_op = 1;
-                if (semop(sem_id, &sem_op, 1) == -1) {
-                    perror("semop unlock failed");
-                    exit(EXIT_FAILURE);
-                }
-                continue;
-            }
-
-            // Génère les temps de roulage pour le secteur et les meilleurs temps
-            generate_sector_times(&cars[i], MIN_TIME, MAX_TIME);
-            find_overall_best_times(cars, num_cars);
-
-            // Simule une panne si le tirage aléatoire est inférieur à 1%   
-            if (rand() % 500 < 1) { // 1% de panne
-                cars[i].out = 1;
-                cars[i].pit_stop = 0;
-                active_cars--;
-            }
-
-            // Unlock the semaphore (V operation)
-            sem_op.sem_op = 1;
-            if (semop(sem_id, &sem_op, 1) == -1) {
-                perror("semop unlock failed");
-                exit(EXIT_FAILURE);
-            }
-
-            // porte de sortie pour les sessions d'essais et de qualifications
-            if (strcmp(session_type, "essai") == 0 || strcmp(session_type, "qualif") == 0) {
-                if (cars[i].temps_rouler > session_duration) return;
-            }
-
-            // Switch positions if current lap time is greater
-            if (strcmp(session_type, "course") == 0 || strcmp(session_type, "sprint") == 0) {
-                if (i > 0 && cars[i].current_lap < cars[i-1].current_lap) {
-                    car_t temp = cars[i];
-                    cars[i] = cars[i-1];
-                    cars[i-1] = temp;
-                }
-            }
-        }
-
-        // si toutes les voitures sont out, ne sert à rien de simuler la suite
-        if (active_cars == 0) break;
-
-        // Affiche les résultats du tour
-        system("clear");
-        // printf("Tour %d:\n", lap + 1);
-        display_practice_results(cars, num_cars, session_type);
-        display_overall_best_times(cars, num_cars, session_type);
-        strcmp(session_type, "course") == 0 ? usleep(10000) : usleep(10000); // sleep for 0.2 seconds
-    }
-
-    // Pour les courses et sprints, les voitures sont obligés de faire au moins un pit-stop => Si aucun pit-stop : elimine
-    if (strcmp(session_type, "course") == 0 || strcmp(session_type, "sprint") == 0) {
-        for (int i = 0; i < num_cars; i++) {
-            if (!cars[i].out && cars[i].pit_stop_nb == 0) {
-                printf("La voiture %d n'a pas respecté l'arrêt obligatoire.\n", cars[i].car_number);
-                cars[i].out = 1;
-            }
-        }
-    }
-
-    // Remove the semaphore set
-    if (semctl(sem_id, 0, IPC_RMID) == -1) {
-        perror("semctl remove failed");
+    shared_cars = (car_t *)shmat(shm_id, NULL, 0);
+    if (shared_cars == (car_t *)-1) {
+        perror("Erreur d'attachement mémoire");
         exit(EXIT_FAILURE);
     }
+
+    // Copie initiale des voitures dans la mémoire partagée
+    memcpy(shared_cars, cars, sizeof(car_t) * num_cars);
+
+    // Initialisation du sémaphore
+    init_semaphore();
+
+    // Créer un processus pour chaque voiture
+    for (int i = 0; i < num_cars; i++) {
+        pids[i] = fork();
+        if (pids[i] < 0) {
+            perror("Erreur lors du fork");
+            exit(EXIT_FAILURE);
+        } else if (pids[i] == 0) {
+            // Processus enfant : Simulation pour une voiture
+
+            srand(time(NULL) ^ getpid());  // Initialisation aléatoire unique pour chaque processus
+
+            for (int lap = 0; lap < total_laps; lap++) {
+                if (shared_cars[i].out) break;
+
+                sem_wait(sem); // Verrouillage du sémaphore
+                if (shared_cars[i].pit_stop) {
+                    simulate_pit_stop(&shared_cars[i], MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION, session_type);
+                } else {
+                    generate_sector_times(&shared_cars[i], MIN_TIME, MAX_TIME);
+                    if (rand() % 500 < 1) shared_cars[i].out = 1; // 1% de chance de panne
+                }
+                sem_post(sem); // Déverrouillage du sémaphore
+
+                // Fin de session si la durée est dépassée
+                if (strcmp(session_type, "essai") == 0 || strcmp(session_type, "qualif") == 0) {
+                    if (shared_cars[i].temps_rouler > session_duration) break;
+                }
+            }
+
+            shmdt(shared_cars); // Détache la mémoire partagée
+            exit(0);  // Le processus enfant se termine
+        }
+    }
+
+    // Attendre la fin de tous les processus enfants
+    for (int i = 0; i < num_cars; i++) {
+        waitpid(pids[i], NULL, 0);
+    }
+
+    // Mise à jour des voitures après simulation
+    memcpy(cars, shared_cars, sizeof(car_t) * num_cars);
+
+    // Détache et libère la mémoire partagée
+    shmdt(shared_cars);
+    shmctl(shm_id, IPC_RMID, NULL);
+
+    // Destruction du sémaphore
+    destroy_semaphore();
+
+    // Calcul des meilleurs temps et affichage des résultats
+    find_overall_best_times(cars, num_cars);
+    //system("clear");
+    usleep(2000000);
+    display_practice_results(cars, num_cars, session_type);
+    display_overall_best_times(cars, num_cars, session_type);
 }
 
 /**
@@ -409,7 +379,8 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, ch
 void simulate_course(car_t cars[], int special_weekend, int session_num, const char *ville, char *session_type, char *session_file) {
 
     int distance_course;
-    const char *points_file = "data/gestion_points.csv";
+
+    // Identifier la voiture avec le meilleur tour
 
     // Ensure the correct path for classement.csv
     char *classement_file_path = malloc(150 * sizeof(char));
@@ -428,12 +399,14 @@ void simulate_course(car_t cars[], int special_weekend, int session_num, const c
 
 
     int total_laps = calculate_total_laps(ville, distance_course);
+    char *input_file = malloc(150 * sizeof(char));
+    snprintf(input_file, 150, "data/fichiers/%s", ville);
 
     // // Read starting grid from classement.csv
     // read_starting_grid(classement_file_path, car_numbers, MAX_NUM_CARS - 1);
 
     // // Display the starting grid
-    // display_starting_grid(MAX_NUM_CARS - 1, MAX_NUM_CARS);
+    // display_starting_grid(car_numbers, MAX_NUM_CARS);
 
     // // Start the race
     // printf("La course commence !\n");
@@ -441,7 +414,10 @@ void simulate_course(car_t cars[], int special_weekend, int session_num, const c
 
     simulate_sess(cars, MAX_NUM_CARS - 1, 999999, total_laps, session_type);
     save_session_results(cars, MAX_NUM_CARS - 1 , session_file, "w");
-    gestion_points(cars, session_file, points_file, session_type);
-    
+
+
+    // gestion_points(input_file, points_file, meilleur_tour_voiture, special_weekend);
+
     free(classement_file_path);
+    free(input_file);
 }
