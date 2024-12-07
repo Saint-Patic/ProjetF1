@@ -21,15 +21,19 @@ typedef struct car{
     int car_number;
     int out; // 1 si hors course, 0 sinon
     float sector_times[NUM_SECTORS];
-    float best_lap_time;
     float best_sector_times[NUM_SECTORS]; // Meilleur temps pour chaque secteur
+    float current_lap;
+    float best_lap_time;
     int pit_stop; // 1 si en pit stop, 0 sinon
     int pit_stop_duration; // Durée du pit stop en tours
     int pit_stop_nb; // nombre de pit stop effectué
     float temps_rouler; // Temps de roulage total en secondes
     int eliminate; // true si elimine pdt qualif
-    float current_lap;
     int nb_points; // nombre de points obtenus lors de la simul
+
+    // pour voiture fictive
+    int best_cars_sector[NUM_SECTORS]; // Numéro des meilleures voitutres par secteurs
+    int best_cars_tour; // Numéro des meilleures voitures au tour
 } car_t;
 
 
@@ -40,8 +44,9 @@ void simulate_pit_stop(car_t *car, int min_time, int max_time, char *session_typ
 void simulate_qualification(car_t cars[], int session_num, const char *ville, char *filename, char *session_type);
 void simulate_course(car_t cars[], int special_weekend, int session_num, const char *ville, char *session_type, char *file_session);
 void initialize_cars(car_t cars[], int car_numbers[]);
-void gestion_points(const char *classement_filename, const char *points_filename, int meilleur_tour_voiture, int is_sprint);
 void find_overall_best_times(car_t cars[], int num_cars);
+void gestion_points(car_t cars[], const char *input_file, const char *output_file, const char *type_session);
+int compare_tour_cars(const void *a, const void *b);
 
 
 
