@@ -47,13 +47,13 @@ int main(int argc, char *argv[]) {
         simulate_qualification(cars, session_num, ville, session_file, session_type);
     } else if (strcmp(session_type, "sprint") == 0) { // sprint (uniquement pdt wk spé)
         printf("Simulation du Sprint\n");
-        simulate_course(cars, special_weekend, session_num, ville, session_type, session_file);
+        simulate_course(cars, ville, session_type, session_file);
     } else if (strcmp(session_type, "qualif") == 0) { // qualif pour la course principale
         printf("Simulation des qualifications pour un %s.\n", special_weekend ? "week-end spécial" : "week-end normal");
         simulate_qualification(cars, session_num, ville, session_file, session_type);
     } else if (strcmp(session_type, "course") == 0) { // course principale
         printf("Simulation de la course principale.\n");
-        simulate_course(cars, special_weekend, session_num, ville, session_type, session_file);
+        simulate_course(cars, ville, session_type, session_file);
     }
     process_session_files(session_num, ville, session_type); // création fichier resume_<type>.csv
     free(ville);

@@ -406,7 +406,7 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, ch
  * @param total_laps Nombre total de tours prévus.
  * @param ville Nom de la ville où se déroule l'événement.
  */
-void simulate_course(car_t cars[], int special_weekend, int session_num, const char *ville, char *session_type, char *session_file) {
+void simulate_course(car_t cars[], const char *ville, char *session_type, char *session_file) {
 
     int distance_course;
     const char *points_file = "data/gestion_points.csv";

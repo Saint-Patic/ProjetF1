@@ -428,3 +428,4 @@ void read_starting_grid(const char *filename, int car_numbers[], int num_cars) {
     fclose(file);
 }
 
+
