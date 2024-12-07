@@ -52,8 +52,10 @@ void initialize_cars(car_t cars[], int car_numbers[]) {
         for (int j = 0; j < NUM_SECTORS; j++) {
             cars[i].sector_times[j] = 0.0;
             cars[i].best_sector_times[j] = 0.0;
+            cars[i].best_cars_sector[j] = -1;
         }
         cars[i].nb_points = 0;
+        cars[i].best_cars_tour = -1;
     }
 }
 
@@ -121,7 +123,12 @@ int compare_cars(const void *a, const void *b) {
     car_t *carB = (car_t *)b;
     return (carA->best_lap_time > carB->best_lap_time) ? 1 : -1;
 }
-
+    
+int compare_tour_cars(const void *a, const void *b) {
+    car_t *carA = (car_t *)a;
+    car_t *carB = (car_t *)b;
+    return (carA->temps_rouler > carB->temps_rouler) ? 1 : -1;
+}
 
 /**
  * @brief Attribue les points aux voitures en fonction du classement et sauvegarde les résultats.
@@ -132,82 +139,98 @@ int compare_cars(const void *a, const void *b) {
  * @param is_sprint Indique si la session est un sprint (1) ou une course classique (0).
  * @param filename Chemin du fichier de points.
  */
-void gestion_points(const char *classement_filename, const char *points_filename, int meilleur_tour_voiture, int is_sprint) {
-    int points_sprint[] = POINTS_SPRINT;
-    int points_course[] = POINTS_COURSE;
-    int existing_points[MAX_NUM_CARS - 1] = {0};
-    int car_numbers[MAX_NUM_CARS - 1] = {0}; // Pour stocker les numéros de voitures depuis classement.csv
-    int num_cars = 0;
-
-    // Charger le classement des voitures depuis classement.csv
-    FILE *classement_file = fopen(classement_filename, "r");
-    if (!classement_file) {
-        perror("Erreur lors de l'ouverture du fichier de classement");
+void gestion_points(car_t cars[], const char *input_file, const char *output_file, const char *type_session) {
+    FILE *file_in = fopen(input_file, "r");
+    if (!file_in) {
+        perror("Erreur lors de l'ouverture du fichier d'entrée");
         exit(EXIT_FAILURE);
     }
 
-    // Ignorer l'en-tête
-    char buffer[256];
-    fgets(buffer, sizeof(buffer), classement_file);
+    char line[1024];
+    int car_count = 0;
 
-    // Lire les numéros de voiture
-    while (fscanf(classement_file, "%d,%*f,%*f,%*f,%*f\n", &car_numbers[num_cars]) == 1) {
-        num_cars++;
-    }
-    fclose(classement_file);
-    // Charger les points actuels depuis points.csv
-    FILE *points_file = fopen(points_filename, "r");
-    if (!points_file) {
-        perror("Erreur lors de l'ouverture du fichier de points");
-        exit(EXIT_FAILURE);
-    }
-
-    // Ignorer l'en-tête
-    fgets(buffer, sizeof(buffer), points_file);
-
-    // Charger les points existants
-    int car_number, points;
-    while (fscanf(points_file, "%d,%d\n", &car_number, &points) == 2) {
-        if (car_number < 1 || car_number > MAX_NUM_CARS - 1) {
-            fprintf(stderr, "Numéro de voiture invalide : %d\n", car_number);
-            continue;
+    // Lire l'en-tête et ignorer
+    fgets(line, sizeof(line), file_in);
+    // Lire les données des voitures
+    while (fgets(line, sizeof(line), file_in)) {
+        // Ne lie que les 20 voitures qui roulent
+        if (strncmp(line, "Best Sector Times", 17) == 0 || car_count >= MAX_NUM_CARS - 1) {
+            break; // Arrêter la lecture des données
         }
-        existing_points[car_number - 1] = points;
+        sscanf(line, "%d,%f,%f,%f,%f",
+               &cars[car_count].car_number,
+               &cars[car_count].best_lap_time,
+               &cars[car_count].sector_times[0],
+               &cars[car_count].sector_times[1],
+               &cars[car_count].sector_times[2]);
+        cars[car_count].nb_points = 0;
+        car_count++;
     }
-    fclose(points_file);
+    fclose(file_in);
 
-    // Attribution des points selon le classement
-    int *points_tableau = is_sprint ? points_sprint : points_course;
-    int max_places = is_sprint ? 8 : 10;
-
-    for (int i = 0; i < num_cars && i < max_places; i++) {
-        existing_points[car_numbers[i] - 1] += points_tableau[i];
+    // Déterminer les points attribuables
+    int points_distribution[MAX_NUM_CARS - 1] = {0};
+    if (strcmp(type_session, "course") == 0) {
+        int course_points[] = POINTS_COURSE;
+        memcpy(points_distribution, course_points, sizeof(course_points));
+    } else if (strcmp(type_session, "sprint") == 0) {
+        int sprint_points[] = POINTS_SPRINT;
+        memcpy(points_distribution, sprint_points, sizeof(sprint_points));
     }
+    // Attribuer les points selon le classement
+    for (int i = 0; i < car_count; i++) {
+        cars[i].nb_points = points_distribution[i];
+    }
+    // Ajouter un point bonus pour le meilleur temps au tour
+    int best_lap_index = 0;
+    for (int i = 1; i < car_count; i++) {
+        if (cars[i].best_lap_time < cars[best_lap_index].best_lap_time) {
+            best_lap_index = i;
+        }
+    }
+    cars[best_lap_index].nb_points += 1; // Ajouter un point bonus pour le meilleur temps au tour
+    // Charger les points existants depuis le fichier de sortie, si disponible
+    FILE *file_out = fopen(output_file, "r");
+    if (file_out) {
+        // Lire l'en-tête et ignorer
+        fgets(line, sizeof(line), file_out);
 
-    // Point bonus pour le meilleur tour
-    if (!is_sprint && meilleur_tour_voiture > 0) {
-        for (int i = 0; i < num_cars; i++) {
-            if (car_numbers[i] == meilleur_tour_voiture && i < 10) {
-                existing_points[meilleur_tour_voiture - 1] += 1;
-                break;
+        // Lire les points existants
+        while (fgets(line, sizeof(line), file_out)) {
+            int car_number, existing_points;
+            sscanf(line, "%d,%d", &car_number, &existing_points);
+
+            // Ajouter les points existants aux voitures correspondantes
+            for (int i = 0; i < car_count; i++) {
+                if (cars[i].car_number == car_number) {
+                    cars[i].nb_points += existing_points;
+                    break;
+                }
+            }
+        }
+        fclose(file_out);
+    }
+    // Trier les voitures par nombre de points (ordre décroissant)
+    for (int i = 0; i < car_count - 1; i++) {
+        for (int j = i + 1; j < car_count; j++) {
+            if (cars[i].nb_points < cars[j].nb_points) {
+                car_t temp = cars[i];
+                cars[i] = cars[j];
+                cars[j] = temp;
             }
         }
     }
-
-    // Sauvegarde des nouveaux points dans points.csv
-    points_file = fopen(points_filename, "w");
-    if (!points_file) {
-        perror("Erreur lors de la sauvegarde des points");
+    // Sauvegarder les résultats mis à jour dans le fichier de sortie
+    file_out = fopen(output_file, "w");
+    if (!file_out) {
+        perror("Erreur lors de l'ouverture du fichier de sortie");
         exit(EXIT_FAILURE);
     }
-
-    fprintf(points_file, "Car Number,Points\n");
-    for (int i = 0; i < MAX_NUM_CARS - 1; i++) {
-        if (existing_points[i] > 0) {
-            fprintf(points_file, "%d,%d\n", i + 1, existing_points[i]);
-        }
+    fprintf(file_out, "Car Number,Points\n");
+    for (int i = 0; i < car_count; i++) {
+        fprintf(file_out, "%d,%d\n", cars[i].car_number, cars[i].nb_points);
     }
-    fclose(points_file);
+    fclose(file_out);
 }
 
 
@@ -379,8 +402,7 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, ch
 void simulate_course(car_t cars[], const char *ville, char *session_type, char *session_file) {
 
     int distance_course;
-
-    // Identifier la voiture avec le meilleur tour
+    const char *points_file = "data/gestion_points.csv";
 
     // Ensure the correct path for classement.csv
     char *classement_file_path = malloc(150 * sizeof(char));
@@ -399,14 +421,12 @@ void simulate_course(car_t cars[], const char *ville, char *session_type, char *
 
 
     int total_laps = calculate_total_laps(ville, distance_course);
-    char *input_file = malloc(150 * sizeof(char));
-    snprintf(input_file, 150, "data/fichiers/%s", ville);
 
     // // Read starting grid from classement.csv
     // read_starting_grid(classement_file_path, car_numbers, MAX_NUM_CARS - 1);
 
     // // Display the starting grid
-    // display_starting_grid(car_numbers, MAX_NUM_CARS);
+    // display_starting_grid(MAX_NUM_CARS - 1, MAX_NUM_CARS);
 
     // // Start the race
     // printf("La course commence !\n");
@@ -414,10 +434,7 @@ void simulate_course(car_t cars[], const char *ville, char *session_type, char *
 
     simulate_sess(cars, MAX_NUM_CARS - 1, 999999, total_laps, session_type);
     save_session_results(cars, MAX_NUM_CARS - 1 , session_file, "w");
-
-
-    // gestion_points(input_file, points_file, meilleur_tour_voiture, special_weekend);
-
+    gestion_points(cars, session_file, points_file, session_type);
+    
     free(classement_file_path);
-    free(input_file);
 }
