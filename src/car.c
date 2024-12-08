@@ -270,7 +270,6 @@ void find_overall_best_times(car_t cars[], int num_cars) {
  * @param session_type Type de session ("course", "essai", etc.).
  */
 void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_laps, char *session_type) {
-    pid_t pids[num_cars];
     int shm_id;
     car_t *shared_cars;
 
@@ -293,19 +292,17 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
     // Initialisation du sémaphore
     init_semaphore();
 
-    // Créer un processus pour chaque voiture
-    for (int i = 0; i < num_cars; i++) {
-        pids[i] = fork();
-        if (pids[i] < 0) {
-            perror("Erreur lors du fork");
-            exit(EXIT_FAILURE);
-        } else if (pids[i] == 0) {
-            // Processus enfant : Simulation pour une voiture
+    for (int lap = 0; lap < total_laps; lap++) {
+        for (int i = 0; i < num_cars; i++) {
+            if (shared_cars[i].out) continue;
 
-            srand(time(NULL) ^ getpid());  // Initialisation aléatoire unique pour chaque processus
-
-            for (int lap = 0; lap < total_laps; lap++) {
-                if (shared_cars[i].out) break;
+            pid_t pid = fork();
+            if (pid < 0) {
+                perror("Erreur lors du fork");
+                exit(EXIT_FAILURE);
+            } else if (pid == 0) {
+                // Processus enfant : gérer un seul tour pour une voiture
+                srand(time(NULL) ^ getpid()); // Initialisation aléatoire unique pour chaque processus
 
                 sem_wait(sem); // Verrouillage du sémaphore
                 if (shared_cars[i].pit_stop) {
@@ -316,24 +313,26 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
                 }
                 sem_post(sem); // Déverrouillage du sémaphore
 
-                // Fin de session si la durée est dépassée
-                if (strcmp(session_type, "essai") == 0 || strcmp(session_type, "qualif") == 0) {
-                    if (shared_cars[i].temps_rouler > session_duration) break;
-                }
+                shmdt(shared_cars); // Détache la mémoire partagée
+                exit(0);  // Le processus enfant se termine après un tour
             }
-
-            shmdt(shared_cars); // Détache la mémoire partagée
-            exit(0);  // Le processus enfant se termine
         }
-    }
 
-    // Attendre la fin de tous les processus enfants
-    for (int i = 0; i < num_cars; i++) {
-        waitpid(pids[i], NULL, 0);
-    }
+        // Attendre que tous les processus enfants finissent leur tour
+        for (int i = 0; i < num_cars; i++) {
+            wait(NULL);
+        }
 
-    // Mise à jour des voitures après simulation
-    memcpy(cars, shared_cars, sizeof(car_t) * num_cars);
+        // Mise à jour des voitures après ce tour
+        memcpy(cars, shared_cars, sizeof(car_t) * num_cars);
+
+        system("clear");
+        find_overall_best_times(cars, num_cars);
+        display_practice_results(cars, num_cars, session_type);
+        display_overall_best_times(cars, num_cars, session_type);
+        strcmp(session_type, "course") == 0 ? usleep(1000000) : usleep(1000000);
+        system("clear");
+    }
 
     // Détache et libère la mémoire partagée
     shmdt(shared_cars);
@@ -342,14 +341,10 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
     // Destruction du sémaphore
     destroy_semaphore();
 
-    // Calcul des meilleurs temps et affichage des résultats
-    find_overall_best_times(cars, num_cars);
-    system("clear");
-    display_practice_results(cars, num_cars, session_type);
-    display_overall_best_times(cars, num_cars, session_type);
-    strcmp(session_type, "course") == 0 ? usleep(1000000) : usleep(1000000);
-
+    // Calcul des meilleurs temps globaux à la fin
 }
+
+
 
 /**
  * @brief Simule une session de qualifications.
