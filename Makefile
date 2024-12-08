@@ -9,7 +9,7 @@ SUBFOLDER_2 ?= 2_Djeddah
 
 all: $(BIN_DIR)/main
 
-$(BIN_DIR)/main: $(OBJ_DIR)/main.o $(OBJ_DIR)/car.o $(OBJ_DIR)/utils.o $(OBJ_DIR)/display.o $(OBJ_DIR)/file_manager.o
+$(BIN_DIR)/main: $(OBJ_DIR)/main.o $(OBJ_DIR)/car.o $(OBJ_DIR)/utils.o $(OBJ_DIR)/display.o $(OBJ_DIR)/file_manager.o $(OBJ_DIR)/simulate.o 
 	mkdir -p $(BIN_DIR)
 	$(CC) $(CFLAGS) -o $@ $^
 
@@ -30,6 +30,10 @@ $(OBJ_DIR)/display.o: $(SRC_DIR)/display.c include/display.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)/file_manager.o: $(SRC_DIR)/file_manager.c include/file_manager.h
+	mkdir -p $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/simulate.o: $(SRC_DIR)/simulate.c include/simulate.h
 	mkdir -p $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
