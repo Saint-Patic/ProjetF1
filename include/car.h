@@ -49,6 +49,8 @@ void gestion_points(car_t cars[], const char *input_file, const char *output_fil
 int compare_tour_cars(const void *a, const void *b);
 void init_semaphore();
 void destroy_semaphore();
+void enter_critical_section(int i);
+void exit_critical_section(int i);
 
 
 

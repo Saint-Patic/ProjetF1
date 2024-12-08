@@ -20,7 +20,11 @@
 #define SHM_KEY 12345 // Clé pour la mémoire partagée
 #define SEM_NAME "/car_sim_semaphore" // Nom du sémaphore
 
-sem_t *sem; // Define the semaphore
+sem_t *sem; // Define the semaphore as a global variable
+
+// Variables globales pour l'algorithme de Courtois
+int flag[MAX_NUM_CARS] = {0}; // Indique si une voiture veut entrer dans la section critique
+int turn = 0;                 // Tour actuel pour le processus
 
 
 // Fonction pour initialiser le sémaphore global
@@ -38,7 +42,26 @@ void destroy_semaphore() {
     sem_unlink(SEM_NAME);
 }
 
+void enter_critical_section(int i) {
+    flag[i] = 1;  // Indique l'intention d'entrer
+    int j = turn;
+    while (j != i) {
+        if (flag[j] == 0) {
+            j = (j + 1) % MAX_NUM_CARS;
+        }
+    }
+    flag[i] = 2;  // Indique que la section critique est acquise
+    for (j = 0; j < MAX_NUM_CARS; j++) {
+        if (j != i && flag[j] == 2) {
+            break;  // Si un autre processus est en section critique, attendre
+        }
+    }
+}
 
+void exit_critical_section(int i) {
+    turn = (turn + 1) % MAX_NUM_CARS; // Passe au processus suivant
+    flag[i] = 0;                      // Libère la section critique
+}
 
 void initialize_cars(car_t cars[], int car_numbers[]) {
     for (int i = 0; i < MAX_NUM_CARS; i++) {
@@ -289,9 +312,6 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
     // Copie initiale des voitures dans la mémoire partagée
     memcpy(shared_cars, cars, sizeof(car_t) * num_cars);
 
-    // Initialisation du sémaphore
-    init_semaphore();
-
     for (int lap = 0; lap < total_laps; lap++) {
         for (int i = 0; i < num_cars; i++) {
             if (shared_cars[i].out) continue;
@@ -304,14 +324,18 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
                 // Processus enfant : gérer un seul tour pour une voiture
                 srand(time(NULL) ^ getpid()); // Initialisation aléatoire unique pour chaque processus
 
-                sem_wait(sem); // Verrouillage du sémaphore
+                // Entrée en section critique
+                enter_critical_section(i);
+
                 if (shared_cars[i].pit_stop) {
                     simulate_pit_stop(&shared_cars[i], MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION, session_type);
                 } else {
                     generate_sector_times(&shared_cars[i], MIN_TIME, MAX_TIME);
                     if (rand() % 500 < 1) shared_cars[i].out = 1; // 1% de chance de panne
                 }
-                sem_post(sem); // Déverrouillage du sémaphore
+
+                // Sortie de section critique
+                exit_critical_section(i);
 
                 shmdt(shared_cars); // Détache la mémoire partagée
                 exit(0);  // Le processus enfant se termine après un tour
@@ -331,19 +355,14 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
         display_practice_results(cars, num_cars, session_type);
         display_overall_best_times(cars, num_cars, session_type);
         strcmp(session_type, "course") == 0 ? usleep(1000000) : usleep(1000000);
-        system("clear");
     }
 
     // Détache et libère la mémoire partagée
     shmdt(shared_cars);
     shmctl(shm_id, IPC_RMID, NULL);
 
-    // Destruction du sémaphore
-    destroy_semaphore();
-
     // Calcul des meilleurs temps globaux à la fin
 }
-
 
 
 /**
