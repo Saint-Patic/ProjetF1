@@ -5,6 +5,8 @@
 #include "../include/car.h"
 #include "../include/utils.h"
 #include "../include/display.h"  
+#include "../include/simulate.h"  
+#include "../include/file_manager.h"
 
 #define RESET   "\x1b[0m"
 #define RED   "\x1b[31m"

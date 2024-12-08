@@ -12,6 +12,7 @@
 #include "../include/display.h"
 #include "../include/file_manager.h"
 #include "../include/utils.h"
+#include "../include/simulate.h"
 
 /**
  * @brief Extrait le type de session à partir d'un nom de fichier.

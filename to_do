@@ -13,7 +13,7 @@
    3.4) affichage tous les x tours
    3.5) passage au stand au moins une fois (fait)
    3.5.1) si aucun pitstop à la fin de la course, DNF (fait)
-   3.6) mettre les out en dernier
+   3.6) mettre les out en dernier (fait)
    3.7) gérer la gestion des points et du classement général (fait)
 
 4. gérer wk de sprint (Nathan)
@@ -21,5 +21,5 @@
 
 5. Sémaphore (fait)
 
-6. display.c : colonne en plus pour les dépassements
-   tout afficher dans un bloc
+6. display.c : colonne en plus pour les dépassements (fait)
+   tout afficher dans un bloc (gardé séparé en fin de compte)

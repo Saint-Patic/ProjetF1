@@ -10,6 +10,7 @@
 #include "../include/utils.h"
 #include "../include/display.h"
 #include "../include/file_manager.h"
+#include "../include/simulate.h"
 
 /**
  * @brief Vérifie la validité des paramètres pour une session de course.

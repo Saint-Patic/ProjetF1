@@ -9,6 +9,7 @@
 #include "../include/display.h"
 #include "../include/file_manager.h"
 #include "../include/utils.h"
+#include "../include/simulate.h"
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
