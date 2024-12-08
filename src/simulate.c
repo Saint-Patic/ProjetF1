@@ -49,16 +49,25 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
     // Copie initiale des voitures dans la mémoire partagée
     memcpy(shared_cars, cars, sizeof(car_t) * num_cars);
 
+    int stop_simulation = 0; // Indicateur pour arrêter la simulation
+
     for (int lap = 0; lap < total_laps; lap++) {
+        if (stop_simulation) break; // Arrêter la simulation si nécessaire
+
         for (int i = 0; i < num_cars; i++) {
             if (shared_cars[i].out) continue;
+
+            // Vérifie si une voiture a roulé plus que la durée de la session
+            if (shared_cars[i].temps_rouler > session_duration) {
+                stop_simulation = 1;
+                break;
+            }
 
             pid_t pid = fork();
             if (pid < 0) {
                 perror("Erreur lors du fork");
                 exit(EXIT_FAILURE);
             } else if (pid == 0) {
-                // Processus enfant : gérer un seul tour pour une voiture
                 srand(time(NULL) ^ getpid()); // Initialisation aléatoire unique pour chaque processus
 
                 // Entrée en section critique
@@ -84,14 +93,17 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
             wait(NULL);
         }
 
+        if (stop_simulation) break; // Arrêter après ce tour si nécessaire
+
         // Mise à jour des voitures après ce tour
         memcpy(cars, shared_cars, sizeof(car_t) * num_cars);
-
         system("clear");
         find_overall_best_times(cars, num_cars);
         display_practice_results(cars, num_cars, session_type);
         display_overall_best_times(cars, num_cars, session_type);
-        strcmp(session_type, "course") == 0 ? usleep(1000000) : usleep(1000000);
+
+        // Pause pour simuler le temps entre les tours
+        strcmp(session_type, "course") == 0 ? usleep(1000000) : usleep(10000);
     }
 
     // Détache et libère la mémoire partagée
@@ -100,6 +112,7 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
 
     // Calcul des meilleurs temps globaux à la fin
 }
+
 
 
 /**

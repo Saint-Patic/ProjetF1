@@ -36,6 +36,7 @@ typedef struct car{
     // pour voiture fictive
     int best_cars_sector[NUM_SECTORS]; // Numéro des meilleures voitutres par secteurs
     int best_cars_tour; // Numéro des meilleures voitures au tour
+    int laps_completed;
 } car_t;
 
 
