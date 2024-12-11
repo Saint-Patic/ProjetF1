@@ -175,7 +175,6 @@ void gestion_points(car_t cars[], const char *input_file, const char *output_fil
     fgets(line, sizeof(line), file_in);
     // Lire les données des voitures
     while (fgets(line, sizeof(line), file_in)) {
-        // Ne lie que les 20 voitures qui roulent
         if (strncmp(line, "Best Sector Times", 17) == 0 || car_count >= MAX_NUM_CARS - 1) {
             break; // Arrêter la lecture des données
         }
@@ -199,30 +198,27 @@ void gestion_points(car_t cars[], const char *input_file, const char *output_fil
         int sprint_points[] = POINTS_SPRINT;
         memcpy(points_distribution, sprint_points, sizeof(sprint_points));
     }
-    // Attribuer les points selon le classement
+
     for (int i = 0; i < car_count; i++) {
         cars[i].nb_points = points_distribution[i];
     }
-    // Ajouter un point bonus pour le meilleur temps au tour
+
     int best_lap_index = 0;
     for (int i = 1; i < car_count; i++) {
         if (cars[i].best_lap_time < cars[best_lap_index].best_lap_time) {
             best_lap_index = i;
         }
     }
-    cars[best_lap_index].nb_points += 1; // Ajouter un point bonus pour le meilleur temps au tour
-    // Charger les points existants depuis le fichier de sortie, si disponible
+    cars[best_lap_index].nb_points += 1;
+
     FILE *file_out = fopen(output_file, "r");
     if (file_out) {
-        // Lire l'en-tête et ignorer
         fgets(line, sizeof(line), file_out);
 
-        // Lire les points existants
         while (fgets(line, sizeof(line), file_out)) {
             int car_number, existing_points;
             sscanf(line, "%d,%d", &car_number, &existing_points);
 
-            // Ajouter les points existants aux voitures correspondantes
             for (int i = 0; i < car_count; i++) {
                 if (cars[i].car_number == car_number) {
                     cars[i].nb_points += existing_points;
@@ -232,7 +228,7 @@ void gestion_points(car_t cars[], const char *input_file, const char *output_fil
         }
         fclose(file_out);
     }
-    // Trier les voitures par nombre de points (ordre décroissant)
+
     for (int i = 0; i < car_count - 1; i++) {
         for (int j = i + 1; j < car_count; j++) {
             if (cars[i].nb_points < cars[j].nb_points) {
@@ -242,7 +238,7 @@ void gestion_points(car_t cars[], const char *input_file, const char *output_fil
             }
         }
     }
-    // Sauvegarder les résultats mis à jour dans le fichier de sortie
+
     file_out = fopen(output_file, "w");
     if (!file_out) {
         perror("Erreur lors de l'ouverture du fichier de sortie");
@@ -253,7 +249,10 @@ void gestion_points(car_t cars[], const char *input_file, const char *output_fil
         fprintf(file_out, "%d,%d\n", cars[i].car_number, cars[i].nb_points);
     }
     fclose(file_out);
+
+    display_points(cars, car_count);
 }
+
 
 
 /**

@@ -172,20 +172,17 @@ void simulate_course(car_t cars[], const char *ville, char *session_type, char *
         distance_course = SESSION_DISTANCE;  
         snprintf(classement_file_path, 150, "data/fichiers/%s/classement.csv", ville); 
     }
-
-
-    int total_laps = calculate_total_laps(ville, distance_course);
-
     // Read starting grid from classement.csv
     read_starting_grid(classement_file_path, MAX_NUM_CARS - 1, cars, car_numbers);
-
     // Display the starting grid
-    display_starting_grid(car_numbers, MAX_NUM_CARS);
+    display_starting_grid(car_numbers, MAX_NUM_CARS - 1);
+
 
     // Start the race
     printf("La course commence !\n");
     sleep(1); // Simulate the start delay
 
+    int total_laps = calculate_total_laps(ville, distance_course);
     simulate_sess(cars, MAX_NUM_CARS - 1, 999999, total_laps, session_type);
     save_session_results(cars, MAX_NUM_CARS - 1 , session_file, "w");
     gestion_points(cars, session_file, points_file, session_type);

@@ -192,3 +192,13 @@ void display_starting_grid(int car_numbers[], int num_cars) {
     }
     printf("=====================\n");
 }
+
+void display_points(const car_t cars[], int car_count) {
+    system("clear");
+    char *suffixe;
+    printf("\n=== Résultats finaux ===\n");
+    for (int i = 0; i < car_count; i++) {
+        suffixe = cars[i].nb_points > 1 ? "points" : "point";
+        printf("Voiture n°%d : %d %s\n", cars[i].car_number, cars[i].nb_points, suffixe);
+    }
+}
