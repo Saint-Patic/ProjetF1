@@ -91,7 +91,7 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
         find_overall_best_times(cars, num_cars);
         display_practice_results(cars, num_cars, session_type);
         display_overall_best_times(cars, num_cars, session_type);
-        strcmp(session_type, "course") == 0 ? usleep(1000000) : usleep(1000000);
+        strcmp(session_type, "course") == 0 ? usleep(10000) : usleep(10000);
     }
 
     // Détache et libère la mémoire partagée
@@ -186,6 +186,6 @@ void simulate_course(car_t cars[], const char *ville, char *session_type, char *
     simulate_sess(cars, MAX_NUM_CARS - 1, 999999, total_laps, session_type);
     save_session_results(cars, MAX_NUM_CARS - 1 , session_file, "w");
     gestion_points(cars, session_file, points_file, session_type);
-    
+    display_points(cars, MAX_NUM_CARS - 1);
     free(classement_file_path);
 }

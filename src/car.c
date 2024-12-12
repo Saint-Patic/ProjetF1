@@ -191,10 +191,13 @@ void gestion_points(car_t cars[], const char *input_file, const char *output_fil
 
     // Déterminer les points attribuables
     int points_distribution[MAX_NUM_CARS - 1] = {0};
+    int max_points;
     if (strcmp(type_session, "course") == 0) {
+        max_points = 10;
         int course_points[] = POINTS_COURSE;
         memcpy(points_distribution, course_points, sizeof(course_points));
     } else if (strcmp(type_session, "sprint") == 0) {
+        max_points = 8;
         int sprint_points[] = POINTS_SPRINT;
         memcpy(points_distribution, sprint_points, sizeof(sprint_points));
     }
@@ -205,7 +208,7 @@ void gestion_points(car_t cars[], const char *input_file, const char *output_fil
 
     int best_lap_index = 0;
     for (int i = 1; i < car_count; i++) {
-        if (cars[i].best_lap_time < cars[best_lap_index].best_lap_time) {
+        if (cars[i].best_lap_time < cars[best_lap_index].best_lap_time && i < max_points) {
             best_lap_index = i;
         }
     }
