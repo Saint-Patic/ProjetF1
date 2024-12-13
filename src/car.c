@@ -88,7 +88,7 @@ void initialize_cars(car_t cars[], int car_numbers[]) {
  * 
  * @param car Pointeur vers la structure de la voiture.
  * @param min_time Temps minimum possible pour un secteur.
- * @param max_time Temps maximum possible pour un secteur.
+ * @param max_time Temps maximum possible pour un secteur.session_type
  */
 void generate_sector_times(car_t *car, int min_time, int max_time) {
     car->current_lap = 0;
@@ -102,7 +102,7 @@ void generate_sector_times(car_t *car, int min_time, int max_time) {
         }
 
         // Probabilité de faire un pit stop
-        if (rand() % 100 < 15 && i == NUM_SECTORS - 1) { // chance of pit stop
+        if (rand() % 100 < 7 && i == NUM_SECTORS - 1) { // chance of pit stop
             car->pit_stop_duration = random_float(MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION);
             car->pit_stop = 1;
         }
