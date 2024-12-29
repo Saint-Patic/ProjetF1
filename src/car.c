@@ -37,6 +37,7 @@ void initialize_cars(car_t cars[], int car_numbers[]) {
         }
         cars[i].nb_points = 0;
         cars[i].best_cars_tour = -1;
+        cars[i].nb_tours = 0;
     }
 }
 
@@ -74,6 +75,7 @@ void generate_sector_times(car_t *car, int min_time, int max_time) {
         car->best_lap_time = car->current_lap;
     }
     car->temps_rouler += car->current_lap;
+    car->nb_tours += 1;
 }
 
 

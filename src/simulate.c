@@ -19,9 +19,12 @@
 #include "../include/simulate.h"
 #include "../include/semaphore.h"
 
+int pause_course = 1000000;
+int pause_autre = 10000; 
+
 
 /**
- * @brief Simule un arrêt au stand pour une voiture.
+ * @brief Simule un arrêt au stand pour une voiture.g
  * 
  * @param car Pointeur vers la structure de la voiture.
  * @param min_time Temps minimum pour un arrêt au stand.
@@ -115,7 +118,7 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
         find_overall_best_times(cars, num_cars);
         display_practice_results(cars, num_cars, session_type);
         display_overall_best_times(cars, num_cars, session_type);
-        strcmp(session_type, "course") == 0 ? usleep(10000) : usleep(10000);
+        strcmp(session_type, "course") == 0 ? usleep(pause_course) : usleep(pause_autre);
     }
 
     // Détache et libère la mémoire partagée
