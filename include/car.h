@@ -13,9 +13,6 @@
 #define MAX_TIME 45
 #define SESSION_DISTANCE 300
 #define SPRINT_DISTANCE 100
-#define SEM_KEY 1234
-#define SHM_KEY 12345 // Clé pour la mémoire partagée
-#define SEM_NAME "/car_sim_semaphore" // Nom du sémaphore
 #define POINTS_SPRINT {8, 7, 6, 5, 4, 3, 2, 1}
 #define POINTS_COURSE {25, 18, 15, 12, 10, 8, 6, 4, 2, 1}
 
@@ -46,10 +43,6 @@ void initialize_cars(car_t cars[], int car_numbers[]);
 void find_overall_best_times(car_t cars[], int num_cars);
 void gestion_points(car_t cars[], const char *input_file, const char *output_file, const char *type_session);
 int compare_tour_cars(const void *a, const void *b);
-void init_semaphore();
-void destroy_semaphore();
-void enter_critical_section(int i);
-void exit_critical_section(int i);
 
 
 

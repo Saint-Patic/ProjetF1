@@ -5,7 +5,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <semaphore.h>
-#include <pthread.h>
 #include <fcntl.h>
 #include <float.h>
 #include <sys/mman.h>
@@ -17,6 +16,7 @@
 #include "../include/display.h"
 #include "../include/file_manager.h"
 #include "../include/simulate.h"
+#include "../include/semaphore.h"
 
 
 

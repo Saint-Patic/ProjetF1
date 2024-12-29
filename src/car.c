@@ -19,48 +19,7 @@
 #include "../include/simulate.h"
 
 
-sem_t *sem; // Define the semaphore as a global variable
 
-// Variables globales pour l'algorithme de Courtois
-int flag[MAX_NUM_CARS] = {0}; // Indique si une voiture veut entrer dans la section critique
-int turn = 0;                 // Tour actuel pour le processus
-
-
-// Fonction pour initialiser le sémaphore global
-void init_semaphore() {
-    sem = sem_open(SEM_NAME, O_CREAT, 0644, 1); // Valeur initiale du sémaphore : 1 (sémaphore binaire)
-    if (sem == SEM_FAILED) {
-        perror("Erreur lors de l'initialisation du sémaphore");
-        exit(EXIT_FAILURE);
-    }
-}
-
-// Fonction pour détruire le sémaphore à la fin du programme
-void destroy_semaphore() {
-    sem_close(sem);
-    sem_unlink(SEM_NAME);
-}
-
-void enter_critical_section(int i) {
-    flag[i] = 1;  // Indique l'intention d'entrer
-    int j = turn;
-    while (j != i) {
-        if (flag[j] == 0) {
-            j = (j + 1) % MAX_NUM_CARS;
-        }
-    }
-    flag[i] = 2;  // Indique que la section critique est acquise
-    for (j = 0; j < MAX_NUM_CARS; j++) {
-        if (j != i && flag[j] == 2) {
-            break;  // Si un autre processus est en section critique, attendre
-        }
-    }
-}
-
-void exit_critical_section(int i) {
-    turn = (turn + 1) % MAX_NUM_CARS; // Passe au processus suivant
-    flag[i] = 0;                      // Libère la section critique
-}
 
 void initialize_cars(car_t cars[], int car_numbers[]) {
     for (int i = 0; i < MAX_NUM_CARS; i++) {
