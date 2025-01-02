@@ -43,7 +43,8 @@ void initialize_cars(car_t cars[], int car_numbers[]);
 void find_overall_best_times(car_t cars[], int num_cars);
 void gestion_points(car_t cars[], const char *input_file, const char *output_file, const char *type_session);
 int compare_tour_cars(const void *a, const void *b);
-
+void update_best_times(car_t *car, int sector_index);
+void handle_pit_stop(car_t *car, int lap, int total_laps, char *session_type);
 
 
 #endif // CAR_H

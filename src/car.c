@@ -19,8 +19,6 @@
 #include "../include/simulate.h"
 
 
-
-
 void initialize_cars(car_t cars[], int car_numbers[]) {
     for (int i = 0; i < MAX_NUM_CARS; i++) {
         cars[i].car_number = car_numbers[i]; // 21e voiture fictive
@@ -41,8 +39,6 @@ void initialize_cars(car_t cars[], int car_numbers[]) {
     }
 }
 
-
-
 /**
  * @brief Génère les temps par secteur pour une voiture et met à jour ses meilleurs temps.
  * 
@@ -50,35 +46,31 @@ void initialize_cars(car_t cars[], int car_numbers[]) {
  * @param min_time Temps minimum possible pour un secteur.
  * @param max_time Temps maximum possible pour un secteur.session_type
  */
+void update_best_times(car_t *car, int sector_index) {
+    if (car->best_sector_times[sector_index] == 0 || car->sector_times[sector_index] < car->best_sector_times[sector_index]) {
+        car->best_sector_times[sector_index] = car->sector_times[sector_index];
+    }
+
+    if (car->best_lap_time == 0 || car->current_lap < car->best_lap_time) {
+        car->best_lap_time = car->current_lap;
+    }
+}
+
 void generate_sector_times(car_t *car, int min_time, int max_time) {
     car->current_lap = 0;
-    for (int i = 0; i < NUM_SECTORS; i++) { // génération des 3 secteurs pour 1 voiture
+    for (int i = 0; i < NUM_SECTORS; i++) {
         car->sector_times[i] = random_float(min_time, max_time);
         car->current_lap += car->sector_times[i];
+        update_best_times(car, i);
 
-        // Mise à jour des meilleurs temps pour les secteurs
-        if (car->best_sector_times[i] == 0 || car->sector_times[i] < car->best_sector_times[i]) {
-            car->best_sector_times[i] = car->sector_times[i];
-        }
-
-        // Probabilité de faire un pit stop
-        if (rand() % 100 < 7 && i == NUM_SECTORS - 1) { // chance of pit stop
+        if (rand() % 100 < 7 && i == NUM_SECTORS - 1) {
             car->pit_stop_duration = random_float(MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION);
             car->pit_stop = 1;
         }
     }
- 
-
-
-    // Mise à jour du meilleur temps pour la voiture
-    if (car->best_lap_time == 0 || car->current_lap < car->best_lap_time) {
-        car->best_lap_time = car->current_lap;
-    }
     car->temps_rouler += car->current_lap;
     car->nb_tours += 1;
 }
-
-
 
 /**
  * @brief Compare deux voitures en fonction de leur meilleur temps au tour.
@@ -203,8 +195,6 @@ void gestion_points(car_t cars[], const char *input_file, const char *output_fil
     display_points(cars, car_count);
 }
 
-
-
 /**
  * @brief Enregistre les meilleurs temps des 3 secteurs et du circuit en général dans une voiture imiganaire
  * @param cars Tableau de voitures
@@ -224,5 +214,18 @@ void find_overall_best_times(car_t cars[], int num_cars) {
                 cars[num_cars].best_cars_sector[j] = cars[i].car_number;
             }
         }
+    }
+}
+
+void handle_pit_stop(car_t *car, int lap, int total_laps, char *session_type) {
+    if (lap >= (total_laps * 3 / 4) && car->pit_stop_nb == 0) {
+        simulate_pit_stop(car, MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION, session_type);
+    }
+
+    if (car->pit_stop) {
+        simulate_pit_stop(car, MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION, session_type);
+    } else {
+        generate_sector_times(car, MIN_TIME, MAX_TIME);
+        if (rand() % 500 < 1) car->out = 1; // 1% de chance de panne
     }
 }

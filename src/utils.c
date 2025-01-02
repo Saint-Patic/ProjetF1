@@ -12,6 +12,23 @@
 #include "../include/file_manager.h"
 #include "../include/simulate.h"
 
+
+int check_file_exists(const char *file_path, const char *error_message) {
+    if (!file_exists(file_path)) {
+        printf("Erreur : %s (%s).\n", error_message, file_path);
+        return 0;
+    }
+    return 1;
+}
+
+int check_session_num(int session_num, int max_num, const char *error_message) {
+    if (session_num < 1 || session_num > max_num) {
+        printf("Erreur : %s\n", error_message);
+        return 0;
+    }
+    return 1;
+}
+
 /**
  * @brief Vérifie la validité des paramètres pour une session de course.
  * 
@@ -28,96 +45,53 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
         return 1;
     }
 
-    // Vérifie le format du fichier de session
     if (sscanf(session_file, "data/fichiers/%49[^/]/%19[a-zA-Z]_%d.csv", ville, session_type, session_num) != 3) {
         printf("Nom de fichier invalide. Utilisez le format ../data/fichiers/<x_ville>/<type>_<numéro>.csv\n");
         return 0;
     }
 
-    int special_weekend = is_special_weekend(ville); // Vérifie si le week-end est spécial
+    int special_weekend = is_special_weekend(ville);
 
     if (special_weekend) {
-        // Vérifications spécifiques aux week-ends spéciaux
         if (strcmp(session_type, "essai") == 0) {
-            if (*session_num != 1) {
-                printf("Erreur : Pour un week-end spécial, il n'y a qu'une seule période d'essai.\n");
-                return 0;
-            }
+            return check_session_num(*session_num, 1, "Pour un week-end spécial, il n'y a qu'une seule période d'essai.");
         } else if (strcmp(session_type, "shootout") == 0) {
-            if (*session_num < 1 || *session_num > 3) {
-                printf("Erreur : Nombre maximum de Sprint Shootout dépassé (3).\n");
-                return 0;
-            }
+            if (!check_session_num(*session_num, 3, "Nombre maximum de Sprint Shootout dépassé (3).")) return 0;
             char essai_resume_file[100];
             snprintf(essai_resume_file, sizeof(essai_resume_file), "data/fichiers/%s/essai_1.csv", ville);
-            if (!file_exists(essai_resume_file)) {
-                printf("Erreur : Le Sprint Shootout nécessite une période d'essai préalable (%s).\n", essai_resume_file);
-                return 0;
-            }
+            return check_file_exists(essai_resume_file, "Le Sprint Shootout nécessite une période d'essai préalable");
         } else if (strcmp(session_type, "sprint") == 0) {
-            if (*session_num != 1) {
-                printf("Erreur : Nombre maximum de courses sprint dépassé (1).\n");
-                return 0;
-            }
+            if (!check_session_num(*session_num, 1, "Nombre maximum de courses sprint dépassé (1).")) return 0;
             char shootout_resume_file[100];
             snprintf(shootout_resume_file, sizeof(shootout_resume_file), "data/fichiers/%s/resume_shootout.csv", ville);
-            if (!file_exists(shootout_resume_file)) {
-                printf("Erreur : La course sprint nécessite un Sprint Shootout complet (%s).\n", shootout_resume_file);
-                return 0;
-            }
+            return check_file_exists(shootout_resume_file, "La course sprint nécessite un Sprint Shootout complet");
         } else if (strcmp(session_type, "qualif") == 0) {
-            if (*session_num < 1 || *session_num > MAX_SESSION_QUALIF) {
-                printf("Erreur : Nombre maximum de qualifications dépassé (3).\n");
-                return 0;
-            }
+            if (!check_session_num(*session_num, MAX_SESSION_QUALIF, "Nombre maximum de qualifications dépassé (3).")) return 0;
             char essai_resume_file[100];
             snprintf(essai_resume_file, sizeof(essai_resume_file), "data/fichiers/%s/sprint_1.csv", ville);
-            if (!file_exists(essai_resume_file)) {
-                printf("Erreur : Les qualifications nécessitent une période de sprint préalable (%s).\n", essai_resume_file);
-                return 0;
-            }
+            return check_file_exists(essai_resume_file, "Les qualifications nécessitent une période de sprint préalable");
         } else if (strcmp(session_type, "course") == 0) {
-            if (*session_num != 1) {
-                printf("Erreur : Nombre maximum de courses principales dépassé (1).\n");
-                return 0;
-            }
+            if (!check_session_num(*session_num, 1, "Nombre maximum de courses principales dépassé (1).")) return 0;
             char qualif_resume_file[100];
             snprintf(qualif_resume_file, sizeof(qualif_resume_file), "data/fichiers/%s/resume_qualif.csv", ville);
-            if (!file_exists(qualif_resume_file)) {
-                printf("Erreur : La course principale nécessite des qualifications normales (%s).\n", qualif_resume_file);
-                return 0;
-            }
+            return check_file_exists(qualif_resume_file, "La course principale nécessite des qualifications normales");
         }
     } else {
-        // Vérifications pour les week-ends normaux
-        if (strcmp(session_type, "essai") == 0 && *session_num > MAX_SESSION_ESSAI) {
-            printf("Erreur : Nombre maximum d'essais dépassé (%d).\n", MAX_SESSION_ESSAI);
-            return 0;
-        } else if (strcmp(session_type, "shootout") == 0 ||strcmp(session_type, "sprint") == 0) {
+        if (strcmp(session_type, "essai") == 0) {
+            return check_session_num(*session_num, MAX_SESSION_ESSAI, "Nombre maximum d'essais dépassé");
+        } else if (strcmp(session_type, "shootout") == 0 || strcmp(session_type, "sprint") == 0) {
             printf("Erreur : Il n'y a pas de %s pour un week-end normal\n", session_type);
             return 0;
         } else if (strcmp(session_type, "qualif") == 0) {
-            if (*session_num < 1 || *session_num > MAX_SESSION_QUALIF) {
-                printf("Erreur : Nombre maximum de qualifications dépassé (3).\n");
-                return 0;
-            }
+            if (!check_session_num(*session_num, MAX_SESSION_QUALIF, "Nombre maximum de qualifications dépassé (3).")) return 0;
             char essai_resume_file[100];
             snprintf(essai_resume_file, sizeof(essai_resume_file), "data/fichiers/%s/resume_essai.csv", ville);
-            if (!file_exists(essai_resume_file)) {
-                printf("Erreur : Les qualifications nécessitent une période d'essai préalable (%s).\n", essai_resume_file);
-                return 0;
-            }
+            return check_file_exists(essai_resume_file, "Les qualifications nécessitent une période d'essai préalable");
         } else if (strcmp(session_type, "course") == 0) {
-            if (*session_num != 1) {
-                printf("Erreur : Nombre maximum de courses principales dépassé (1).\n");
-                return 0;
-            }
+            if (!check_session_num(*session_num, 1, "Nombre maximum de courses principales dépassé (1).")) return 0;
             char qualif_resume_file[100];
             snprintf(qualif_resume_file, sizeof(qualif_resume_file), "data/fichiers/%s/resume_qualif.csv", ville);
-            if (!file_exists(qualif_resume_file)) {
-                printf("Erreur : La course principale nécessite des qualifications (%s).\n", qualif_resume_file);
-                return 0;
-            }
+            return check_file_exists(qualif_resume_file, "La course principale nécessite des qualifications");
         }
     }
 
@@ -138,13 +112,8 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
         return 0;
     }
 
-    // if (!verifier_dossier_precedent(ville)) {
-    //     return 0;
-    // }
-
     return 1;
 }
-
 
 int verifier_dossier_precedent(char *ville) {
     int num_ville = atoi(ville);

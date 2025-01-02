@@ -12,4 +12,6 @@ int ternaire_moins_criminel(int session_num, int res1, int res2, int resDefault)
 int is_special_weekend(const char *ville);
 int calculate_total_laps(const char *ville, float session_distance);
 int verifier_dossier_precedent(char *ville);
+int check_file_exists(const char *file_path, const char *error_message);
+int check_session_num(int session_num, int max_num, const char *error_message);
 #endif
