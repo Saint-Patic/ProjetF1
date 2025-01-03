@@ -152,7 +152,7 @@ void display_practice_results(car_t cars[], int num_cars, char *session_type) {
         GREEN "================================================================================================" RESET "\n";
     append_to_buffer(&buffer, &buffer_size, &current_length, footer);
 
-    printf(GREEN "\n===" RESET YELLOW " Résultats de la session %s " RESET GREEN " ===\n" RESET, session_type);
+    printf(GREEN "\n===" RESET YELLOW " Résultats de la session %s | Tour n°%d" RESET GREEN " ===\n" RESET, session_type, cars[0].nb_tours);
 
     // Affiche tout le tableau
     printf("%s", buffer);
