@@ -84,18 +84,7 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
                 // Entrée en section critique
                 enter_critical_section(i);
 
-                // Si on est au 3/4 de la course et que la voiture n'a pas encore fait de pit stop, forcer un arrêt
-                if (lap >= (total_laps * 3 / 4) && shared_cars[i].pit_stop_nb == 0) {
-                    //printf("Forcing pit stop for car %d at lap %d (3/4 of the race).\n", shared_cars[i].car_number, lap + 1);
-                    simulate_pit_stop(&shared_cars[i], MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION, session_type);
-                }
-
-                if (shared_cars[i].pit_stop) {
-                    simulate_pit_stop(&shared_cars[i], MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION, session_type);
-                } else {
-                    generate_sector_times(&shared_cars[i], MIN_TIME, MAX_TIME);
-                    if (rand() % 500 < 1) shared_cars[i].out = 1; // 1% de chance de panne
-                }
+                handle_pit_stop(&shared_cars[i], lap, total_laps, session_type);
 
                 // Sortie de section critique
                 exit_critical_section(i);

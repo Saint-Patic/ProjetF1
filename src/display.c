@@ -24,6 +24,20 @@
 
 
 
+void append_to_buffer(char **buffer, size_t *buffer_size, size_t *current_length, const char *str) {
+    size_t str_length = strlen(str);
+    if (*current_length + str_length >= *buffer_size) {
+        *buffer_size += BUFFER_INCREMENT;
+        *buffer = realloc(*buffer, *buffer_size);
+        if (!*buffer) {
+            perror("ERREUR: problème de mémoire non allouée");
+            exit(EXIT_FAILURE);
+        }
+    }
+    strcat(*buffer, str);
+    *current_length += str_length;
+}
+
 void display_practice_results(car_t cars[], int num_cars, char *session_type) {
     int compare_function(const void *a, const void *b) {
         car_t *car_a = (car_t *)a;
@@ -80,17 +94,7 @@ void display_practice_results(car_t cars[], int num_cars, char *session_type) {
         GREEN "================================================================================================" RESET "\n",
         nom_de_colonne);
 
-    size_t header_length = strlen(header);
-    if (current_length + header_length >= buffer_size) {
-        buffer_size += header_length;
-        buffer = realloc(buffer, buffer_size);
-        if (!buffer) {
-            perror("ERREUR: problème de mémoire non allouée");
-            exit(EXIT_FAILURE);
-        }
-    }
-    strcat(buffer, header);
-    current_length += header_length;
+    append_to_buffer(&buffer, &buffer_size, &current_length, header);
 
     // Ajoute les résultats ligne par ligne
     float prev_value = (strcmp(session_type, "course") == 0 || strcmp(session_type, "sprint") == 0)
@@ -138,34 +142,13 @@ void display_practice_results(car_t cars[], int num_cars, char *session_type) {
                 i == 0 ? 0.00 : diff);
         }
 
-        size_t line_length = strlen(line);
-        if (current_length + line_length >= buffer_size) {
-            buffer_size += BUFFER_INCREMENT;
-            buffer = realloc(buffer, buffer_size);
-            if (!buffer) {
-                perror("ERREUR: problème de mémoire non allouée");
-                exit(EXIT_FAILURE);
-            }
-        }
-        strcat(buffer, line);
-        current_length += line_length;
-
-        prev_value = current_value;
+        append_to_buffer(&buffer, &buffer_size, &current_length, line);
     }
 
     // Ajoute la ligne de fin
     const char *footer =
         GREEN "================================================================================================" RESET "\n";
-    size_t footer_length = strlen(footer);
-    if (current_length + footer_length >= buffer_size) {
-        buffer_size += footer_length;
-        buffer = realloc(buffer, buffer_size);
-        if (!buffer) {
-            perror("ERREUR: problème de mémoire non allouée");
-            exit(EXIT_FAILURE);
-        }
-    }
-    strcat(buffer, footer);
+    append_to_buffer(&buffer, &buffer_size, &current_length, footer);
 
     printf(GREEN "\n===" RESET YELLOW " Résultats de la session %s " RESET GREEN " ===\n" RESET, session_type);
 
