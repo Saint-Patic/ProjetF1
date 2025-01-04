@@ -18,7 +18,21 @@
 #include "../include/file_manager.h"
 #include "../include/simulate.h"
 
-
+/**
+ * @brief Simule un arrêt au stand pour une voiture.
+ * 
+ * @param car Pointeur vers la structure de la voiture.
+ * @param min_time Temps minimum pour un arrêt au stand.
+ * @param max_time Temps maximum pour un arrêt au stand.
+ * @param session_type Type de session en cours (course, essai, etc.).
+ */
+void simulate_pit_stop(car_t *car, int min_time, int max_time, char *session_type) {
+    float pit_stop_time = random_float(min_time, max_time);
+    car->temps_rouler += pit_stop_time;
+    car->pit_stop_nb++;
+    car->pit_stop = 0; // Une fois effectué, désactive l'indicateur
+    car->current_lap += pit_stop_time;
+}
 
 /**
  * @brief Simule une session (essais, qualifications, course) pour un ensemble de voitures.

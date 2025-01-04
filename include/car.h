@@ -41,7 +41,6 @@ typedef struct car{
 
 void generate_sector_times(car_t *car, int min_time, int max_time);
 int compare_cars(const void *a, const void *b);
-void simulate_pit_stop(car_t *car, int min_time, int max_time, char *session_type);
 void initialize_cars(car_t cars[], int car_numbers[]);
 void find_overall_best_times(car_t cars[], int num_cars);
 void gestion_points(car_t cars[], const char *input_file, const char *output_file, const char *type_session);
