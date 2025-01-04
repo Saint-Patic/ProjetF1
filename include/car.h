@@ -32,6 +32,7 @@ typedef struct car{
     float temps_rouler; // Temps de roulage total en secondes
     int eliminate; // true si elimine pdt qualif
     int nb_points; // nombre de points obtenus lors de la simul
+    int nb_tours; // nombre de tours effectués
 
     // pour voiture fictive
     int best_cars_sector[NUM_SECTORS]; // Numéro des meilleures voitutres par secteurs

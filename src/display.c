@@ -29,14 +29,22 @@ void display_practice_results(car_t cars[], int num_cars, char *session_type) {
         car_t *car_a = (car_t *)a;
         car_t *car_b = (car_t *)b;
 
-        // Sinon, tri par temps (temps_rouler ou best_lap_time selon le contexte)
+        // Vérifie si c'est une course ou un sprint
         if (strcmp(session_type, "course") == 0 || strcmp(session_type, "sprint") == 0) {
             // Place les voitures "out" en dernier
             if (car_a->out && car_b->out) return 0; // Les deux sont "out", ordre inchangé
-            if (car_a->out) return 1; // "car_a" est "out", elle passe après
-            if (car_b->out) return -1; // "car_b" est "out", elle passe après
+            if (car_a->out) return 1;               // "car_a" est "out", elle passe après
+            if (car_b->out) return -1;              // "car_b" est "out", elle passe après
+
+            // Si aucune voiture n'est "out", comparer par nb_tours
+            if (car_a->nb_tours != car_b->nb_tours) {
+                return (car_b->nb_tours - car_a->nb_tours); // Plus de tours = mieux classée
+            }
+
+            // Si le nombre de tours est égal, comparer par temps_rouler
             return (car_a->temps_rouler > car_b->temps_rouler) - (car_a->temps_rouler < car_b->temps_rouler);
         } else {
+            // Si ce n'est pas une course ou un sprint, comparer par best_lap_time
             return (car_a->best_lap_time > car_b->best_lap_time) - (car_a->best_lap_time < car_b->best_lap_time);
         }
     }
@@ -171,18 +179,19 @@ void display_practice_results(car_t cars[], int num_cars, char *session_type) {
 
 
 void display_overall_best_times(car_t cars[], int num_cars, char *session_type) {
-    float overall_best_sector_times[NUM_SECTORS] = {cars[num_cars].best_sector_times[0],cars[num_cars].best_sector_times[1], cars[num_cars].best_sector_times[2]};
+    float overall_best_sector_times[NUM_SECTORS] = {cars[num_cars].best_sector_times[0], cars[num_cars].best_sector_times[1], cars[num_cars].best_sector_times[2]};
     int overall_best_sector_car[NUM_SECTORS] = {cars[num_cars].best_cars_sector[0], cars[num_cars].best_cars_sector[1], cars[num_cars].best_cars_sector[2]}; // Ajout du tableau pour les numéros des voitures des meilleurs secteurs
     float overall_best_lap_time = cars[num_cars].best_lap_time;
     int best_lap_car = cars[num_cars].best_cars_tour; // Ajout du numéro de la voiture au meilleur tour
 
-    printf("\n=== Meilleurs temps par section et général pour %s ===\n", session_type);
+    printf(GREEN"=== "YELLOW"Meilleurs temps par section et général pour %s"GREEN" ===\n"RESET, session_type);
     for (int i = 0; i < NUM_SECTORS; i++) {
         printf(MAGENTA"Meilleur temps secteur %d :"RESET" Voiture n°%d en "RED"%.2f"RESET" secondes\n", i + 1, overall_best_sector_car[i], overall_best_sector_times[i]);
     }
-    printf(MAGENTA"Meilleur temps de tour global :"RESET" Voiture n°%d en "CYAN"%.2f"RESET" secondes\n", best_lap_car, overall_best_lap_time);
+    printf(MAGENTA"Meilleur temps de tour global :"RESET" Voiture n°%d en "RED"%.2f"RESET" secondes\n", best_lap_car, overall_best_lap_time);
     printf(GREEN"=======================================================\n"RESET);
 }
+
 
 void display_starting_grid(int car_numbers[], int num_cars) {
     system("clear");
