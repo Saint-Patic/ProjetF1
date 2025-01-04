@@ -5,39 +5,20 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <semaphore.h>
+#include <pthread.h>
 #include <fcntl.h>
 #include <float.h>
 #include <sys/mman.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/shm.h> // Include this header for shared memory functions
-#include <time.h> 
 #include "../include/car.h"
 #include "../include/utils.h"
 #include "../include/display.h"
 #include "../include/file_manager.h"
 #include "../include/simulate.h"
-#include "../include/semaphore.h"
-
-int pause_course = 1000000;
-int pause_autre = 10000; 
 
 
-/**
- * @brief Simule un arrêt au stand pour une voiture.g
- * 
- * @param car Pointeur vers la structure de la voiture.
- * @param min_time Temps minimum pour un arrêt au stand.
- * @param max_time Temps maximum pour un arrêt au stand.
- * @param session_type Type de session en cours (course, essai, etc.).
- */
-void simulate_pit_stop(car_t *car, int min_time, int max_time, char *session_type) {
-    float pit_stop_time = random_float(min_time, max_time);
-    car->temps_rouler += pit_stop_time;
-    car->pit_stop_nb++;
-    car->pit_stop = 0; // Une fois effectué, désactive l'indicateur
-    car->current_lap += pit_stop_time;
-}
 
 /**
  * @brief Simule une session (essais, qualifications, course) pour un ensemble de voitures.
@@ -84,7 +65,18 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
                 // Entrée en section critique
                 enter_critical_section(i);
 
-                handle_pit_stop(&shared_cars[i], lap, total_laps, session_type);
+                // Si on est au 3/4 de la course et que la voiture n'a pas encore fait de pit stop, forcer un arrêt
+                if (lap >= (total_laps * 3 / 4) && shared_cars[i].pit_stop_nb == 0) {
+                    //printf("Forcing pit stop for car %d at lap %d (3/4 of the race).\n", shared_cars[i].car_number, lap + 1);
+                    simulate_pit_stop(&shared_cars[i], MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION, session_type);
+                }
+
+                if (shared_cars[i].pit_stop) {
+                    simulate_pit_stop(&shared_cars[i], MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION, session_type);
+                } else {
+                    generate_sector_times(&shared_cars[i], MIN_TIME, MAX_TIME);
+                    if (rand() % 500 < 1) shared_cars[i].out = 1; // 1% de chance de panne
+                }
 
                 // Sortie de section critique
                 exit_critical_section(i);
@@ -106,7 +98,7 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
         find_overall_best_times(cars, num_cars);
         display_practice_results(cars, num_cars, session_type);
         display_overall_best_times(cars, num_cars, session_type);
-        strcmp(session_type, "course") == 0 ? usleep(pause_course) : usleep(pause_autre);
+        strcmp(session_type, "course") == 0 ? usleep(10000) : usleep(10000);
     }
 
     // Détache et libère la mémoire partagée

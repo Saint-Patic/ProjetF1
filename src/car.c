@@ -19,6 +19,49 @@
 #include "../include/simulate.h"
 
 
+sem_t *sem; // Define the semaphore as a global variable
+
+// Variables globales pour l'algorithme de Courtois
+int flag[MAX_NUM_CARS] = {0}; // Indique si une voiture veut entrer dans la section critique
+int turn = 0;                 // Tour actuel pour le processus
+
+
+// Fonction pour initialiser le sémaphore global
+void init_semaphore() {
+    sem = sem_open(SEM_NAME, O_CREAT, 0644, 1); // Valeur initiale du sémaphore : 1 (sémaphore binaire)
+    if (sem == SEM_FAILED) {
+        perror("Erreur lors de l'initialisation du sémaphore");
+        exit(EXIT_FAILURE);
+    }
+}
+
+// Fonction pour détruire le sémaphore à la fin du programme
+void destroy_semaphore() {
+    sem_close(sem);
+    sem_unlink(SEM_NAME);
+}
+
+void enter_critical_section(int i) {
+    flag[i] = 1;  // Indique l'intention d'entrer
+    int j = turn;
+    while (j != i) {
+        if (flag[j] == 0) {
+            j = (j + 1) % MAX_NUM_CARS;
+        }
+    }
+    flag[i] = 2;  // Indique que la section critique est acquise
+    for (j = 0; j < MAX_NUM_CARS; j++) {
+        if (j != i && flag[j] == 2) {
+            break;  // Si un autre processus est en section critique, attendre
+        }
+    }
+}
+
+void exit_critical_section(int i) {
+    turn = (turn + 1) % MAX_NUM_CARS; // Passe au processus suivant
+    flag[i] = 0;                      // Libère la section critique
+}
+
 void initialize_cars(car_t cars[], int car_numbers[]) {
     for (int i = 0; i < MAX_NUM_CARS; i++) {
         cars[i].car_number = car_numbers[i]; // 21e voiture fictive
@@ -35,9 +78,10 @@ void initialize_cars(car_t cars[], int car_numbers[]) {
         }
         cars[i].nb_points = 0;
         cars[i].best_cars_tour = -1;
-        cars[i].nb_tours = 0;
     }
 }
+
+
 
 /**
  * @brief Génère les temps par secteur pour une voiture et met à jour ses meilleurs temps.
@@ -46,30 +90,47 @@ void initialize_cars(car_t cars[], int car_numbers[]) {
  * @param min_time Temps minimum possible pour un secteur.
  * @param max_time Temps maximum possible pour un secteur.session_type
  */
-void update_best_times(car_t *car, int sector_index) {
-    if (car->best_sector_times[sector_index] == 0 || car->sector_times[sector_index] < car->best_sector_times[sector_index]) {
-        car->best_sector_times[sector_index] = car->sector_times[sector_index];
-    }
-
-    if (car->best_lap_time == 0 || car->current_lap < car->best_lap_time) {
-        car->best_lap_time = car->current_lap;
-    }
-}
-
 void generate_sector_times(car_t *car, int min_time, int max_time) {
     car->current_lap = 0;
-    for (int i = 0; i < NUM_SECTORS; i++) {
+    for (int i = 0; i < NUM_SECTORS; i++) { // génération des 3 secteurs pour 1 voiture
         car->sector_times[i] = random_float(min_time, max_time);
         car->current_lap += car->sector_times[i];
-        update_best_times(car, i);
 
-        if (rand() % 100 < 7 && i == NUM_SECTORS - 1) {
+        // Mise à jour des meilleurs temps pour les secteurs
+        if (car->best_sector_times[i] == 0 || car->sector_times[i] < car->best_sector_times[i]) {
+            car->best_sector_times[i] = car->sector_times[i];
+        }
+
+        // Probabilité de faire un pit stop
+        if (rand() % 100 < 7 && i == NUM_SECTORS - 1) { // chance of pit stop
             car->pit_stop_duration = random_float(MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION);
             car->pit_stop = 1;
         }
     }
+ 
+
+
+    // Mise à jour du meilleur temps pour la voiture
+    if (car->best_lap_time == 0 || car->current_lap < car->best_lap_time) {
+        car->best_lap_time = car->current_lap;
+    }
     car->temps_rouler += car->current_lap;
-    car->nb_tours += 1;
+}
+
+/**
+ * @brief Simule un arrêt au stand pour une voiture.
+ * 
+ * @param car Pointeur vers la structure de la voiture.
+ * @param min_time Temps minimum pour un arrêt au stand.
+ * @param max_time Temps maximum pour un arrêt au stand.
+ * @param session_type Type de session en cours (course, essai, etc.).
+ */
+void simulate_pit_stop(car_t *car, int min_time, int max_time, char *session_type) {
+    float pit_stop_time = random_float(min_time, max_time);
+    car->temps_rouler += pit_stop_time;
+    car->pit_stop_nb++;
+    car->pit_stop = 0; // Une fois effectué, désactive l'indicateur
+    car->current_lap += pit_stop_time;
 }
 
 /**
@@ -195,6 +256,8 @@ void gestion_points(car_t cars[], const char *input_file, const char *output_fil
     display_points(cars, car_count);
 }
 
+
+
 /**
  * @brief Enregistre les meilleurs temps des 3 secteurs et du circuit en général dans une voiture imiganaire
  * @param cars Tableau de voitures
@@ -214,18 +277,5 @@ void find_overall_best_times(car_t cars[], int num_cars) {
                 cars[num_cars].best_cars_sector[j] = cars[i].car_number;
             }
         }
-    }
-}
-
-void handle_pit_stop(car_t *car, int lap, int total_laps, char *session_type) {
-    if (lap >= (total_laps * 3 / 4) && car->pit_stop_nb == 0) {
-        simulate_pit_stop(car, MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION, session_type);
-    }
-
-    if (car->pit_stop) {
-        simulate_pit_stop(car, MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION, session_type);
-    } else {
-        generate_sector_times(car, MIN_TIME, MAX_TIME);
-        if (rand() % 500 < 1) car->out = 1; // 1% de chance de panne
     }
 }

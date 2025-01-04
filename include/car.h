@@ -13,6 +13,9 @@
 #define MAX_TIME 45
 #define SESSION_DISTANCE 300
 #define SPRINT_DISTANCE 100
+#define SEM_KEY 1234
+#define SHM_KEY 12345 // Clé pour la mémoire partagée
+#define SEM_NAME "/car_sim_semaphore" // Nom du sémaphore
 #define POINTS_SPRINT {8, 7, 6, 5, 4, 3, 2, 1}
 #define POINTS_COURSE {25, 18, 15, 12, 10, 8, 6, 4, 2, 1}
 
@@ -29,7 +32,6 @@ typedef struct car{
     float temps_rouler; // Temps de roulage total en secondes
     int eliminate; // true si elimine pdt qualif
     int nb_points; // nombre de points obtenus lors de la simul
-    int nb_tours; // nombre de tours effectués
 
     // pour voiture fictive
     int best_cars_sector[NUM_SECTORS]; // Numéro des meilleures voitutres par secteurs
@@ -39,12 +41,16 @@ typedef struct car{
 
 void generate_sector_times(car_t *car, int min_time, int max_time);
 int compare_cars(const void *a, const void *b);
+void simulate_pit_stop(car_t *car, int min_time, int max_time, char *session_type);
 void initialize_cars(car_t cars[], int car_numbers[]);
 void find_overall_best_times(car_t cars[], int num_cars);
 void gestion_points(car_t cars[], const char *input_file, const char *output_file, const char *type_session);
 int compare_tour_cars(const void *a, const void *b);
-void update_best_times(car_t *car, int sector_index);
-void handle_pit_stop(car_t *car, int lap, int total_laps, char *session_type);
+void init_semaphore();
+void destroy_semaphore();
+void enter_critical_section(int i);
+void exit_critical_section(int i);
+
 
 
 #endif // CAR_H
