@@ -1,8 +1,8 @@
 #ifndef CAR_H
 #define CAR_H
 #define NUM_SECTORS 3
-#define MIN_PIT_STOP_DURATION 24 // Durée minimale du pit stop en secondes
-#define MAX_PIT_STOP_DURATION 26 // Durée maximale du pit stop en secondes
+#define MIN_PIT_STOP_DURATION 14 // Durée minimale du pit stop en secondes
+#define MAX_PIT_STOP_DURATION 16 // Durée maximale du pit stop en secondes
 #define MAX_TIME_LAP 3*MAX_TIME // Temps maximum d'un tour en secondes
 #define DUREE_QUALIF_1 1080 // Temps maximum de la période d'essai
 #define DUREE_QUALIF_2 900 // Temps maximum de la période d'essai
