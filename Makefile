@@ -9,11 +9,11 @@ SUBFOLDER_2 ?= 2_Djeddah
 
 all: $(BIN_DIR)/main
 
-$(BIN_DIR)/main: $(OBJ_DIR)/main.o $(OBJ_DIR)/car.o $(OBJ_DIR)/utils.o $(OBJ_DIR)/display.o $(OBJ_DIR)/file_manager.o $(OBJ_DIR)/simulate.o 
+$(BIN_DIR)/main: $(OBJ_DIR)/main.o $(OBJ_DIR)/car.o $(OBJ_DIR)/utils.o $(OBJ_DIR)/display.o $(OBJ_DIR)/file_manager.o $(OBJ_DIR)/simulate.o $(OBJ_DIR)/algorithm.o
 	mkdir -p $(BIN_DIR)
 	$(CC) $(CFLAGS) -o $@ $^
 
-$(OBJ_DIR)/main.o: $(SRC_DIR)/main.c include/car.h include/utils.h include/display.h include/file_manager.h
+$(OBJ_DIR)/main.o: $(SRC_DIR)/main.c include/car.h include/utils.h include/display.h include/file_manager.h include/algorithm.h include/simulate.h
 	mkdir -p $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
@@ -34,6 +34,10 @@ $(OBJ_DIR)/file_manager.o: $(SRC_DIR)/file_manager.c include/file_manager.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)/simulate.o: $(SRC_DIR)/simulate.c include/simulate.h
+	mkdir -p $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/algorithm.o: $(SRC_DIR)/algorithm.c include/algorithm.h
 	mkdir -p $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
