@@ -113,9 +113,9 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
         return 0;
     }
 
-    if (!verifier_dossier_precedent(ville)) {
-        return 0;
-    }
+    // if (!verifier_dossier_precedent(ville)) {
+    //     return 0;
+    // }
 
     return 1;
 }
