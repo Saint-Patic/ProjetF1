@@ -48,7 +48,7 @@ void simulate_pit_stop(car_t *car, int min_time, int max_time, char *session_typ
  * @param total_laps Nombre total de tours prévus.
  * @param session_type Type de session ("course", "essai", etc.).
  */
-void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_laps, char *session_type) {
+void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_laps, char *session_type, char *ville) {
     int shm_id;
     car_t *shared_cars;
 
@@ -107,7 +107,7 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
 
         system("clear");
         find_overall_best_times(cars, num_cars);
-        display_practice_results(cars, num_cars, session_type);
+        display_practice_results(cars, num_cars, session_type, ville);
         display_overall_best_times(cars, num_cars, session_type);
         strcmp(session_type, "course") == 0 ? usleep(pause_course) : usleep(pause_autre);
     }
@@ -128,7 +128,7 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
  * @param ville Nom de la ville où se déroule l'événement.
  * @param filename Nom du fichier où sauvegarder les résultats.
  */
-void simulate_qualification(car_t cars[], int session_num, const char *ville, char *filename, char *session_type) {
+void simulate_qualification(car_t cars[], int session_num, char *ville, char *filename, char *session_type) {
     int num_cars_in_stage = ternaire_moins_criminel(session_num, 20, 15, 10); // nbr de voitures qui roulent
     int eliminated_cars_count = ternaire_moins_criminel(session_num, 5, 5, 0); // nbr de voitures éliminées à la fin de la simul
     int session_duration;  // durée de la session
@@ -157,7 +157,7 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, ch
     eligible_cars[num_cars_in_stage] = cars[MAX_NUM_CARS - 1];
     // ##### init voiture pouvant participer à la qualif #####
     int total_laps = estimate_max_laps(session_duration, (float)3 * MIN_TIME) + 1;
-    simulate_sess(eligible_cars, num_cars_in_stage, session_duration, total_laps, session_type);
+    simulate_sess(eligible_cars, num_cars_in_stage, session_duration, total_laps, session_type, ville);
     qsort(eligible_cars, num_cars_in_stage, sizeof(car_t), compare_cars);
     save_session_results(eligible_cars, num_cars_in_stage, filename, "a");
     save_eliminated_cars(eligible_cars, num_cars_in_stage, eliminated_cars_count, session_num, cars, MAX_NUM_CARS - 1, ville, classement_file);
@@ -171,7 +171,7 @@ void simulate_qualification(car_t cars[], int session_num, const char *ville, ch
  * @param distance Distance de la course en km.
  * @param ville Nom de la ville où se déroule l'événement.
  */
-void simulate_course(car_t cars[], const char *ville, char *session_type, char *session_file, int  car_numbers[]) {
+void simulate_course(car_t cars[], char *ville, char *session_type, char *session_file, int  car_numbers[]) {
 
     int distance_course;
     const char *points_file = "data/gestion_points.csv";
@@ -201,7 +201,7 @@ void simulate_course(car_t cars[], const char *ville, char *session_type, char *
     sleep(1); // Simulate the start delay
 
     int total_laps = calculate_total_laps(ville, distance_course);
-    simulate_sess(cars, MAX_NUM_CARS - 1, 999999, total_laps, session_type);
+    simulate_sess(cars, MAX_NUM_CARS - 1, 999999, total_laps, session_type, ville);
     save_session_results(cars, MAX_NUM_CARS - 1 , session_file, "w");
     gestion_points(cars, session_file, points_file, session_type);
     display_points(cars, MAX_NUM_CARS - 1);

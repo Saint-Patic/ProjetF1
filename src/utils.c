@@ -113,9 +113,9 @@ int verifier_parametres(char *session_file, char *ville, char *session_type, int
         return 0;
     }
 
-    if (!verifier_dossier_precedent(ville)) {
-        return 0;
-    }
+    // if (!verifier_dossier_precedent(ville)) {
+    //     return 0;
+    // }
 
     return 1;
 }
@@ -157,10 +157,10 @@ int verifier_dossier_precedent(char *ville) {
     }
 
     // Vérifie si le fichier "resume_course.csv" existe
-    // if (!file_exists(resume_file)) {
-    //     printf("ERREUR: Le fichier resume_course n'a pas été trouvé : %s\n", resume_file);
-    //     return 0;
-    // }
+    if (!file_exists(resume_file)) {
+        printf("ERREUR: Le fichier resume_course n'a pas été trouvé : %s\n", resume_file);
+        return 0;
+    }
 
     return 1;
 }

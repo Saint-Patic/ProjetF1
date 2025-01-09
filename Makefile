@@ -5,7 +5,6 @@ OBJ_DIR = build
 BIN_DIR = bin
 DATA_DIR = data/fichiers
 SUBFOLDER ?= 1_Sakhir
-SUBFOLDER_2 ?= 2_Djeddah
 
 all: $(BIN_DIR)/main
 
@@ -73,36 +72,27 @@ clean:
 	rm -rf $(OBJ_DIR)/*.o $(BIN_DIR)/main $(DATA_DIR)/*/
 	rm -f data/gestion_points.csv
 
-clean_dirs:
-	rm -rf $(DATA_DIR)/*/
-
-clean_files:
-	rm -f $(DATA_DIR)/fichiers/*
-
-clean_o:
-	rm -rf $(OBJ_DIR) $(BIN_DIR)/main
-
-first_session: clean $(BIN_DIR)/main
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_1.csv
-
-seconde_session: $(BIN_DIR)/main
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_2.csv
-
-qualif_session: $(BIN_DIR)/main
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_1.csv
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_2.csv
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_3.csv
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/qualif_1.csv
-
-djeddah: $(BIN_DIR)/main
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER_2)/essai_1.csv
-
-djeddah_complet: clean $(BIN_DIR)/main
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_1.csv
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_2.csv
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/essai_3.csv
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/qualif_1.csv
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/qualif_2.csv
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/qualif_3.csv
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER)/course_1.csv
-	./$(BIN_DIR)/main $(DATA_DIR)/$(SUBFOLDER_2)/essai_1.csv
+## commandes pour lancer le championnat
+run_championnat: clean 
+	$(MAKE) run_sessions
+	$(MAKE) run_sessions SUBFOLDER=2_Djeddah
+	$(MAKE) run_sessions SUBFOLDER=3_Melbourne
+	$(MAKE) run_sessions_special SUBFOLDER=4_Bakou
+	$(MAKE) run_sessions SUBFOLDER=5_Miami
+	$(MAKE) run_sessions SUBFOLDER=6_Monte-Carlo
+	$(MAKE) run_sessions SUBFOLDER=7_Barcelone
+	$(MAKE) run_sessions SUBFOLDER=8_Montréal
+	$(MAKE) run_sessions_special SUBFOLDER=9_Spielberg
+	$(MAKE) run_sessions SUBFOLDER=10_Silverstone
+	$(MAKE) run_sessions SUBFOLDER=11_Budapest
+	$(MAKE) run_sessions_special SUBFOLDER=12_Spa-Francorchamps
+	$(MAKE) run_sessions SUBFOLDER=13_Zandvoort
+	$(MAKE) run_sessions SUBFOLDER=14_Monza
+	$(MAKE) run_sessions SUBFOLDER=15_Marina_Bay
+	$(MAKE) run_sessions SUBFOLDER=16_Suzuka
+	$(MAKE) run_sessions_special SUBFOLDER=17_Losail
+	$(MAKE) run_sessions_special SUBFOLDER=18_Austin
+	$(MAKE) run_sessions SUBFOLDER=19_Mexico
+	$(MAKE) run_sessions_special SUBFOLDER=20_Sao_Paulo
+	$(MAKE) run_sessions SUBFOLDER=21_Las_Vegas
+	$(MAKE) run_sessions SUBFOLDER=22_Yas_Marina

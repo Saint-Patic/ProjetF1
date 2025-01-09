@@ -38,7 +38,7 @@ void append_to_buffer(char **buffer, size_t *buffer_size, size_t *current_length
     *current_length += str_length;
 }
 
-void display_practice_results(car_t cars[], int num_cars, char *session_type) {
+void display_practice_results(car_t cars[], int num_cars, char *session_type, char *ville) {
     int compare_function(const void *a, const void *b) {
         car_t *car_a = (car_t *)a;
         car_t *car_b = (car_t *)b;
@@ -150,7 +150,7 @@ void display_practice_results(car_t cars[], int num_cars, char *session_type) {
         GREEN "================================================================================================" RESET "\n";
     append_to_buffer(&buffer, &buffer_size, &current_length, footer);
 
-    printf(GREEN "\n===" RESET YELLOW " Résultats de la session %s " RESET GREEN " ===\n" RESET, session_type);
+    printf(GREEN "\n===" RESET YELLOW " Résultats de la session %s - %s " RESET GREEN " ===\n" RESET, session_type, ville);
 
     // Affiche tout le tableau
     printf("%s", buffer);

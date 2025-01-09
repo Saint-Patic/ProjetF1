@@ -13,11 +13,11 @@ Course,Ville,DATE,Pays,Nom du circuit,taille (km),Race,Circuit,Date,Sprint
 12,Spa-Francorchamps,30-juil.,Belgique,Circuit de Spa-Francorchamps,7.004,Belgian Grand Prix,Spa-Francorchamps,Jul 28-30,1
 13,Zandvoort,27-août,Pays-Bas,Circuit Zandvoort,4.259,Dutch Grand Prix,Zandvoort,Aug 25-27,0
 14,Monza,3-sept.,Italie,Autodromo Nazionale di Monza,5.793,Italian Grand Prix,Monza,Sep 1-3,0
-15,Marina Bay,17-sept.,Singapour,Marina Bay Street Circuit,5.063,Singapore Grand Prix,Singapore,Sep 15-17,0
+15,Marina_Bay,17-sept.,Singapour,Marina Bay Street Circuit,5.063,Singapore Grand Prix,Singapore,Sep 15-17,0
 16,Suzuka,24-sept.,Japon,Suzuka International Racing Course,5.807,Japanese Grand Prix,Suzuka,Sep 22-24,0
 17,Losail,8-oct.,Qatar,circuit international de Losail ,5.418,Qatar Grand Prix,Losail International Circuit,Oct 6-8,1
 18,Austin,22-oct.,Etats-Unis,Circuit of the Americas,5.513,United States Grand Prix,Circuit of the Americas,Oct 20-22,1
 19,Mexico,29-oct.,Mexique,Autódromo Hermanos Rodríguez,4.304,Mexican Grand Prix,Autodromo Hermanos Rodriguez,Oct 27-29,0
-20,Sao Paulo,5-nov.,Brésil,Autódromo José Carlos Pace,4.309,Brazilian Grand Prix,Interlagos,Nov 3-5,1
-21,Las Vegas,18-nov.,Etats-Unis,Circuit Silver Las Vegas,6.12,Las Vegas Grand Prix,Las Vegas Street Circuit,Nov 16-18,0
-22,Yas Marina,26-nov.,Emirats Arabes Unis,Yas Marina Circuit,5.281,Abu Dhabi Grand Prix,Yas Marina,Nov 24-26,0
+20,Sao_Paulo,5-nov.,Brésil,Autódromo José Carlos Pace,4.309,Brazilian Grand Prix,Interlagos,Nov 3-5,1
+21,Las_Vegas,18-nov.,Etats-Unis,Circuit Silver Las Vegas,6.12,Las Vegas Grand Prix,Las Vegas Street Circuit,Nov 16-18,0
+22,Yas_Marina,26-nov.,Emirats Arabes Unis,Yas Marina Circuit,5.281,Abu Dhabi Grand Prix,Yas Marina,Nov 24-26,0
