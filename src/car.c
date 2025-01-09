@@ -17,7 +17,7 @@
 #include "../include/display.h"
 #include "../include/file_manager.h"
 #include "../include/simulate.h"
-
+#include "../include/algorithm.h"
 
 void initialize_cars(car_t cars[], int car_numbers[]) {
     for (int i = 0; i < MAX_NUM_CARS; i++) {
@@ -38,7 +38,6 @@ void initialize_cars(car_t cars[], int car_numbers[]) {
         cars[i].nb_tours = 0;
     }
 }
-
 
 
 /**
@@ -219,6 +218,7 @@ void find_overall_best_times(car_t cars[], int num_cars) {
     }
 }
 void handle_pit_stop(car_t *car, int lap, int total_laps, char *session_type) {
+    
     if (lap >= (total_laps * 3 / 4) && car->pit_stop_nb == 0) {
         simulate_pit_stop(car, MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION, session_type);
     }
