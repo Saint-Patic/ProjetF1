@@ -1,6 +1,5 @@
 #ifndef SIMULATE_H
 #define SIMULATE_H
-#define SHM_KEY 1234
 #include "car.h"
 void simulate_pit_stop(car_t *car, int min_time, int max_time, char *session_type);
 void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_laps, char *session_type);

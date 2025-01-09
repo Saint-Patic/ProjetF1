@@ -13,10 +13,8 @@
 #define MAX_TIME 45
 #define SESSION_DISTANCE 300
 #define SPRINT_DISTANCE 100
-#define SEM_KEY 1234
 #define SHM_KEY 12345 // Clé pour la mémoire partagée
-#define SEM_NAME_MUTEX "/mutex_sem"
-#define SEM_NAME_MUTLECT "/mutlect_sem"
+
 #define POINTS_SPRINT {8, 7, 6, 5, 4, 3, 2, 1}
 #define POINTS_COURSE {25, 18, 15, 12, 10, 8, 6, 4, 2, 1}
 

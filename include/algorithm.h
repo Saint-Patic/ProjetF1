@@ -1,5 +1,9 @@
+#ifndef ALGORITHM_H
+#define ALGORITHM_H
+
 #define SEM_KEY 1234
-#define SHM_KEY 12345 // Clé pour la mémoire partagée
+#define SEM_NAME_MUTEX "/mutex_sem"
+#define SEM_NAME_MUTLECT "/mutlect_sem"
 #define SEM_NAME_MUTEX "/mutex_sem"
 #define SEM_NAME_MUTLECT "/mutlect_sem"
 
@@ -9,3 +13,4 @@ void enter_critical_section_reader();
 void exit_critical_section_reader();
 void enter_critical_section_writer();
 void exit_critical_section_writer();
+#endif 
