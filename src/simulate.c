@@ -66,10 +66,11 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
     }
 
     // Copie initiale des voitures dans la mémoire partagée
+    enter_critical_section_writer();
     memcpy(shared_cars, cars, sizeof(car_t) * num_cars);
+    exit_critical_section_writer();
 
     for (int lap = 0; lap < total_laps; lap++) {
-        //printf("Lap %d/%d\n", lap + 1, total_laps);
         for (int i = 0; i < num_cars; i++) {
             if (shared_cars[i].out) continue;
 
@@ -82,12 +83,12 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
                 srand(time(NULL) ^ getpid()); // Initialisation aléatoire unique pour chaque processus
 
                 // Entrée en section critique
-                enter_critical_section(i);
+                enter_critical_section_writer();
 
                 handle_pit_stop(&shared_cars[i], lap, total_laps, session_type);
 
                 // Sortie de section critique
-                exit_critical_section(i);
+                exit_critical_section_writer();
 
                 shmdt(shared_cars); // Détache la mémoire partagée
                 exit(0);  // Le processus enfant se termine après un tour
@@ -100,7 +101,9 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
         }
 
         // Mise à jour des voitures après ce tour
+        enter_critical_section_reader();
         memcpy(cars, shared_cars, sizeof(car_t) * num_cars);
+        exit_critical_section_reader();
 
         system("clear");
         find_overall_best_times(cars, num_cars);

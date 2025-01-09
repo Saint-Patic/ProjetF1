@@ -19,17 +19,21 @@
 #include "../include/simulate.h"
 
 
-sem_t *sem; // Define the semaphore as a global variable
+sem_t *mutex; // Define the semaphore as a global variable
+sem_t *mutlect;
 
 // Variables globales pour l'algorithme de Courtois
-int flag[MAX_NUM_CARS] = {0}; // Indique si une voiture veut entrer dans la section critique
-int turn = 0;                 // Tour actuel pour le processus
-
+int nblect = 0;
 
 // Fonction pour initialiser le sémaphore global
 void init_semaphore() {
-    sem = sem_open(SEM_NAME, O_CREAT, 0644, 1); // Valeur initiale du sémaphore : 1 (sémaphore binaire)
-    if (sem == SEM_FAILED) {
+    mutex = sem_open(SEM_NAME_MUTEX, O_CREAT, 0644, 1); // Valeur initiale du sémaphore : 1 (sémaphore binaire)
+    if (mutex == SEM_FAILED) {
+        perror("Erreur lors de l'initialisation du sémaphore");
+        exit(EXIT_FAILURE);
+    }
+    mutlect = sem_open(SEM_NAME_MUTLECT, O_CREAT, 0644, 1); // Valeur initiale du sémaphore : 1 (sémaphore binaire)
+    if (mutlect == SEM_FAILED) {
         perror("Erreur lors de l'initialisation du sémaphore");
         exit(EXIT_FAILURE);
     }
@@ -37,29 +41,40 @@ void init_semaphore() {
 
 // Fonction pour détruire le sémaphore à la fin du programme
 void destroy_semaphore() {
-    sem_close(sem);
-    sem_unlink(SEM_NAME);
+    sem_close(mutex);
+    sem_close(mutlect);
+    sem_unlink(SEM_NAME_MUTEX);
+    sem_unlink(SEM_NAME_MUTLECT);
 }
 
-void enter_critical_section(int i) {
-    flag[i] = 1;  // Indique l'intention d'entrer
-    int j = turn;
-    while (j != i) {
-        if (flag[j] == 0) {
-            j = (j + 1) % MAX_NUM_CARS;
-        }
+// Fonction pour entrer en section critique (lecteur)
+void enter_critical_section_reader() {
+    sem_wait(mutlect);
+    nblect++;
+    if (nblect == 1) {
+        sem_wait(mutex);
     }
-    flag[i] = 2;  // Indique que la section critique est acquise
-    for (j = 0; j < MAX_NUM_CARS; j++) {
-        if (j != i && flag[j] == 2) {
-            break;  // Si un autre processus est en section critique, attendre
-        }
-    }
+    sem_post(mutlect);
 }
 
-void exit_critical_section(int i) {
-    turn = (turn + 1) % MAX_NUM_CARS; // Passe au processus suivant
-    flag[i] = 0;                      // Libère la section critique
+// Fonction pour sortir de la section critique (lecteur)
+void exit_critical_section_reader() {
+    sem_wait(mutlect);
+    nblect--;
+    if (nblect == 0) {
+        sem_post(mutex);
+    }
+    sem_post(mutlect);
+}
+
+// Fonction pour entrer en section critique (rédacteur)
+void enter_critical_section_writer() {
+    sem_wait(mutex);
+}
+
+// Fonction pour sortir de la section critique (rédacteur)
+void exit_critical_section_writer() {
+    sem_post(mutex);
 }
 
 void initialize_cars(car_t cars[], int car_numbers[]) {

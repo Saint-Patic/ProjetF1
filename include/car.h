@@ -15,7 +15,8 @@
 #define SPRINT_DISTANCE 100
 #define SEM_KEY 1234
 #define SHM_KEY 12345 // Clé pour la mémoire partagée
-#define SEM_NAME "/car_sim_semaphore" // Nom du sémaphore
+#define SEM_NAME_MUTEX "/mutex_sem"
+#define SEM_NAME_MUTLECT "/mutlect_sem"
 #define POINTS_SPRINT {8, 7, 6, 5, 4, 3, 2, 1}
 #define POINTS_COURSE {25, 18, 15, 12, 10, 8, 6, 4, 2, 1}
 
@@ -50,8 +51,10 @@ void gestion_points(car_t cars[], const char *input_file, const char *output_fil
 int compare_tour_cars(const void *a, const void *b);
 void init_semaphore();
 void destroy_semaphore();
-void enter_critical_section(int i);
-void exit_critical_section(int i);
+void enter_critical_section_reader();
+void exit_critical_section_reader();
+void enter_critical_section_writer();
+void exit_critical_section_writer();
 
 
 
