@@ -19,8 +19,8 @@
 #include "../include/simulate.h"
 
 
-int pause_course = 1000000;
-int pause_autre = 1000000; 
+int pause_course = 100000;
+int pause_autre = 100000; 
 
 
 /**

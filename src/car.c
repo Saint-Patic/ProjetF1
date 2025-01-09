@@ -55,14 +55,15 @@ void update_best_times(car_t *car, int sector_index) {
         car->best_lap_time = car->current_lap;
     }
 }
-void generate_sector_times(car_t *car, int min_time, int max_time) {
+void generate_sector_times(car_t *car, int min_time, int max_time, char *session_type) {
     car->current_lap = 0;
     for (int i = 0; i < NUM_SECTORS; i++) {
         car->sector_times[i] = random_float(min_time, max_time);
         car->current_lap += car->sector_times[i];
         update_best_times(car, i);
 
-        if (rand() % 100 < 7 && i == NUM_SECTORS - 1) {
+        int proba_pit_stop =  !strcmp(session_type, "course") ? 1 : 15;
+        if (rand() % 100 < proba_pit_stop && i == NUM_SECTORS - 1) {
             car->pit_stop_duration = random_float(MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION);
             car->pit_stop = 1;
         }
@@ -225,7 +226,7 @@ void handle_pit_stop(car_t *car, int lap, int total_laps, char *session_type) {
     if (car->pit_stop) {
         simulate_pit_stop(car, MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION, session_type);
     } else {
-        generate_sector_times(car, MIN_TIME, MAX_TIME);
+        generate_sector_times(car, MIN_TIME, MAX_TIME, session_type);
         if (rand() % 500 < 1) car->out = 1; // 1% de chance de panne
     }
 }

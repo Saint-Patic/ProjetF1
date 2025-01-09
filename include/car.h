@@ -39,7 +39,7 @@ typedef struct car{
 } car_t;
 
 
-void generate_sector_times(car_t *car, int min_time, int max_time);
+void generate_sector_times(car_t *car, int min_time, int max_time, char *session_type);
 int compare_cars(const void *a, const void *b);
 void update_best_times(car_t *car, int sector_index);
 void handle_pit_stop(car_t *car, int lap, int total_laps, char *session_type);
