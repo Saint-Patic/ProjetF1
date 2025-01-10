@@ -24,32 +24,7 @@
 
 
 
-// Variable globale pour stocker le type de session
-static char *current_session_type;
-
-int compare_function(const void *a, const void *b) {
-    car_t *car_a = (car_t *)a;
-    car_t *car_b = (car_t *)b;
-
-    // Vérifie si c'est une course ou un sprint
-    if (strcmp(current_session_type, "course") == 0 || strcmp(current_session_type, "sprint") == 0) {
-        // Place les voitures "out" en dernier
-        if (car_a->out && car_b->out) return 0; // Les deux sont "out", ordre inchangé
-        if (car_a->out) return 1;               // "car_a" est "out", elle passe après
-        if (car_b->out) return -1;              // "car_b" est "out", elle passe après
-
-        // Si aucune voiture n'est "out", comparer par nb_tours
-        if (car_a->nb_tours != car_b->nb_tours) {
-            return (car_b->nb_tours - car_a->nb_tours); // Plus de tours = mieux classée
-        }
-
-        // Si le nombre de tours est égal, comparer par temps_rouler
-        return (car_a->temps_rouler > car_b->temps_rouler) - (car_a->temps_rouler < car_b->temps_rouler);
-    } else {
-        // Si ce n'est pas une course ou un sprint, comparer par best_lap_time
-        return (car_a->best_lap_time > car_b->best_lap_time) - (car_a->best_lap_time < car_b->best_lap_time);
-    }
-}
+extern char *current_session_type;
 
 void append_to_buffer(char **buffer, size_t *buffer_size, size_t *current_length, const char *str) {
     size_t str_length = strlen(str);
@@ -66,9 +41,6 @@ void append_to_buffer(char **buffer, size_t *buffer_size, size_t *current_length
 }
 
 void display_practice_results(car_t cars[], int num_cars, char *session_type, char *ville) {
-    // Mettre à jour la variable globale
-    current_session_type = session_type;
-
     // Détermine les colonnes et la méthode de tri selon le type de session
     char *nom_de_colonne = strcmp(session_type, "course") == 0 || strcmp(session_type, "sprint") == 0 ? " Temps rouler " : " Meilleur tour ";
 

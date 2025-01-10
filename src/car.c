@@ -18,7 +18,8 @@
 #include "../include/file_manager.h"
 #include "../include/simulate.h"
 #include "../include/algorithm.h"
-
+// Variable globale pour stocker le type de session
+extern char *current_session_type;
 void initialize_cars(car_t cars[], int car_numbers[]) {
     for (int i = 0; i < MAX_NUM_CARS; i++) {
         cars[i].car_number = car_numbers[i]; // 21e voiture fictive
@@ -73,25 +74,6 @@ void generate_sector_times(car_t *car, int min_time, int max_time, char *session
 }
 
 /**
- * @brief Compare deux voitures en fonction de leur meilleur temps au tour.
- * 
- * @param a Pointeur vers la première voiture.
- * @param b Pointeur vers la deuxième voiture.
- * @return 1 si la première voiture a un temps plus lent, -1 sinon.
- */
-int compare_cars(const void *a, const void *b) {
-    car_t *carA = (car_t *)a;
-    car_t *carB = (car_t *)b;
-    return (carA->best_lap_time > carB->best_lap_time) ? 1 : -1;
-}
-    
-int compare_tour_cars(const void *a, const void *b) {
-    car_t *carA = (car_t *)a;
-    car_t *carB = (car_t *)b;
-    return (carA->temps_rouler > carB->temps_rouler) ? 1 : -1;
-}
-
-/**
  * @brief Attribue les points aux voitures en fonction du classement et sauvegarde les résultats.
  *
  * @param cars Tableau de voitures.
@@ -123,8 +105,8 @@ void gestion_points(car_t cars[], const char *input_file, const char *output_fil
                &cars[car_count].sector_times[0],
                &cars[car_count].sector_times[1],
                &cars[car_count].sector_times[2]);
-        cars[car_count].nb_points = 0;
-        car_count++;
+        cars[car_count++].nb_points = 0;
+
     }
     fclose(file_in);
 
@@ -219,8 +201,8 @@ void find_overall_best_times(car_t cars[], int num_cars) {
     }
 }
 void handle_pit_stop(car_t *car, int lap, int total_laps, char *session_type) {
-    
-    if (lap >= (total_laps * 3 / 4) && car->pit_stop_nb == 0 && strcmp(session_type, "course") == 0) {
+    float forced_pit_stop = 3/4;
+    if (lap >= (total_laps * forced_pit_stop) && car->pit_stop_nb == 0 && strcmp(session_type, "course") == 0) {
         simulate_pit_stop(car, MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION, session_type);
     }
     if (car->pit_stop) {
@@ -228,5 +210,28 @@ void handle_pit_stop(car_t *car, int lap, int total_laps, char *session_type) {
     } else {
         generate_sector_times(car, MIN_TIME, MAX_TIME, session_type);
         if (rand() % 500 < 1) car->out = 1; // 1/500 de chance de panne
+    }
+}
+
+int compare_function(const void *a, const void *b) {
+    car_t *car_a = (car_t *)a;
+    car_t *car_b = (car_t *)b;
+    // Vérifie si c'est une course ou un sprint
+    if (strcmp(current_session_type, "course") == 0 || strcmp(current_session_type, "sprint") == 0) {
+        // Place les voitures "out" en dernier
+        if (car_a->out && car_b->out) return 0; // Les deux sont "out", ordre inchangé
+        if (car_a->out) return 1;               // "car_a" est "out", elle passe après
+        if (car_b->out) return -1;              // "car_b" est "out", elle passe après
+
+        // Si aucune voiture n'est "out", comparer par nb_tours
+        if (car_a->nb_tours != car_b->nb_tours) {
+            return (car_b->nb_tours - car_a->nb_tours); // Plus de tours = mieux classée
+        }
+
+        // Si le nombre de tours est égal, comparer par temps_rouler
+        return (car_a->temps_rouler > car_b->temps_rouler) - (car_a->temps_rouler < car_b->temps_rouler);
+    } else {
+        // Si ce n'est pas une course ou un sprint, comparer par best_lap_time
+        return (car_a->best_lap_time > car_b->best_lap_time) - (car_a->best_lap_time < car_b->best_lap_time);
     }
 }

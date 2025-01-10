@@ -11,6 +11,8 @@
 #include "../include/utils.h"
 #include "../include/simulate.h"
 #include "../include/algorithm.h"
+char *current_session_type;
+
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
@@ -40,6 +42,7 @@ int main(int argc, char *argv[]) {
     create_directories_from_csv_values("data/liste_circuits.csv", "Course", "Ville");
 
     int special_weekend = is_special_weekend(ville);
+    current_session_type = session_type;
     if (strcmp(session_type, "essai") == 0) { // essai libre (1 pour wk spé et 3 pour wk normal)
         printf("Simulation des essais libres pour un %s.\n", special_weekend ? "week-end spécial" : "week-end normal");
         int total_laps = estimate_max_laps(DUREE_ESSAI, 3*MIN_TIME);

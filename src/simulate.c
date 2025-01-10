@@ -157,7 +157,6 @@ void simulate_qualification(car_t cars[], int session_num, char *ville, char *fi
     // ##### init voiture pouvant participer à la qualif #####
     int total_laps = estimate_max_laps(session_duration, (float)3 * MIN_TIME) + 1;
     simulate_sess(eligible_cars, num_cars_in_stage, session_duration, total_laps, session_type, ville);
-    qsort(eligible_cars, num_cars_in_stage, sizeof(car_t), compare_cars);
     save_session_results(eligible_cars, num_cars_in_stage, filename, "a");
     save_eliminated_cars(eligible_cars, num_cars_in_stage, eliminated_cars_count, session_num, cars, MAX_NUM_CARS - 1, ville, classement_file);
     free(classement_file);
