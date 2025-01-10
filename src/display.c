@@ -24,6 +24,33 @@
 
 
 
+// Variable globale pour stocker le type de session
+static char *current_session_type;
+
+int compare_function(const void *a, const void *b) {
+    car_t *car_a = (car_t *)a;
+    car_t *car_b = (car_t *)b;
+
+    // Vérifie si c'est une course ou un sprint
+    if (strcmp(current_session_type, "course") == 0 || strcmp(current_session_type, "sprint") == 0) {
+        // Place les voitures "out" en dernier
+        if (car_a->out && car_b->out) return 0; // Les deux sont "out", ordre inchangé
+        if (car_a->out) return 1;               // "car_a" est "out", elle passe après
+        if (car_b->out) return -1;              // "car_b" est "out", elle passe après
+
+        // Si aucune voiture n'est "out", comparer par nb_tours
+        if (car_a->nb_tours != car_b->nb_tours) {
+            return (car_b->nb_tours - car_a->nb_tours); // Plus de tours = mieux classée
+        }
+
+        // Si le nombre de tours est égal, comparer par temps_rouler
+        return (car_a->temps_rouler > car_b->temps_rouler) - (car_a->temps_rouler < car_b->temps_rouler);
+    } else {
+        // Si ce n'est pas une course ou un sprint, comparer par best_lap_time
+        return (car_a->best_lap_time > car_b->best_lap_time) - (car_a->best_lap_time < car_b->best_lap_time);
+    }
+}
+
 void append_to_buffer(char **buffer, size_t *buffer_size, size_t *current_length, const char *str) {
     size_t str_length = strlen(str);
     if (*current_length + str_length >= *buffer_size) {
@@ -39,37 +66,11 @@ void append_to_buffer(char **buffer, size_t *buffer_size, size_t *current_length
 }
 
 void display_practice_results(car_t cars[], int num_cars, char *session_type, char *ville) {
-    int compare_function(const void *a, const void *b) {
-        car_t *car_a = (car_t *)a;
-        car_t *car_b = (car_t *)b;
-
-        // Vérifie si c'est une course ou un sprint
-        if (strcmp(session_type, "course") == 0 || strcmp(session_type, "sprint") == 0) {
-            // Place les voitures "out" en dernier
-            if (car_a->out && car_b->out) return 0; // Les deux sont "out", ordre inchangé
-            if (car_a->out) return 1;               // "car_a" est "out", elle passe après
-            if (car_b->out) return -1;              // "car_b" est "out", elle passe après
-
-            // Si aucune voiture n'est "out", comparer par nb_tours
-            if (car_a->nb_tours != car_b->nb_tours) {
-                return (car_b->nb_tours - car_a->nb_tours); // Plus de tours = mieux classée
-            }
-
-            // Si le nombre de tours est égal, comparer par temps_rouler
-            return (car_a->temps_rouler > car_b->temps_rouler) - (car_a->temps_rouler < car_b->temps_rouler);
-        } else {
-            // Si ce n'est pas une course ou un sprint, comparer par best_lap_time
-            return (car_a->best_lap_time > car_b->best_lap_time) - (car_a->best_lap_time < car_b->best_lap_time);
-        }
-    }
+    // Mettre à jour la variable globale
+    current_session_type = session_type;
 
     // Détermine les colonnes et la méthode de tri selon le type de session
-    char *nom_de_colonne;
-    if (strcmp(session_type, "course") == 0 || strcmp(session_type, "sprint") == 0) {
-        nom_de_colonne = " Temps rouler ";
-    } else {
-        nom_de_colonne = " Meilleur tour ";
-    }
+    char *nom_de_colonne = strcmp(session_type, "course") == 0 || strcmp(session_type, "sprint") == 0 ? " Temps rouler " : " Meilleur tour ";
 
     // Trie les voitures selon la fonction définie
     qsort(cars, num_cars, sizeof(car_t), compare_function);
@@ -108,39 +109,18 @@ void display_practice_results(car_t cars[], int num_cars, char *session_type, ch
 
         float diff = current_value - prev_value;
         char line[512];
-
+        char *etat = cars[i].out ? MAGENTA " (Out)" RESET : cars[i].pit_stop ? BLUE " (P)" RESET : "";
         // Crée la ligne correspondante
-        if (cars[i].pit_stop) {
-            snprintf(line, sizeof(line),
-                CYAN "|" RESET " " RED "%3d" RESET "  " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "    %7.2f     " CYAN "|" RESET "     %7.2f      " CYAN "|" RESET "  %+5.2f    " BLUE " (P)" RESET "\n",
-                cars[i].car_number,
-                cars[i].sector_times[0],
-                cars[i].sector_times[1],
-                cars[i].sector_times[2],
-                cars[i].current_lap,
-                current_value,
-                i == 0 ? 0.00 : diff);
-        } else if (cars[i].out) {
-            snprintf(line, sizeof(line),
-                CYAN "|" RESET " " RED "%3d" RESET "  " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "    %7.2f     " CYAN "|" RESET "     %7.2f      " CYAN "|" RESET "  %+5.2f     " MAGENTA " (Out)" RESET "\n",
-                cars[i].car_number,
-                cars[i].sector_times[0],
-                cars[i].sector_times[1],
-                cars[i].sector_times[2],
-                cars[i].current_lap,
-                current_value,
-                i == 0 ? 0.00 : diff);
-        } else {
-            snprintf(line, sizeof(line),
-                CYAN "|" RESET " " RED "%3d" RESET "  " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "    %7.2f     " CYAN "|" RESET "     %7.2f      " CYAN "|" RESET "  %+5.2f   \n",
-                cars[i].car_number,
-                cars[i].sector_times[0],
-                cars[i].sector_times[1],
-                cars[i].sector_times[2],
-                cars[i].current_lap,
-                current_value,
-                i == 0 ? 0.00 : diff);
-        }
+        snprintf(line, sizeof(line),
+            CYAN "|" RESET " " RED "%3d" RESET "  " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "    %7.2f     " CYAN "|" RESET "     %7.2f      " CYAN "|" RESET "  %+5.2f   %s \n",
+            cars[i].car_number,
+            cars[i].sector_times[0],
+            cars[i].sector_times[1],
+            cars[i].sector_times[2],
+            cars[i].current_lap,
+            current_value,
+            i == 0 ? 0.00 : diff, 
+            etat);
 
         append_to_buffer(&buffer, &buffer_size, &current_length, line);
     }
@@ -149,7 +129,7 @@ void display_practice_results(car_t cars[], int num_cars, char *session_type, ch
     const char *footer =
         GREEN "================================================================================================" RESET "\n";
     append_to_buffer(&buffer, &buffer_size, &current_length, footer);
-
+    clear_screen();
     printf(GREEN "\n===" RESET YELLOW " Résultats de la session %s - %s " RESET GREEN " ===\n" RESET, session_type, ville);
 
     // Affiche tout le tableau
@@ -162,22 +142,34 @@ void display_practice_results(car_t cars[], int num_cars, char *session_type, ch
 
 
 void display_overall_best_times(car_t cars[], int num_cars, char *session_type) {
-    float overall_best_sector_times[NUM_SECTORS] = {cars[num_cars].best_sector_times[0], cars[num_cars].best_sector_times[1], cars[num_cars].best_sector_times[2]};
-    int overall_best_sector_car[NUM_SECTORS] = {cars[num_cars].best_cars_sector[0], cars[num_cars].best_cars_sector[1], cars[num_cars].best_cars_sector[2]}; // Ajout du tableau pour les numéros des voitures des meilleurs secteurs
+    float overall_best_sector_times[NUM_SECTORS];
+    int overall_best_sector_car[NUM_SECTORS]; // Ajout du tableau pour les numéros des voitures des meilleurs secteurs
+
+    for (int i = 0; i < NUM_SECTORS; i++) {
+        overall_best_sector_times[i] = cars[num_cars].best_sector_times[i];
+        overall_best_sector_car[i] = cars[num_cars].best_cars_sector[i];
+    }
+
     float overall_best_lap_time = cars[num_cars].best_lap_time;
     int best_lap_car = cars[num_cars].best_cars_tour; // Ajout du numéro de la voiture au meilleur tour
 
-    printf(GREEN"=== "YELLOW"Meilleurs temps par section et général pour %s"GREEN" ===\n"RESET, session_type);
+    const char *header_format = GREEN"=== "YELLOW"Meilleurs temps par section et général pour %s"GREEN" ===\n"RESET;
+    const char *sector_format = MAGENTA"Meilleur temps secteur %d :"RESET" Voiture n°%d en "RED"%.2f"RESET" secondes\n";
+    const char *lap_format = MAGENTA"Meilleur temps de tour global :"RESET" Voiture n°%d en "RED"%.2f"RESET" secondes\n";
+    const char *footer_format = GREEN"=======================================================\n"RESET;
+
+    printf(header_format, session_type);
     for (int i = 0; i < NUM_SECTORS; i++) {
-        printf(MAGENTA"Meilleur temps secteur %d :"RESET" Voiture n°%d en "RED"%.2f"RESET" secondes\n", i + 1, overall_best_sector_car[i], overall_best_sector_times[i]);
+        printf(sector_format, i + 1, overall_best_sector_car[i], overall_best_sector_times[i]);
     }
-    printf(MAGENTA"Meilleur temps de tour global :"RESET" Voiture n°%d en "RED"%.2f"RESET" secondes\n", best_lap_car, overall_best_lap_time);
-    printf(GREEN"=======================================================\n"RESET);
+    printf(lap_format, best_lap_car, overall_best_lap_time);
+    printf("%s", footer_format);
 }
 
 
+
 void display_starting_grid(int car_numbers[], int num_cars) {
-    system("clear");
+    clear_screen();
     printf("=== Starting Grid ===\n");
     for (int i = 0; i < num_cars; i++) {
         printf("Position %d: Car Number %d\n", i + 1, car_numbers[i]);
@@ -186,7 +178,7 @@ void display_starting_grid(int car_numbers[], int num_cars) {
 }
 
 void display_points(const car_t cars[], int car_count) {
-    system("clear");
+    clear_screen();
     char *suffixe;
     printf("\n=== Résultats finaux ===\n");
     for (int i = 0; i < car_count; i++) {

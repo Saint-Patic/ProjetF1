@@ -105,7 +105,6 @@ void simulate_sess(car_t cars[], int num_cars, int session_duration, int total_l
         memcpy(cars, shared_cars, sizeof(car_t) * num_cars);
         exit_critical_section_reader();
 
-        system("clear");
         find_overall_best_times(cars, num_cars);
         display_practice_results(cars, num_cars, session_type, ville);
         display_overall_best_times(cars, num_cars, session_type);
