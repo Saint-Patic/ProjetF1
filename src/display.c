@@ -83,6 +83,18 @@ void display_practice_results(car_t cars[], int num_cars, char *session_type, ch
         char line[512];
         char *etat = cars[i].out ? MAGENTA " (Out)" RESET : cars[i].pit_stop ? BLUE " (P)" RESET : "";
         // Crée la ligne correspondante
+    if (cars[i].out && (strcmp(session_type, "course") == 0 || strcmp(session_type, "sprint") == 0)) {
+        snprintf(line, sizeof(line),
+            CYAN "|" RESET " " RED "%3d" RESET "  " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "    %7.2f     " CYAN "|" RESET "     %7.2f      " CYAN "|" RESET "  %5s   %s \n",
+            cars[i].car_number,
+            cars[i].sector_times[0],
+            cars[i].sector_times[1],
+            cars[i].sector_times[2],
+            cars[i].current_lap,
+            current_value,
+            "out", 
+            etat);
+    } else {
         snprintf(line, sizeof(line),
             CYAN "|" RESET " " RED "%3d" RESET "  " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "  %7.2f    " CYAN "|" RESET "    %7.2f     " CYAN "|" RESET "     %7.2f      " CYAN "|" RESET "  %+5.2f   %s \n",
             cars[i].car_number,
@@ -93,6 +105,7 @@ void display_practice_results(car_t cars[], int num_cars, char *session_type, ch
             current_value,
             i == 0 ? 0.00 : diff, 
             etat);
+    }
 
         append_to_buffer(&buffer, &buffer_size, &current_length, line);
         prev_value = current_value;
