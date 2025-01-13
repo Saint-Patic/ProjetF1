@@ -52,9 +52,7 @@ void update_best_times(car_t *car, int sector_index) {
     if (car->best_sector_times[sector_index] == 0 || car->sector_times[sector_index] < car->best_sector_times[sector_index]) {
         car->best_sector_times[sector_index] = car->sector_times[sector_index];
     }
-    if (car->best_lap_time == 0 || car->current_lap < car->best_lap_time) {
-        car->best_lap_time = car->current_lap;
-    }
+
 }
 void generate_sector_times(car_t *car, int min_time, int max_time, char *session_type) {
     car->current_lap = 0;
@@ -68,6 +66,9 @@ void generate_sector_times(car_t *car, int min_time, int max_time, char *session
             car->pit_stop_duration = random_float(MIN_PIT_STOP_DURATION, MAX_PIT_STOP_DURATION);
             car->pit_stop = 1;
         }
+    }
+    if (car->best_lap_time == 0 || car->current_lap < car->best_lap_time) {
+        car->best_lap_time = car->current_lap;
     }
     car->temps_rouler += car->current_lap;
     car->nb_tours += 1;
