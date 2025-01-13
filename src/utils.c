@@ -299,6 +299,6 @@ int calculate_total_laps(const char *ville, float session_distance) {
 }
 
 void clear_screen() {
-    printf("\033[2J\033[0;0H");
-    // system("clear");
+    // printf("\033[0;0H");
+    system("clear");
 }

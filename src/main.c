@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
     int car_numbers[MAX_NUM_CARS] = {1, 11, 44, 63, 16, 55, 4, 81, 14, 18, 10, 31, 23, 2, 22, 3, 77, 24, 20, 27, 1000};
     initialize_cars(cars, car_numbers);
     init_semaphore();
-
+    system("clear");
     printf("===== Début de la session: %s =====\n\n", session_file);
     create_directories_from_csv_values("data/liste_circuits.csv", "Course", "Ville");
 

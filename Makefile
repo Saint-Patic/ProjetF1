@@ -1,3 +1,4 @@
+## ./bin/main data/fichiers/4_Bakou/essai_1.csv
 CC = gcc
 CFLAGS = -Wall -g -Iinclude
 SRC_DIR = src
@@ -41,7 +42,6 @@ $(OBJ_DIR)/algorithm.o: $(SRC_DIR)/algorithm.c include/algorithm.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 ## commandes de bases
-
 clean_run: clean run_sessions # supprimer tous les dossiers et lancer une simulation classique
 
 clean_run_spe : clean run_sessions_special # supprimer tous les dossier et lance une simulation de sprint
