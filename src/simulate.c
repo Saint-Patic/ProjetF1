@@ -20,7 +20,7 @@
 
 
 int pause_course = 1000000;
-int pause_autre = 1000000; 
+int pause_autre = 1000; 
 
 
 /**

@@ -95,6 +95,7 @@ void display_practice_results(car_t cars[], int num_cars, char *session_type, ch
             etat);
 
         append_to_buffer(&buffer, &buffer_size, &current_length, line);
+        prev_value = current_value;
     }
 
     // Ajoute la ligne de fin
